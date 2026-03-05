@@ -38,8 +38,8 @@ class TransactionController extends AjaxCrudController
      * @param Engine $template
      */
     public function __construct(
-        Transaction $service, Session $session, Config $config, Flash $flash, Engine $template,
-        private Donor $donor, private Educator $educator, private Transaction $transaction, private Round $round,
+        Transaction    $service, Session $session, Config $config, Flash $flash, Engine $template,
+        private Donor  $donor, private Educator $educator, private Transaction $transaction, private Round $round,
         private Mailer $mailer, private \Solidarity\Educator\Filter\Educator $educatorFilter, private Delegate $delegate
     ) {
         parent::__construct($service, $session, $config, $flash, $template);

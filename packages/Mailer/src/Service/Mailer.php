@@ -2,11 +2,6 @@
 namespace Solidarity\Mailer\Service;
 
 use Laminas\Config\Config;
-use Laminas\Mail\Message;
-use Laminas\Mail\Transport\TransportInterface;
-use Laminas\Mime\Message as MimeMessage;
-use Laminas\Mime\Mime;
-use Laminas\Mime\Part;
 use League\Plates\Engine;
 use MailerSend\Helpers\Builder\Attachment;
 use MailerSend\Helpers\Builder\Recipient;
@@ -14,13 +9,14 @@ use MailerSend\MailerSend;
 use Monolog\LogRecord;
 use Psr\Log\LoggerInterface as Logger;
 
-class Mailer extends \Skeletor\Core\Mailer\Service\Mailer
+class Mailer extends \Skeletor\Core\Mailer\Service\MailerSendMailer
 {
     public function __construct(MailerSend $mail, Config $config, Engine $template)
     {
-//        parent::__construct($mail, $config, $template);
+        parent::__construct($mail, $config, $template);
     }
 
+    // @todo
     public function sendTransactionListToDelegate($email, $listPath)
     {
         $body = $this->render('transactionList', []);
@@ -40,6 +36,7 @@ class Mailer extends \Skeletor\Core\Mailer\Service\Mailer
         $this->send($emailParams);
     }
 
+    // @todo, might not be required
     public function sendRoundStartMailToDelegate($email)
     {
         $body = $this->render('roundStart', []);
@@ -60,6 +57,7 @@ class Mailer extends \Skeletor\Core\Mailer\Service\Mailer
         $this->send($emailParams);
     }
 
+    // @todo, might not be required
     public function sendDelegateRegisteredMail($email)
     {
         $body = $this->render('delegateRegistered', []);
@@ -78,6 +76,7 @@ class Mailer extends \Skeletor\Core\Mailer\Service\Mailer
         $this->send($emailParams);
     }
 
+    // @todo
     public function sendDonorRegisteredMail($email)
     {
         $body = $this->render('donorRegistered', [
@@ -100,67 +99,20 @@ class Mailer extends \Skeletor\Core\Mailer\Service\Mailer
         $this->send($emailParams);
     }
 
-    public function sendForgotPasswordMail($email, $token, $displayName, $userId)
+    public function sendDashboardMagicLinkMail(string $email, string $magicLinkUrl, string $displayName): void
     {
         $recipients = [
             new Recipient($email, $email),
         ];
-        $token = sprintf('$%s$%s', $userId, $token);
-        $resetUrl = sprintf('%s/login/resetPasswordForm/%s/', $this->config->offsetGet('adminUrl'), $token);
-        $body = $this->render('forgotPassword', [
+
+        $body = $this->render('magicLink', [
             'displayName' => $displayName,
-            'resetUrl' => $resetUrl,
+            'magicLinkUrl' => $magicLinkUrl,
             'baseUrl' => $this->config->offsetGet('baseUrl')
         ]);
-        $emailParams = (new \MailerSend\Helpers\Builder\EmailParams())
-            ->setFrom('info+no-reply@mrezasolidarnosti.org')
-            ->setFromName('Mreža solidarnosti')
-            ->setRecipients($recipients)
-            ->setSubject('Potvrda promene lozinke za Mrežu solidarnosti')
-            ->setHtml($body)
-            ->setReplyToName('Mreža solidarnosti');
+        $subject = "Vaš link za prijavu na Mrežu solidarnosti";
 
-
-        $this->send($emailParams);
-    }
-
-    protected function send($message)
-    {
-        try {
-            $response = $this->getMail()->email->send($message);
-        } catch (\Exception $e) {
-//            var_dump($e->getMessage());
-//            die();
-//            $this->logger->log(\Monolog\Level::Error,
-//                sprintf('Could not send mail %s: %s', $message->getSubject(), $e->getMessage()));
-        }
-    }
-
-    public function handle(\Monolog\LogRecord $record): bool
-    {
-        return $this->handleApplicationError($record);
-    }
-
-    public function handleApplicationError(LogRecord $record)
-    {
-        $body = $record->message . PHP_EOL .
-            $record->channel . PHP_EOL .
-            $record->datetime->format('y/m/d H:i:s') . PHP_EOL .
-            $record->level->getName() . PHP_EOL;
-        $recipients = [];
-        foreach ($this->config->mailer->recipients->errorNotice as $targetMail) {
-            $recipients[] = new Recipient($targetMail, $targetMail);
-        }
-        $emailParams = (new \MailerSend\Helpers\Builder\EmailParams())
-            ->setFrom('info+no-reply@mrezasolidarnosti.org')
-            ->setFromName('Mreža solidarnosti')
-            ->setRecipients($recipients)
-            ->setSubject(sprintf('%s application error !', $this->config->offsetGet('appName')))
-            ->setHtml($body)
-            ->setReplyToName('Mreža solidarnosti');
-        $this->send($emailParams);
-
-        return true;
+        $this->send($recipients, $subject, $body);
     }
 
 }

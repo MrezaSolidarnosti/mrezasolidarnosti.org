@@ -46,6 +46,11 @@ class Period
         $this->educators = new ArrayCollection();
     }
 
+    public function getLabel()
+    {
+        return sprintf('%d-%d-%s', $this->month, $this->year, $this->type);
+    }
+
     // @todo
     public function getChoiceLabel(): string
     {

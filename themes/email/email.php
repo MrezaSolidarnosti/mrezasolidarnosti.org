@@ -1,30 +1,25 @@
-<!DOCTYPE html>
-<html>
+<html lang="sr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
-    <title></title>
-    <style>
-        svg {
-            width:150px;
-            height:150px;
-        }
-    </style>
+
+    <title>Mreža solidarnosti</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, sans-serif;background-color:#efefef;">
+<body style="margin: 0; padding: 0;">
+<div style="background: #2700EC; padding: 20px;">
+    <img src="<?=$baseUrl?>/assets/image/logo-msp-email.jpg" style="width: 200px;">
+</div>
 
-<?=$this->section('content')?>
+<div style="padding: 10px 20px 20px 20px; background: #FFFFFF;">
+    <div style="margin: 24px 0;">
+        <?=$this->section('content')?>
+    </div>
 
-<p style="max-width:600px;padding:20px;margin:0 auto;color:#505050;">
-    Srdačan pozdrav,
-    <br>
-    <br>
-    <br>
-    <b>IT Srbija</b>
-    <br>
-    <br>
-    <a style="color:#3067b1;" href="https://mrezasolidarnosti.org" title="mrezasolidarnosti.org">mrezasolidarnosti.org</a>
-</p>
+    <div>
+        <div>Solidarno,</div>
+        <div><b>Mreža solidarnosti</b></div>
+    </div>
+</div>
 </body>
 </html>

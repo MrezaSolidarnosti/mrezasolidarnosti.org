@@ -23,23 +23,20 @@ $statusCollection = (new OptionCollection(new Option('1', 'New')))->fromArray($s
 $statusSelect = (new Select('status', $statusCollection, 'Status'));
 $name = (new Text('name', $data['model']?->name, 'Name'));
 $amount = (new \Skeletor\Form\InputTypes\Input\Number('amount', $data['model']?->amount, 'Amount'));
-$accountNumber = (new \Skeletor\Form\InputTypes\Input\Number('accountNumber', $data['model']?->accountNumber, 'Account number'));
+$accountNumber = (new \Skeletor\Form\InputTypes\Input\Text('accountNumber', $data['model']?->accountNumber, 'Account number'));
 $comment = (new \Skeletor\Form\InputTypes\TextArea\TextArea('comment', $data['model']?->comment, 'Comment'));
 $periodCollection = (new OptionCollection())->fromArray($data['periods'], $data['model']?->period->id);
 $periodSelect = (new Select('period', $periodCollection, 'Period'));
 
-
-
 $delegateSelect = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
     'createdBy',
-    '/user/tableHandler/',
-    'displayName',
+    '/delegate/tableHandler/',
+    'name',
     'id',
     'Created By',
     $data['model']?->createdBy?->id ?? null,
-    $data['model']?->createdBy?->displayName,
+    $data['model']?->createdBy?->name,
     'Search delegates...',
-    ['role' => 2]
 ))->required('Delegate is required');
 
 

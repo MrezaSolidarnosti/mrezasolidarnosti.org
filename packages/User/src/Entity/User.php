@@ -1,23 +1,20 @@
 <?php
 namespace Solidarity\User\Entity;
 
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Skeletor\Core\Behaviors\Entity\Timestampable;
-use Skeletor\User\Model\User as DtoModel;
-use Solidarity\Delegate\Entity\Delegate;
-use Solidarity\Educator\Entity\Educator;
+use Skeletor\Core\Security\Authentication\AuthenticatableInterface;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'user')]
-class User
+class User implements AuthenticatableInterface
 {
     use \Skeletor\Core\Entity\Timestampable;
 
     const ROLE_GUEST = 0;
     const ROLE_ADMIN = 1;
-    const ROLE_DELEGATE = 2;
+    const ROLE_STUFF = 2;
 
     const STATUS_INACTIVE = 0;
     const STATUS_ACTIVE = 1;
@@ -41,10 +38,6 @@ class User
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     public ?\DateTime $lastLogin;
 
-    #[ORM\OneToOne(targetEntity: Delegate::class, inversedBy: 'user', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[ORM\JoinColumn(name: 'delegate_id', referencedColumnName: 'id', nullable: true)]
-    public ?Delegate $delegate;
-
     protected $redirectPath = '/';
 
 //    #[ORM\ManyToOne(targetEntity: Tenant::class, fetch: 'EAGER')]
@@ -61,12 +54,7 @@ class User
 //        return $this->tenant;
 //    }
 
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    public function updateLoginInfo($ipv4, $lastLogin)
+    public function updateLoginInfo($ipv4, $lastLogin): void
     {
         $this->ipv4 = $ipv4;
         $this->lastLogin = $lastLogin;
@@ -77,7 +65,7 @@ class User
         $this->password = $password;
     }
 
-    public function getFirstName()
+    public function getFirstName(): ?string
     {
         return $this->firstName;
     }
@@ -85,7 +73,7 @@ class User
     /**
      * @return mixed
      */
-    public function getLastName()
+    public function getLastName(): ?string
     {
         return $this->lastName;
     }
@@ -106,7 +94,7 @@ class User
         return $this->lastLogin;
     }
 
-    public function getRedirectPath()
+    public function getRedirectPath(): string
     {
         return $this->redirectPath;
     }
@@ -123,7 +111,7 @@ class User
     {
         return array(
             self::ROLE_ADMIN => 'Admin',
-            self::ROLE_DELEGATE => 'Delegate',
+            self::ROLE_STUFF => 'Saradnik',
         );
     }
 
@@ -159,5 +147,31 @@ class User
     public function getPassword(): string
     {
         return $this->password;
+    }
+
+    // AuthenticatableInterface implementation
+    public function getAuthIdentifier(): string
+    {
+        return $this->email;
+    }
+
+    public function getAuthPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function getAuthRole(): int
+    {
+        return $this->role;
+    }
+
+    public function isActive(): bool
+    {
+        return (bool) $this->isActive;
+    }
+
+    public function supportsAuthenticator(string $authenticatorType): bool
+    {
+        return in_array($authenticatorType, ['password', 'magic_link']);
     }
 }

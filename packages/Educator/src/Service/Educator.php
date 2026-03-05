@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface as Logger;
 use Skeletor\User\Service\Session;
 use Solidarity\Educator\Filter\Educator as EducatorFilter;
 use Solidarity\Educator\Repository\PeriodRepository;
+use Solidarity\School\Service\School;
 use Solidarity\Transaction\Service\Round;
 use Tamtamchik\SimpleFlash\Flash;
 
@@ -21,9 +22,26 @@ class Educator extends TableView
      */
     public function __construct(
         EducatorRepository $repo, Session $user, Logger $logger, EducatorFilter $filter, private \DateTime $dt,
-        private Round      $round, private PeriodRepository $roundRepository, private Delegate $delegate
+        private Period $period, private School $school, private Delegate $delegate
     ) {
         parent::__construct($repo, $user, $logger, $filter);
+    }
+
+    public function fetchTableData(
+        $search, $filter, $offset, $limit, $order, $uncountableFilter = null, $idsToInclude = [], $idsToExclude = []
+    ) {
+        // delegate can only see educators from assigned school
+        if ($this->getUserSession()->getLoggedInEntityType() === 'delegate') {
+//            $delegate = $this->delegate->getById($this->getUserSession()->getLoggedInUserId());
+//            $uncountableFilter['school'] = $delegate->school->id;
+        }
+
+        $items = $this->repo->fetchTableData($search, $filter, $offset, $limit, $order, $uncountableFilter, $idsToInclude, $idsToExclude);
+        return [
+            'count' => $items['count'],
+            'entities' => $this->prepareEntities($items['items']),
+            'countColumnData' => $items['countColumnData']
+        ];
     }
 
     /**
@@ -74,9 +92,7 @@ class Educator extends TableView
         foreach ($entities as $educator) {
             // @TODO make sure all educators have delegate
             $delegateVerified = 'No';
-//            var_dump($educator->createdBy->delegate->id);
-//            die();
-            if ($educator->createdBy->delegate->status === \Solidarity\Delegate\Entity\Delegate::STATUS_VERIFIED) {
+            if ($educator->createdBy->status === \Solidarity\Delegate\Entity\Delegate::STATUS_VERIFIED) {
                 $delegateVerified = 'Yes';
             }
             $itemData = [
@@ -90,7 +106,7 @@ class Educator extends TableView
                 'school' => $educator->school->name,
                 'city' => $educator->school->city->name,
                 'delegateVerified' => $delegateVerified,
-//                'slipLink' => $educator->slipLink,
+                'period' => $educator->period->getLabel(),
                 'accountNumber' => $educator->accountNumber,
                 'createdAt' => $educator->getCreatedAt()->format('d.m.Y'),
             ];
@@ -104,17 +120,16 @@ class Educator extends TableView
 
     public function compileTableColumns()
     {
-
         $columnDefinitions = [
-            ['name' => 'name', 'label' => 'Name'],
-            ['name' => 'delegateVerified', 'label' => 'Delegate verified'],
-            ['name' => 'school', 'label' => 'School name'],
-            ['name' => 'amount', 'label' => 'Amount', 'rangeFilter' => ['type' => 'number']],
-            ['name' => 'accountNumber', 'label' => 'Account Number'],
-            ['name' => 'city', 'label' => 'City'],
+            ['name' => 'name', 'label' => 'Ime'],
+            ['name' => 'period', 'label' => 'Period', 'filterData' => $this->period->getFilterData()],
+            ['name' => 'amount', 'label' => 'Iznos', 'rangeFilter' => ['type' => 'number']],
+            ['name' => 'accountNumber', 'label' => 'Br računa'],
+            ['name' => 'school', 'label' => 'Ime škole', 'filterData' => $this->school->getFilterData()],
+            ['name' => 'city', 'label' => 'Grad'],
+            ['name' => 'delegateVerified', 'label' => 'Delegat verifikovan'],
             ['name' => 'status', 'label' => 'Status', 'filterData' => \Solidarity\Educator\Entity\Educator::getHrStatuses()],
-//            ['name' => 'slipLink', 'label' => 'slipLink'],
-            ['name' => 'createdAt', 'label' => 'Created at'],
+            ['name' => 'createdAt', 'label' => 'Kreirano u'],
         ];
 
         return $columnDefinitions;

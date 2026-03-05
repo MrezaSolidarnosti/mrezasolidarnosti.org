@@ -6,15 +6,17 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Skeletor\Core\Entity\Timestampable;
+use Solidarity\Delegate\Entity\Delegate;
 use Solidarity\User\Entity\User;
 use Solidarity\School\Entity\School;
 use Solidarity\Transaction\Entity\Transaction;
 
 #[ORM\Entity]
-#[ORM\Index(name: 'idx_period', columns: ['period_id', 'school_id', 'accountNumber'])]
+//#[ORM\Index(name: 'idx_period', columns: ['period_id', 'school_id', 'accountNumber'])]
+#[ORM\Index(name: 'idx_period', columns: ['period_id', 'accountNumber'])]
 // @TODO check
-#[ORM\UniqueConstraint(name: 'idx_period', columns: ['period_id', 'school_id', 'accountNumber'])]
-#[ORM\Index(name: 'idx_create_transaction', columns: ['period_id', 'status'])]
+#[ORM\UniqueConstraint(name: 'idx_period_account_unq', columns: ['period_id', 'accountNumber'])]
+//#[ORM\Index(name: 'idx_create_transaction', columns: ['period_id', 'status'])]
 #[ORM\Index(name: 'idx_status', columns: ['status'])]
 #[ORM\Table(name: 'educator')]
 class Educator
@@ -54,7 +56,7 @@ class Educator
 
     #[ORM\ManyToOne(inversedBy: 'damagedEducators')]
     #[ORM\JoinColumn]
-    public ?User $createdBy = null;
+    public ?Delegate $createdBy = null;
 
     #[ORM\ManyToOne(inversedBy: 'damagedEducators')]
     #[ORM\JoinColumn(nullable: false)]

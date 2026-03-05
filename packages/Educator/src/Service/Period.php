@@ -28,7 +28,8 @@ class Period extends TableView
     {
         $periods = [];
         foreach ($this->repo->fetchAll(['active' => 1]) as $period) {
-            $periods[$period->id] = sprintf('%d-%d-%s', $period->month, $period->year, $period->type);
+//            $periods[$period->id] = sprintf('%d-%d-%s', $period->month, $period->year, $period->type);
+            $periods[$period->id] = $period->getLabel();
         }
 
         return $periods;

@@ -38,40 +38,13 @@ class EducatorController extends AjaxCrudController
 //        $this->tableViewConfig['createButton'] = false;
     }
 
+
+
     public function form(): Response
     {
         $this->formData['schools'] = $this->school->getFilterData();
         $this->formData['periods'] = $this->period->getFilterData();
         return parent::form();
-    }
-
-    public function prepRound()
-    {
-        $round = $this->round->getActiveRound();
-        foreach ($this->service->getEntities() as $educator) {
-            $this->service->setRoundAmount($educator, $round);
-        }
-        die('done');
-    }
-
-    public function addSchoolRelation()
-    {
-        foreach ($this->service->getEntities() as $educator) {
-            if ($educator->school) {
-                continue;
-            }
-            $school = $this->school->getByNameAndCity(trim($educator->schoolName), trim($educator->city));
-            if (!$school) {
-                var_dump($educator->schoolName);
-                var_dump($educator->city);
-
-                die('school not found');
-                $failedData[] = $educatorData;
-                continue;
-            }
-            $this->service->updateField('school', $school->id, $educator->id);
-        }
-        die('done');
     }
 
     public function import()

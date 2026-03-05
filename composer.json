@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "dj_avolak/skeletor": "5.x-dev",
+    "dj_avolak/skeletor": "6.x-dev",
     "symfony/string": "^7",
     "laminas/laminas-session": "^2.21.0",
     "nesbot/carbon": "*",

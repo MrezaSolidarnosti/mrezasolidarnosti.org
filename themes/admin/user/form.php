@@ -36,14 +36,14 @@ $lastName = (new Text('lastName', $data['model']?->lastName, 'Last Name'))
 $displayName = (new Text('displayName', $data['model']?->displayName, 'Display Name'))
     ->required('Display Name is required')
     ->minLength(4, 'Display Name must be at least 4 characters');
-$password = (new Password('password', '', 'Password', id: 'password'))
-    ->required('Password is required', $action === 'Create')
-    ->minLength(6, 'Password must be at least 6 characters', $action === 'Create')
-    ->matches('confirmPassword', 'Passwords do not match');
-$confirmPassword = (new Password('password2', '', 'Confirm Password', id: 'confirmPassword'))
-    ->required('Confirm Password is required', $action === 'Create')
-    ->minLength(6, 'Confirm Password must be at least 6 characters', $action === 'Create')
-    ->matches('password', 'Passwords do not match');
+//$password = (new Password('password', '', 'Password', id: 'password'))
+//    ->required('Password is required', $action === 'Create')
+//    ->minLength(6, 'Password must be at least 6 characters', $action === 'Create')
+//    ->matches('confirmPassword', 'Passwords do not match');
+//$confirmPassword = (new Password('password2', '', 'Confirm Password', id: 'confirmPassword'))
+//    ->required('Confirm Password is required', $action === 'Create')
+//    ->minLength(6, 'Confirm Password must be at least 6 characters', $action === 'Create')
+//    ->matches('password', 'Passwords do not match');
 $rolesSelect = (new Select('role', $rolesCollection, 'Role'));
 //    ->required('Role is required', $rolesCollection->getDefaultOption()->getValue());
 $statusSelect = (new Select('isActive', $statusCollection, 'Status'));
@@ -51,13 +51,11 @@ $statusSelect = (new Select('isActive', $statusCollection, 'Status'));
 
 $groupOne = (new InputGroup())
     ->addInput($email)
-    ->addInput($firstName)
-    ->addInput($lastName);
+    ->addInput($firstName);
 
 $groupTwo = (new InputGroup())
     ->addInput($displayName)
-    ->addInput($password)
-    ->addInput($confirmPassword);
+    ->addInput($lastName);
 
 $groupThree = (new InputGroup())
     ->addInput($rolesSelect)
@@ -68,40 +66,7 @@ $basicInfoTab = (new Tab('Basic Info'))
     ->addInputGroup($groupTwo)
     ->addInputGroup($groupThree);
 
-$schoolSelect = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
-    'delegate[school][id]',
-    '/school/tableHandler/',
-    'name',
-    'id',
-    'School',
-    $data['model']?->delegate?->school?->id ?? null,
-    $data['model']?->delegate?->school?->name,
-    'Search schools...',
-));
-//    ->required('School is required');
-$delegateStatuses = \Solidarity\Delegate\Entity\Delegate::getHrStatuses();
-$delegateStatusesCollection = (new OptionCollection())->fromArray($delegateStatuses, $data['model']?->delegate?->status);
-$delegateStatusesSelect = (new Select('delegate[status]', $delegateStatusesCollection, 'Status'));
-$phone = (new Text('delegate[phone]', $data['model']?->delegate?->phone, 'Phone'));
-//    ->required('Phone is required');
-$verifiedBy = (new Text('delegate[verifiedBy]', $data['model']?->delegate?->verifiedBy, 'Verified By'));
-$comment = (new \Skeletor\Form\InputTypes\TextArea\TextArea('delegate[comment]', $data['model']?->delegate?->comment, 'Comment'));
-$adminComment = (new \Skeletor\Form\InputTypes\TextArea\TextArea('delegate[adminComment]', $data['model']?->delegate?->adminComment, 'Admin comment'));
-
-$delegateTab = (new Tab('Delegate Info'))
-    ->addInputGroup((new InputGroup())->addInput($delegateStatusesSelect))
-    ->addInputGroup((new InputGroup())->addInput($phone))
-    ->addInputGroup((new InputGroup())->addInput($schoolSelect))
-    ->addInputGroup((new InputGroup())->addInput($verifiedBy))
-    ->addInputGroup((new InputGroup(width: InputGroupWidth::HALF_WIDTH))->addInput($comment))
-    ->addInputGroup((new InputGroup(width: InputGroupWidth::HALF_WIDTH))->addInput($adminComment));
-
-
-
 $form->addTab($basicInfoTab);
-if ($data['model']?->role === User::ROLE_DELEGATE) {
-    $form->addTab($delegateTab);
-}
 
 $formRenderer = new TabbedFormRenderer($form, $data['formTitle']);
 ?>

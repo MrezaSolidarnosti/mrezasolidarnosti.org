@@ -2,14 +2,19 @@
 namespace Solidarity\Delegate\Repository;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Skeletor\Core\Mapper\NotFoundException;
+use Skeletor\Core\Repository\LoginRepoTrait;
+use Skeletor\Login\Repository\LoginRepositoryInterface;
 use Solidarity\Delegate\Entity\Delegate;
 use Solidarity\Delegate\Factory\DelegateFactory;
 use Skeletor\Core\TableView\Repository\TableViewRepository;
 use Solidarity\School\Entity\School;
 use Solidarity\School\Entity\SchoolType;
 
-class DelegateRepository extends TableViewRepository
+class DelegateRepository extends TableViewRepository implements LoginRepositoryInterface
 {
+    use LoginRepoTrait;
+
     const ENTITY = Delegate::class;
     const FACTORY = DelegateFactory::class;
 
@@ -38,7 +43,8 @@ SELECT id FROM educator e WHERE e.schoolid = d.schoolid
 
     public function getSearchableColumns(): array
     {
-        return ['a.email', 'a.name', 'a.schoolName', 'a.comment', 'a.verifiedBy', 'a.city'];
+//        return ['a.email', 'a.name', 'a.schoolName', 'a.comment', 'a.verifiedBy', 'a.city'];
+        return ['a.email', 'a.name', 'a.comment', 'a.verifiedBy'];
     }
 
 	public function getAllSchoolTypes(): array {
@@ -77,4 +83,5 @@ SELECT id FROM educator e WHERE e.schoolid = d.schoolid
 
 		return $results;
 	}
+
 }

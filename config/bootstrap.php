@@ -8,6 +8,9 @@ use Monolog\Handler\BrowserConsoleHandler;
 use Monolog\Handler\StreamHandler;
 use Psr\Log\LoggerInterface as Logger;
 use Laminas\Config\Config;
+use Skeletor\Core\Mailer\Service\MailerInterface;
+use Skeletor\Core\Security\Authorization\AuthorizationService;
+use Skeletor\Core\Security\EntityRegistry;
 use Tamtamchik\SimpleFlash\Flash;
 use Skeletor\Core\Acl\Acl;
 use \League\Flysystem\Filesystem;
@@ -21,6 +24,31 @@ $containerBuilder = new \DI\ContainerBuilder;
 $container = $containerBuilder
 //    ->addDefinitions(require_once __DIR__ . '/config_web.php')
     ->build();
+
+$container->set(ManagerInterface::class, function() use ($container) {
+    // Get config values
+    $config = $container->get(Config::class);
+    $redisHost = array_keys($config->redis->hosts->toArray())[0];
+    $redisPort = array_values($config->redis->hosts->toArray())[0];
+    $sessionName = str_replace(' ', '_', $config->appName . getenv('APPLICATION'));
+
+    // Set session name via ini_set BEFORE creating SessionConfig
+    ini_set('session.name', $sessionName);
+    ini_set('session.gc_maxlifetime', (string)(60*60*24));
+    ini_set('session.save_handler', 'redis');
+    ini_set('session.save_path', sprintf('tcp://%s:%s?weight=1&timeout=1', $redisHost, $redisPort));
+
+    $sessionConfig = new SessionConfig();
+    $sessionConfig->setOptions([
+        'remember_me_seconds' => 2592000, //2592000, // 30 * 24 * 60 * 60 = 30 days
+        'use_cookies'         => true,
+        'cookie_lifetime'     => 30 * 24 * 60 * 60,
+    ]);
+    $session = new SessionManager($sessionConfig);
+    $session->start();
+
+    return $session;
+});
 
 $container->set(\Skeletor\ContentEditor\Contracts\BlockParserFactoryInterface::class, function() use ($container) {
     $blockParserFactory =  new \Skeletor\ContentEditor\Factory\BlockParserFactory(
@@ -39,18 +67,6 @@ $container->set(\Skeletor\ContentEditor\Contracts\ContentEditorParserInterface::
 //    $parser->registerCustomData('customName', 'blockName or empty for all blocks');
     return $parser;
 });
-
-$container->set(\MailerSend\MailerSend::class, function() use ($container) {
-    return new \MailerSend\MailerSend(['api_key' => $container->get(Config::class)->mailer->server->mailersend]);
-});
-
-$container->set(\Skeletor\Core\Mailer\Service\Mailer::class, function() use ($container) {
-    return new \Solidarity\Mailer\Service\Mailer($container->get(\MailerSend\MailerSend::class), $container->get(Laminas\Config\Config::class), $container->get(Engine::class));
-});
-
-//$container->set(\Solidarity\Mailer\Service\Mailer::class, function() use ($container) {
-//    return new \Solidarity\Mailer\Service\Mailer($container->get(\MailerSend\MailerSend::class), $container->get(Laminas\Config\Config::class), $container->get(Engine::class));
-//});
 
 $container->set(\Skeletor\ContentEditor\Contracts\BlockViewInterface::class, function() use ($container) {
     return new \Skeletor\ContentEditor\View();
@@ -128,39 +144,21 @@ if (getenv('APPLICATION') === 'backend') {
             $container->get(Config::class),
             $container->get(Flash::class),
             $container->get(Acl::class),
-            $container->get(\Skeletor\User\Repository\UserRepositoryInterface::class)
+            $container->get(\Skeletor\Core\Security\EntityRegistry::class),
+            $container->get(AuthorizationService::class),
+            true  // Enable voter-based authorization
         );
     });
 }
 
 $container->set(Config::class, function() use ($container) {
-    $config = new Config(include(APP_PATH . "/config/config.php"));
-    $config = $config->merge(new Config(include(APP_PATH . "/config/config-local.php")));
+    $config = new Config(include(APP_PATH . "/config/config.php"), true);
+    $config = $config->merge(new Config(include(APP_PATH . "/config/config-local.php"), true));
     if (file_exists(APP_PATH . sprintf("/config/%s/config-local.php", getenv('APPLICATION')))) {
-        $config = $config->merge(new Config(include(APP_PATH . sprintf("/config/%s/config-local.php", getenv('APPLICATION')))));
+        $config = $config->merge(new Config(include(APP_PATH . sprintf("/config/%s/config-local.php", getenv('APPLICATION'))), true));
     }
 
     return $config;
-});
-
-$container->set(ManagerInterface::class, function() use ($container) {
-    // server should keep session data for AT LEAST
-    ini_set('session.gc_maxlifetime', 60*60*24);
-    $sessionConfig = new SessionConfig();
-    $redisHost = array_keys($container->get(Config::class)->redis->hosts->toArray())[0];
-    $redisPort = array_values($container->get(Config::class)->redis->hosts->toArray())[0];
-    $sessionConfig->setOptions([
-        'remember_me_seconds' => 2592000, //2592000, // 30 * 24 * 60 * 60 = 30 days
-        'use_cookies'         => true,
-        'name'                => $container->get(Config::class)->appName . getenv('APPLICATION'),
-        'cookie_lifetime'     => 30 * 24 * 60 * 60,
-        'phpSaveHandler'      => 'redis',
-        'savePath'            => sprintf('tcp://%s:%s?weight=1&timeout=1', $redisHost, $redisPort),
-    ]);
-    $session = new SessionManager($sessionConfig);
-    $session->start();
-
-    return $session;
 });
 
 $container->set(\Skeletor\Core\Action\Web\NotFoundInterface::class, function() use ($container) {
@@ -194,7 +192,7 @@ $container->set(Logger::class, function() use ($container) {
     $env = strtolower(getenv('APPLICATION_ENV'));
     if ($env && strtolower($env) === 'production') {
         $mailHandler = new \Skeletor\Core\Mailer\Service\MonologHandler(\Monolog\Level::Error, true);
-        $mailHandler->setMail($container->get(\Skeletor\Core\Mailer\Service\Mailer::class));
+        $mailHandler->setMail($container->get(\Skeletor\Core\Mailer\Service\PhpMailer::class));
         $logger->pushHandler($mailHandler);
     }
 
@@ -228,7 +226,37 @@ $container->set(Flash::class, function () use ($container) {
     return $flash;
 });
 
+$container->set(\MailerSend\MailerSend::class, function() use ($container) {
+    return new \MailerSend\MailerSend(['api_key' => $container->get(Config::class)->mailer->server->mailersend->apiKey]);
+});
+
+$container->set(MailerInterface::class, function() use ($container) {
+    return $container->get(\Skeletor\Core\Mailer\Service\MailerSendMailer::class);
+});
+
 if (getenv('APPLICATION') === 'backend') {
+    // Configure Permission Registry for voter-based authorization
+    $container->set(\Skeletor\Core\Security\Authorization\PermissionRegistry::class, function() use ($container) {
+        $config = require APP_PATH . '/config/backend/permissions.php';
+        return new \Skeletor\Core\Security\Authorization\PermissionRegistry($config);
+    });
+
+    $container->set(EntityRegistry::class, function() use ($container) {
+        $registry = new EntityRegistry();
+        $registry->register(
+            'user',
+            \Solidarity\User\Entity\User::class,
+            $container->get(\Solidarity\User\Repository\UserRepository::class)
+        );
+        $registry->register(
+            'delegate',
+            \Solidarity\Delegate\Entity\Delegate::class,
+            $container->get(\Solidarity\Delegate\Repository\DelegateRepository::class)
+        );
+
+        return $registry;
+    });
+
     $container->set(\Skeletor\Login\Provider\ProviderInterface::class, function() use ($container) {
         return new \Skeletor\Login\Provider\DbProvider(
             $container->get(\Skeletor\User\Repository\UserRepositoryInterface::class)

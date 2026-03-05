@@ -11,11 +11,8 @@ use Skeletor\Core\Validator\ValidatorException;
 class Delegate implements FilterInterface
 {
 
-    public function __construct(
-        private \Solidarity\Delegate\Validator\Delegate $validator
-    )
-    {
-    }
+    public function __construct(private \Solidarity\Delegate\Validator\Delegate $validator)
+    {}
 
     public function getErrors()
     {
@@ -28,21 +25,16 @@ class Delegate implements FilterInterface
         $data = [
             'id' => (isset($postData['id'])) ? $int->filter($postData['id']) : null,
             'name' => Transliterator::toLatin($postData['name']),
-            'email' => $postData['email'],
-            'city' => Transliterator::toLatin($postData['city']),
+            'email' => $postData['email'] ?? null,
             'phone' => $postData['phone'],
             'verifiedBy' => isset($postData['verifiedBy'])
                 ? Transliterator::toLatin($postData['verifiedBy'])
                 : '',
-            'count' => $postData['count'],
-            'formLinkSent' => (isset($postData['formLinkSent'])) ? $postData['formLinkSent'] : 0,
-            'countBlocking' => $postData['countBlocking'],
             'school' => $postData['school'],
-            'schoolType' => Transliterator::toLatin($postData['schoolType']),
-            'schoolName' => Transliterator::toLatin($postData['schoolName']),
             'comment' => Transliterator::toLatin($postData['comment'] ?? ''),
+            'adminComment' => Transliterator::toLatin($postData['adminComment'] ?? ''),
             'status' => (isset($postData['status'])) ? $postData['status'] : 1,
-//            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME],
+            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME],
         ];
         if (!$this->validator->isValid($data)) {
             throw new ValidatorException();

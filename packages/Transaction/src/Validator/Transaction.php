@@ -42,6 +42,8 @@ class Transaction implements ValidatorInterface
     {
         $valid = true;
 
+        // @TODO verify that donor has entered more than entered amount in the form
+
         if (!$this->csrf->validate($data)) {
             $this->messages['general'][] = 'Invalid form key.';
             $valid = false;

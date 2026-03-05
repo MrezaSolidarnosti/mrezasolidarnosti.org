@@ -3,6 +3,7 @@
 namespace Solidarity\Educator\Validator;
 
 use Skeletor\Core\Validator\ValidatorInterface;
+use Solidarity\Educator\Repository\EducatorRepository;
 use Volnix\CSRF\CSRF;
 
 /**
@@ -13,12 +14,6 @@ use Volnix\CSRF\CSRF;
  */
 class Educator implements ValidatorInterface
 {
-
-    /**
-     * @var CSRF
-     */
-    private $csrf;
-
     private $messages = [];
 
     /**
@@ -26,10 +21,8 @@ class Educator implements ValidatorInterface
      *
      * @param CSRF $csrf
      */
-    public function __construct(CSRF $csrf)
-    {
-        $this->csrf = $csrf;
-    }
+    public function __construct(private CSRF $csrf, private EducatorRepository $educatorRepo)
+    {}
 
     /**
      * Validates provided data, and sets errors with Flash in session.
@@ -46,11 +39,23 @@ class Educator implements ValidatorInterface
             $this->messages['accountNumber'][] = 'Uneti broj žiro računa nije ispravan.';
             $valid = false;
         }
-
-//        if (!$this->csrf->validate($data)) {
-//            $this->messages['general'][] = 'Stranica je istekla, probajte ponovo.';
-//            $valid = false;
-//        }
+        $existing = $this->educatorRepo->fetchAll(['accountNumber' => $data['accountNumber'], 'period' => $data['period']]);
+        if ($existing) {
+            foreach ($existing as $educator) {
+                if ($educator->id !== $data['id']) {
+                    $this->messages['accountNumber'][] = 'Uneti broj žiro računa je već korišćen za ovaj period.';
+                    $valid = false;
+                }
+            }
+        }
+        if ($data['amount'] > \Solidarity\Educator\Entity\Educator::MONTHLY_LIMIT) {
+            $this->messages['amount'][] = 'Uneti iznos je veći od dozvoljenog : ' . \Solidarity\Educator\Entity\Educator::MONTHLY_LIMIT;
+            $valid = false;
+        }
+        if (!$this->csrf->validate($data)) {
+            $this->messages['general'][] = 'Stranica je istekla, probajte ponovo.';
+            $valid = false;
+        }
 
         return $valid;
     }
@@ -70,12 +75,11 @@ class Educator implements ValidatorInterface
      *
      * @return bool
      */
-    private function validateAccountNumber(string $accountNumber) : bool
+    private function validateAccountNumber(string $accountNumber): bool
     {
-        $validatedNumber = $this->mod97_2($accountNumber);
-        $controlNumber = $this->mod97(substr($validatedNumber, 0,-2));
+        $controlNumber = $this->mod97(substr($accountNumber, 0, -2));
 
-        return $controlNumber == substr($accountNumber, -2);
+        return str_pad($controlNumber, 2, '0', STR_PAD_LEFT) === substr($accountNumber, -2);
     }
 
     /**
@@ -87,8 +91,8 @@ class Educator implements ValidatorInterface
     private function mod97(string $accountNumber, int $base = 100) : int
     {
         $controlNumber = 0;
-        for ($x = strlen($accountNumber)-1; !($x < 0); $x--) {
-            $num = (int)$accountNumber[$x];
+        for ($x = strlen($accountNumber) - 1; $x >= 0; --$x) {
+            $num = (int) $accountNumber[$x];
             $controlNumber = ($controlNumber + ($base * $num)) % 97;
             $base = ($base * 10) % 97;
         }
@@ -96,6 +100,7 @@ class Educator implements ValidatorInterface
         return 98 - $controlNumber;
     }
 
+    // @TODO test this, might have exact validation
     function mod97_2($accountNumber) {
         $form_input = $accountNumber;
         $snum = "";

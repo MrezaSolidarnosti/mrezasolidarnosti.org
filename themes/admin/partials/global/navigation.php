@@ -19,7 +19,7 @@
                 </svg>
                       <span><?=$this->t('No results')?></span>
             </span>
-
+    <?php if ($loggedInEntityType === 'user'): ?>
         <div class="item" data-href="/donor/view/">
             <span class="tooltip"><?=$this->t('Donors')?></span>
             <span class="itemAnchor">
@@ -29,7 +29,9 @@
                 <?=$this->t('Donors')?>
             </span>
         </div>
-        <div class="item" data-href="/user/view/?role=2">
+    <?php endif; ?>
+    <?php if (in_array($loggedInEntityType, ['delegate', 'user'])): ?>
+        <div class="item" data-href="/delegate/view/">
             <span class="tooltip"><?=$this->t('Delegates')?></span>
             <span class="itemAnchor">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
@@ -38,9 +40,7 @@
                 <?=$this->t('Delegates')?>
             </span>
         </div>
-
-
-        <div class="item" data-href="/educator/view/">
+       <div class="item" data-href="/educator/view/">
             <span class="tooltip"><?=$this->t('Educator')?></span>
             <span class="itemAnchor">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
@@ -49,7 +49,6 @@
                     <?=$this->t('Educator')?>
             </span>
         </div>
-
         <div class="item" data-href="/transaction/view/">
             <span class="tooltip"><?=$this->t('Transactions')?></span>
             <span class="itemAnchor">
@@ -59,7 +58,8 @@
                     <?=$this->t('Transactions')?>
             </span>
         </div>
-
+    <?php endif; ?>
+    <?php if ($loggedInEntityType === 'user'): ?>
         <div class="item" data-href="/school/view/">
             <span class="tooltip"><?=$this->t('Schools')?></span>
             <span class="itemAnchor">
@@ -118,6 +118,7 @@
             </span>
         </div>
         <?php endif; ?>
+    <?php endif; ?>
     </div>
     <div class="line"></div>
     <div id="navigationMiscellaneous">

@@ -41,8 +41,8 @@ class TransactionImportController extends AjaxCrudController
      */
     public function __construct(
         TransactionImport $service, Session $session, Config $config, Flash $flash, Engine $template,
-        private Donor $donor, private EducatorImport $educator, private Round $round,
-        private Mailer $mailer, private \Solidarity\Educator\Filter\Educator $educatorFilter, private Delegate $delegate
+        private Donor     $donor, private EducatorImport $educator, private Round $round,
+        private Mailer    $mailer, private \Solidarity\Educator\Filter\Educator $educatorFilter, private Delegate $delegate
     ) {
         parent::__construct($service, $session, $config, $flash, $template);
         $this->tableViewConfig['createButton'] = false;

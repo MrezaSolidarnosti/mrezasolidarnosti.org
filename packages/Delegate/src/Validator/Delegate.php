@@ -45,32 +45,32 @@ class Delegate implements ValidatorInterface
     public function isValid(array $data): bool
     {
         $valid = true;
-        $emailValidator = new EmailAddress();
-        if (!$emailValidator->isValid($data['email'])) {
+        if ($data['email'] && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $this->messages['general'][] = 'Uneta email adresa nije ispravna.' . $data['email'];
             $valid = false;
         }
 
         if (!isset($data['id'])) {
-            $existingDelegates = $this->delegateRepository->fetchAll([
-                'schoolName' => $data['schoolName'],
-                'schoolType' => $data['schoolType'],
-                'city' => $data['city'],
-            ]);
-            if (count($existingDelegates) > 0) {
-                if ($existingDelegates[0]->email !== $data['email']) {
-                    $this->messages['email'][] = 'Mesto delegata za vašu školu je zauzeto.';
-                } else {
-                    $this->messages['email'][] = 'Već ste prijavljeni na mrežu solidarnosti.';
-                }
-                $valid = false;
-            }
+            // @TODO check if school is taken
+//            $existingDelegates = $this->delegateRepository->fetchAll([
+//                'schoolName' => $data['schoolName'],
+//                'schoolType' => $data['schoolType'],
+//                'city' => $data['city'],
+//            ]);
+//            if (count($existingDelegates) > 0) {
+//                if ($existingDelegates[0]->email !== $data['email']) {
+//                    $this->messages['email'][] = 'Mesto delegata za vašu školu je zauzeto.';
+//                } else {
+//                    $this->messages['email'][] = 'Već ste prijavljeni na mrežu solidarnosti.';
+//                }
+//                $valid = false;
+//            }
         }
 
-//        if (!$this->csrf->validate($data)) {
-//            $this->messages['general'][] = 'Stranica je istekla, probajte ponovo.';
-//            $valid = false;
-//        }
+        if (!$this->csrf->validate($data)) {
+            $this->messages['general'][] = 'Stranica je istekla, probajte ponovo.';
+            $valid = false;
+        }
 
         return $valid;
     }

@@ -2,12 +2,11 @@
 
 $guest = [
     '/',
-    '/fetchExchangeRate/',
-    '/invoice-recurring/createInvoices/',
     '/login/loginForm/',
-    '/login/forgotPassword*',
-    '/login/login/',
-    '/login/resetPassword*',
+    '/login/*/magicLinkForm/',
+    '/login/*/requestMagicLink/',
+    '/login/*/verifyMagicLink/',
+    '/login/*/verifyMagicLink/',
     '/cron/*',
 ];
 
@@ -33,7 +32,8 @@ $level2 = [
     '/school/*',
     '/schoolType/*',
     '/city/*',
-
+    '/user/view/',
+    '/user/tableHandler/',
 
     '/user/update/*',
     '/login/logout/',
@@ -54,6 +54,13 @@ $level1 = [
     '/activity/*',
 ];
 
+// Delegate permissions (role 10)
+$delegate = [
+    '/delegate/view/*',
+    '/delegate/update/*',
+    '/login/logout/',
+];
+
 //can also see everything level2 can see
 $level1 = array_merge($level2, $level1);
 
@@ -61,4 +68,5 @@ return [
     0 => $guest,
     1 => $level1,
     2 => $level2,
+    10 => $delegate,
 ];
