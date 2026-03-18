@@ -22,9 +22,9 @@ sudo apt-get install -y zip unzip imagemagick
 sudo apt-get install -y nginx
 sudo apt-get install -y curl git redis-server
 sudo apt-get install -y software-properties-common python-software-properties xpdf
-sudo apt-get install -y php8.3-common php8.3-cli php8.3-fpm
-sudo apt-get install -y php8.3-{bz2,curl,mysql,readline,xml,gd,dev,mbstring,opcache,zip,xsl,dom,intl,redis,igbinary}
-sudo apt-get install -y php8.3-{xdebug,imagick,mcrypt}
+sudo apt-get install -y php8.4-common php8.4-cli php8.4-fpm
+sudo apt-get install -y php8.4-{bz2,curl,mysql,readline,xml,gd,dev,mbstring,opcache,zip,xsl,dom,intl,redis,igbinary}
+sudo apt-get install -y php8.4-{xdebug,imagick,mcrypt}
 
 cd /vagrant/
 
@@ -70,7 +70,7 @@ sudo bash -c "echo 'server {
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
         fastcgi_param APPLICATION_ENV development;
-        fastcgi_param APPLICATION backend;
+        fastcgi_param APPLICATION frontend;
     }
 }' > /etc/nginx/sites-available/solidarity.local"
 
@@ -81,7 +81,7 @@ sudo bash -c "echo 'server {
     sendfile off;
     root /vagrant/public;
     index index.php;
-    server_name solidforms.local;
+    server_name solidarityadmin.local;
     location / {
          try_files \$uri \$uri/ /index.php?\$args;
     }
@@ -105,11 +105,11 @@ sudo bash -c "echo 'server {
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
         fastcgi_param APPLICATION_ENV development;
-        fastcgi_param APPLICATION frontend;
+        fastcgi_param APPLICATION backend;
     }
-}' > /etc/nginx/sites-available/solidforms.local"
+}' > /etc/nginx/sites-available/solidarityadmin.local"
 
-sudo ln -s /etc/nginx/sites-available/solidforms.local /etc/nginx/sites-enabled/solidforms.local
+sudo ln -s /etc/nginx/sites-available/solidarityadmin.local /etc/nginx/sites-enabled/solidarityadmin.local
 sudo service nginx restart
 
 echo 'run composer install ...'
@@ -124,5 +124,3 @@ echo 'constants set.'
 echo 'start db migration.'
 php bin/doctrine orm:schema-tool:update --complete --force --dump-sql
 echo 'db migration done.'
-
-mysql -u root -prootpass  -e "INSERT INTO solid.user (firstName, lastName, email, password, role, isActive, displayName, id) VALUES ('test', 'test', 'test@example.com', '\$2y\$10\$GGArVO/7.xPDg6D5Kl6GHeELUg2Dnod68ynkFaZ7R2Vfx/K1oZ96O', '1', '1', 'test', '3');"
