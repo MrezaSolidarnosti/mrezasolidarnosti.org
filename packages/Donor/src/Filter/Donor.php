@@ -26,14 +26,13 @@ class Donor implements FilterInterface
         $alnum = new Alnum(true);
         $int = new ToInt();
 
+        //$postData['paymentMethods']
         $data = [
             'id' => (isset($postData['id'])) ? $int->filter($postData['id']) : null,
-            'amount' => $int->filter($postData['amount']),
             'email' => $postData['email'],
             'firstName' => $postData['firstName'],
             'lastName' => $postData['lastName'],
             'wantsToDonateTo' => $postData['wantsToDonateTo'],
-            'monthly' => $postData['monthly'],
             'comment' => $postData['comment'],
             'isActive' => $postData['isActive'],
             'projects' => $postData['projects'],

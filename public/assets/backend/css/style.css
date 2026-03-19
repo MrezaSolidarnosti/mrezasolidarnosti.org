@@ -275,4 +275,37 @@ form:has(.selectedService) .fullWidth:has(#totalWithoutVAT) .inputContainer {
   display: none;
 }
 
+#paymentMethodsDonor {
+  grid-column: 1/-1;
+}
+#paymentMethodsDonor #addPaymentMethodDonor {
+  margin-top: 0;
+}
+#paymentMethodsDonor #paymentMethodsDonorList {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+#paymentMethodsDonor #paymentMethodsDonorList .paymentMethodDonor {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--colorOnBorders);
+  padding-bottom: 2rem;
+  border-top: 1px solid var(--colorOnBorders);
+  padding-top: 1rem;
+}
+#paymentMethodsDonor #paymentMethodsDonorList .paymentMethodDonor .currencyView {
+  width: 75px;
+}
+#paymentMethodsDonor #paymentMethodsDonorList .paymentMethodDonor .amount {
+  min-width: 150px;
+}
+#paymentMethodsDonor #paymentMethodsDonorList .paymentMethodDonor .deletePaymentMethod {
+  margin-top: auto;
+  margin-bottom: 0;
+  margin-left: auto;
+  padding: 0.57rem 0.7rem;
+}
+
 /*# sourceMappingURL=style.css.map */
