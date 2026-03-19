@@ -72,7 +72,7 @@ class BeneficiaryController extends AjaxCrudController
 
         $paymentMethods = [];
         if($model) {
-            $paymentMethods = $model->getPaymentMethods();
+            $paymentMethods = $model->paymentMethods;
         }
         $this->formData['paymentMethods'] = $paymentMethods;
 

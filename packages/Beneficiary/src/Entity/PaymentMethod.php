@@ -32,9 +32,9 @@ class PaymentMethod
     #[ORM\JoinColumn(nullable: false)]
     public Beneficiary $beneficiary;
 
-    #[ORM\ManyToOne(targetEntity: Project::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    public Project $project;
+//    #[ORM\ManyToOne(targetEntity: Project::class)]
+//    #[ORM\JoinColumn(nullable: false)]
+//    public Project $project;
 
     public static function getHrTypes(): array
     {

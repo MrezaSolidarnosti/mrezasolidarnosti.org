@@ -18,7 +18,6 @@ $statuses = \Solidarity\Beneficiary\Entity\Beneficiary::getHrStatuses();
 $statusCollection = (new OptionCollection(new Option('1', 'New')))->fromArray($statuses, $data['model']?->status);
 $statusSelect = (new Select('status', $statusCollection, 'Status'));
 $name = (new Text('name', $data['model']?->name, 'Name'))->required("Ime je obavezno");
-$accountNumber = (new Text('accountNumber', $data['model']?->accountNumber, 'Broj računa'));
 $comment = (new \Skeletor\Form\InputTypes\TextArea\TextArea('comment', $data['model']?->comment, 'Komentar'));
 
 $delegateMspSelect = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
@@ -44,20 +43,21 @@ $schoolSelect = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
     'Trazi škole...',
 ));
 
-$mspTab = (new Tab('Osnovne Info'))
+$basicInfo = (new Tab('Osnovne Info'))
     ->addInputGroup((new InputGroup())
-        ->addInput($name))
+        ->addInput($name)
+        ->addInput($schoolSelect))
     ->addInputGroup((new InputGroup())
-        ->addInput($accountNumber))
-    ->addInputGroup((new InputGroup())
-        ->addInput($statusSelect))
+        ->addInput($statusSelect)
+        ->addInput($delegateMspSelect))
     ->addInputGroup((new InputGroup(width: InputGroupWidth::HALF_WIDTH))
-        ->addInput($schoolSelect)
-        ->addInput($delegateMspSelect)
         ->addInput($comment)
+//    ->addInputGroup((new InputGroup(width: InputGroupWidth::HALF_WIDTH))
+//        ->addInput()
+//        ->addInput()
     );
 
-$form->addTab($mspTab);
+$form->addTab($basicInfo);
 
 $formRenderer = new TabbedFormRenderer($form, $data['formTitle']);
 
@@ -74,6 +74,11 @@ if ($data['model']?->registeredPeriods) {
 
 $registeredProjectsTab = (new Tab('Registrovani Projekti'))
     ->addInputGroup((new InputGroup(width: InputGroupWidth::FULL_WIDTH)));
+
+//var_dump($data['assignedProjects']);
+//var_dump($data['assignedPeriods']);
+//var_dump($data['existingRegisteredPeriods']);
+//die();
 
 $registeredPeriodsHTML = $this->fetch('/beneficiary/registeredProjectsInForm',
     ['projects' => $data['assignedProjects'], 'periods' => $data['assignedPeriods'], 'existingRegisteredPeriods' => $existingRegisteredPeriods]

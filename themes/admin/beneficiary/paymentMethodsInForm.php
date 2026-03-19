@@ -16,7 +16,7 @@
             </div>
             <?php if($type === PaymentMethod::TYPE_BANK_TRANSFER):?>
                 <div class="inputContainer<?=$paymentMethod ? '' : ' hidden'?>">
-                    <input <?=$paymentMethod ? $paymentMethod->accountNumber : ''?> class="input bankAccount" type="text" placeholder="Bankovni Račun">
+                    <input value="<?=$paymentMethod ? htmlspecialchars($paymentMethod->accountNumber) : ''?>" class="input bankAccount" type="text" placeholder="Bankovni Račun">
                 </div>
             <?php endif;?>
             <?php if($type === PaymentMethod::TYPE_WIRE_TRANSFER):?>
