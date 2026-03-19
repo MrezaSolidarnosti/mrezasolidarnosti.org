@@ -5,7 +5,7 @@
 
     foreach(PaymentMethod::getHrTypes() as $type => $label):?>
         <?php
-            $paymentMethod = getPaymentMethod($type, $paymentMethods);
+            $paymentMethod = getPaymentMethodByType($type, $paymentMethods);
         ?>
         <div class="paymentMethod">
             <div class="paymentMethodHandle">
@@ -29,7 +29,7 @@
     <?php endforeach;?>
 </div>
 <?php
-function getPaymentMethod($type, $paymentMethods = []) {
+function getPaymentMethodByType($type, $paymentMethods = []) {
         foreach($paymentMethods as $paymentMethod) {
             if($paymentMethod->type === $type) {
                 return $paymentMethod;
