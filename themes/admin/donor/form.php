@@ -31,19 +31,13 @@ $lastName = (new Text('lastName', $data['model']?->lastName, 'Prezime'))
     ->required('Prezime je neophodno')
     ->minLength(2, 'Prezime mora da sadrži bar 2 karaktera');
 $comment = (new \Skeletor\Form\InputTypes\TextArea\TextArea('comment', $data['model']?->comment, 'Comment'));
-$amount = (new \Skeletor\Form\InputTypes\Input\Number('amount', $data['model']?->amount, 'Amount'))
-    ->required('Iznos je neophodan');
-$monthly = [1 => 'Da', 0 => 'Ne'];
-$monthlyCollection = (new OptionCollection(new Option('1', 'Da')))->fromArray($monthly, $data['model']?->monthly);
-$monthlySelect = (new Select('monthly', $monthlyCollection, 'Mesečno'))
-    ->required('Izbor za mesečne donacije je neophodan', '');
 $donationOptionsCollection = (new OptionCollection(new Option('1', 'Svima')))->fromArray(\Solidarity\Donor\Entity\Donor::getHrDonationOptions(), $data['model']?->wantsToDonateTo);
 $donationOptionsSelect = (new Select('wantsToDonateTo', $donationOptionsCollection, 'Bira da donira za'));
 $isActive = [1 => 'Da', 0 => 'Ne'];
 $isActiveCollection = (new OptionCollection(new Option('1', 'Da')))->fromArray($isActive, $data['model']?->isActive);
-$isActiveSelect = (new Select('isActive', $monthlyCollection, 'Aktivno'));
+$isActiveSelect = (new Select('isActive', $isActiveCollection, 'Aktivno'));
 $projects = [];
-foreach ($data['model']?->projects as $project) {
+foreach ($data['model']?->projects ?? [] as $project) {
     $projects[] = $project->id;
 }
 $projectCollection = (new OptionCollection())->fromArray($data['projects'], $projects);
@@ -58,17 +52,23 @@ $form->addTab((new Tab('Osnovne Info'))
     ->addInputGroup($inputGroup1)
     ->addInputGroup((new InputGroup())
         ->addInput($firstName)
-        ->addInput($amount)
         ->addInput($isActiveSelect))
     ->addInputGroup((new InputGroup())
         ->addInput($lastName)
-        ->addInput($monthlySelect))
+        ->addInput($donationOptionsSelect))
     ->addInputGroup((new InputGroup())
         ->addInput($statusSelect)
-        ->addInput($donationOptionsSelect)
         ->addInput($projectSelect))
 );
 
 $formRenderer = new TabbedFormRenderer($form, $data['formTitle']);
+$paymentMethodsTab = (new Tab('Načini plaćanja'))
+    ->addInputGroup((new InputGroup(width: InputGroupWidth::FULL_WIDTH)));
+$paymentMethodsHTML = $this->fetch('/donor/paymentMethodsInForm',
+    ['projects' => $data['projects'], 'paymentMethods' => $data['paymentMethods']
+]);
+
+$form->addTab($paymentMethodsTab);
+$formRenderer->setAdditionalTabContent($paymentMethodsTab, $paymentMethodsHTML);
 ?>
 <?= $formRenderer->render() ?>

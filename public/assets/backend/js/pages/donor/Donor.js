@@ -1,10 +1,8 @@
 import CrudPage from "https://skeletor.greenfriends.systems/skeletorjs/src/Page/CrudPage.js";
-import Loader from "https://skeletor.greenfriends.systems/skeletorjs/src/Loader/Loader.js";
+import PaymentMethods from "./PaymentMethods.js";
 
 export default class Donor extends CrudPage {
-    #data;
-    #formTabs;
-    #formAction;
+    paymentMethods;
     constructor() {
         super();
         this.dataTableOptions = {
@@ -16,6 +14,18 @@ export default class Donor extends CrudPage {
             createModalHeight: '70%',
             editModalWidth: '70%',
             editModalHeight: '70%'
+        }
+    }
+
+    onFormReady(data) {
+        this.paymentMethods = new PaymentMethods();
+        this.paymentMethods.init();
+    }
+
+    onModalBeforeClose() {
+        if(this.paymentMethods) {
+            this.paymentMethods.destroy();
+            this.paymentMethods = null;
         }
     }
 

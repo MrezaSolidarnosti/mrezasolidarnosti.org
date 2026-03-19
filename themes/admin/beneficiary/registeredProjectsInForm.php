@@ -46,7 +46,7 @@
             <select disabled class="input registeredPeriodSelect">
                 <option disabled selected value="-1">Izaberite Period</option>
                 <?php foreach($periods as $period): ?>
-                    <option data-project-id="<?=$period->project->id?>" value="<?=$period->id?>"><?=$period->getLabel()?></option>
+                    <option data-project-id="<?=$period->project->id?>" value="<?=$period->id?>"><?=htmlspecialchars($period->getLabel())?></option>
                 <?php endforeach;?>
             </select>
         </div>

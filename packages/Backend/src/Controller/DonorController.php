@@ -20,7 +20,7 @@ class DonorController extends AjaxCrudController
     const TITLE_UPDATE_SUCCESS = "Donor updated successfully.";
     const TITLE_CREATE_SUCCESS = "Donor created successfully.";
     const TITLE_DELETE_SUCCESS = "Donor deleted successfully.";
-    const PATH = 'Donor';
+    const PATH = '/donor/donor';
 
     /**
      * @param Donor $service
@@ -39,6 +39,12 @@ class DonorController extends AjaxCrudController
     public function form(): Response
     {
         $this->formData['projects'] = $this->project->getFilterData();
+        $id = $this->getRequest()->getAttribute('id');
+        $this->formData['paymentMethods'] = [];
+        if ($id) {
+            $model = $this->service->getById($id);
+            $this->formData['paymentMethods'] = $model->paymentMethods;
+        }
         return parent::form();
     }
 

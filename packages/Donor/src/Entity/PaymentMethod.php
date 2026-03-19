@@ -18,6 +18,9 @@ class PaymentMethod
     const TYPE_WESTERN_UNION = 3;
     const TYPE_MONEYGRAM = 4;
 
+    const CURRENCY_RSD = 1;
+    const CURRENCY_EUR = 2;
+
     #[ORM\Column(type: Types::SMALLINT)]
     public int $type;
 
@@ -35,6 +38,9 @@ class PaymentMethod
     #[ORM\JoinColumn(nullable: false)]
     public Project $project;
 
+    #[ORM\Column(type: Types::SMALLINT)]
+    public int $currency;
+
     public static function getHrTypes(): array
     {
         return array(
@@ -48,5 +54,18 @@ class PaymentMethod
     public static function getHrType($type): string
     {
         return static::getHrTypes()[$type];
+    }
+
+    public static function getCurrencies(): array
+    {
+        return [
+            self::CURRENCY_RSD => 'RSD',
+            self::CURRENCY_EUR => 'EUR',
+        ];
+    }
+
+    public static function getCurrency(int $currency): string
+    {
+        return static::getCurrencies()[$currency];
     }
 }

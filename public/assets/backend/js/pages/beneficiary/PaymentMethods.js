@@ -4,7 +4,7 @@ export default class PaymentMethods {
     injectedInputsContainer = null;
     init() {
         if (this.#initCompleted) {
-            throw new Error('Init of RegisteredProjects had already been completed.');
+            throw new Error('Init of Beneficiary PaymentMethods had already been completed.');
         }
         this.#setElements();
         this.#addListeners();
