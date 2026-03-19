@@ -46,7 +46,9 @@ class TransactionFactory extends AbstractFactory
         $transaction->status = (int) $data['status'];
         $transaction->donorConfirmed = (bool) $data['donorConfirmed'];
         // todo, figure out if amount should be changeable at all?
-        $transaction->amount = (int) $data['amount'];
+        if ((int) $data['amount']) {
+            $transaction->amount = (int) $data['amount'];
+        }
         $transaction->comment = $data['comment'] ?? null;
 
         return $transaction->id;

@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface as Logger;
 use Skeletor\User\Service\Session;
 use Solidarity\Beneficiary\Filter\Beneficiary as BeneficiaryFilter;
 use Solidarity\Delegate\Entity\Delegate;
+use Solidarity\Transaction\Entity\Transaction;
 use Solidarity\Transaction\Service\Project;
 
 class Beneficiary extends TableView
@@ -38,13 +39,22 @@ class Beneficiary extends TableView
     public function prepareEntities($entities)
     {
         $items = [];
-        // todo add total received (confirmed) amount
         foreach ($entities as $beneficiary) {
             $totalAmount = 0;
             $projects = [];
             foreach ($beneficiary->registeredPeriods as $rp) {
                 $totalAmount += $rp->amount;
                 $projects[$rp->project->id] = $rp->project->code;
+            }
+            // Sum confirmed transaction amounts
+            $confirmedAmount = 0;
+
+            foreach ($beneficiary->transactions as $transaction) {
+//                var_dump($transaction->amount);
+//                die();
+                if ($transaction->status === Transaction::STATUS_CONFIRMED) {
+                    $confirmedAmount += $transaction->amount;
+                }
             }
             $methods = '';
             foreach ($beneficiary->paymentMethods as $pm) {
@@ -62,6 +72,7 @@ class Beneficiary extends TableView
                 ],
                 'rp.project' => implode(', ', $projects),
                 'sumAmount' => number_format($totalAmount, 0),
+                'currentAmount' => number_format($confirmedAmount, 0),
                 // TODO add message when delegate not existing
                 'delegateVerified' => ($beneficiary->createdBy?->status === Delegate::STATUS_VERIFIED) ? 'Da' : 'Ne',
                 'pm.accountNumber' => $methods,//$beneficiary->accountNumber,
@@ -81,8 +92,8 @@ class Beneficiary extends TableView
     {
         $items = [
             ['name' => 'name', 'label' => 'Ime'],
-//            ['name' => 'amount', 'label' => 'Trenutni iznos'],
             ['name' => 'sumAmount', 'label' => 'Ukupan iznos'],
+            ['name' => 'currentAmount', 'label' => 'Primljeno'],
             ['name' => 'pm.accountNumber', 'label' => 'Metode plaćanja'],
             ['name' => 'status', 'label' => 'Status', 'filterData' => \Solidarity\Beneficiary\Entity\Beneficiary::getHrStatuses()],
             ['name' => 'rp.project', 'label' => 'Projekat', 'filterData' => $this->project->getFilterData()]

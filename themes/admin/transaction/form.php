@@ -23,7 +23,7 @@ $statuses = \Solidarity\Transaction\Entity\Transaction::getHrStatuses();
 $statusCollection = (new OptionCollection(new Option('1', 'New')))->fromArray($statuses, $data['model']?->status);
 $statusSelect = (new Select('status', $statusCollection, 'Status'))
     ->required('Status is required', '');
-$amount = (new \Skeletor\Form\InputTypes\Input\Number(name: 'amount', value: $data['model']?->amount, label:'Amount'))
+$amount = (new \Skeletor\Form\InputTypes\Input\Number(name: 'amount', value: $data['model']?->amount, label:'Amount', readOnly: $readonly))
     ->required('amount is required');
 $accountNumber = (new \Skeletor\Form\InputTypes\Input\Text(name: 'accountNumber', value: $data['model']?->accountNumber, label:'Account number', readOnly: $readonly));
 $comment = (new \Skeletor\Form\InputTypes\TextArea\TextArea(name:'comment', value:$data['model']?->comment, label:'Comment'));
@@ -35,7 +35,7 @@ $periodCollection = (new OptionCollection())->fromArray($data['periods'], $data[
 $periodSelect = (new Select(name:'period', optionsCollection: $periodCollection, label: 'Period', readOnly: $readonly))
     ->required('Period is required', '');
 $donorConfirmedCollection = (new OptionCollection(new Option(0, 'No')))->fromArray([0 => 'No', 1 => 'Yes'], $data['model']?->donorConfirmed);
-$donorConfirmedSelect = (new Select('donorConfirmed', $donorConfirmedCollection, 'Donator potvrdio uplatu?'));
+$donorConfirmedSelect = (new Select(name:   'donorConfirmed', optionsCollection: $donorConfirmedCollection, label:  'Donator potvrdio uplatu?', readOnly: $readonly));
 
 $donorSelect = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
     'donor',
