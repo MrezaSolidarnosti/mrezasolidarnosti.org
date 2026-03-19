@@ -11,6 +11,7 @@ export default class PaymentMethods {
         }
         this.#setElements();
         this.#addListeners();
+        this.#initExisting();
         this.#initCompleted = true;
     }
 
@@ -26,6 +27,13 @@ export default class PaymentMethods {
 
     #addListeners() {
         this.addButton.addEventListener('click', this.#addHandler);
+    }
+
+    #initExisting() {
+        const containers = document.querySelectorAll('.paymentMethodDonor');
+        containers.forEach((container) => {
+            this.#attachPaymentMethodFunctionality(container);
+        });
     }
 
     #addHandler = (e) => {
