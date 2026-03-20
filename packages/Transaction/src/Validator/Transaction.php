@@ -46,10 +46,13 @@ class Transaction implements ValidatorInterface
 
         // todo verify that assigned donor matches beneficiary type/project (educator, beneficiary)
 
-        if (!$this->csrf->validate($data)) {
-            $this->messages['general'][] = 'Invalid form key.';
-            $valid = false;
+        if (!$data['skipCsrf']) {
+            if (!$this->csrf->validate($data)) {
+                $this->messages['general'][] = 'Invalid form key.';
+                $valid = false;
+            }
         }
+
 
         return $valid;
     }

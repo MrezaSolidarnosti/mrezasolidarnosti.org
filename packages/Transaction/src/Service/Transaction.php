@@ -2,6 +2,12 @@
 namespace Solidarity\Transaction\Service;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use Solidarity\Beneficiary\Entity\Beneficiary;
+use Solidarity\Beneficiary\Entity\PaymentMethod;
+use Solidarity\Donor\Entity\Donor;
+use Solidarity\Period\Entity\Period;
+use Solidarity\Transaction\Service\Project as ProjectService;
+use Solidarity\Transaction\Entity\Project;
 use Solidarity\Transaction\Repository\TransactionRepository;
 use Skeletor\Core\TableView\Service\TableView;
 use Psr\Log\LoggerInterface as Logger;
@@ -16,9 +22,18 @@ class Transaction extends TableView
      * @param Logger $logger
      */
     public function __construct(
-        TransactionRepository $repo, Session $user, Logger $logger, TransactionFilter $filter, private Project $project,
+        TransactionRepository $repo, Session $user, Logger $logger, TransactionFilter $filter, private ProjectService $project,
     ) {
         parent::__construct($repo, $user, $logger, $filter);
+    }
+
+    public function getSumAmountForBeneficiary(Beneficiary $beneficiary, ?Project $project = null, ?Period $period = null) {
+        return $this->repo->getSumAmountForBeneficiary($beneficiary, $project, $period);
+    }
+
+    public function getPaidSumAmountForDonorPerProject(Donor $donor, Project $project, ?int $paymentType = null)
+    {
+        return $this->repo->getPaidSumAmountForDonorPerProject($donor, $project, $paymentType);
     }
 
     public function getTransactionsBySchool($schoolId)
@@ -26,9 +41,9 @@ class Transaction extends TableView
         return $this->repo->getTransactionsBySchool($schoolId);
     }
 
-    public function perPersonLimit($donorEmail, $receiverName)
+    public function getRemainingPerPersonLimit($donor, $beneficiary): int
     {
-        return $this->repo->perPersonLimit($donorEmail, $receiverName);
+        return $this->repo->getRemainingPerPersonLimit($donor, $beneficiary);
     }
 
     public function prepareEntities($entities)
@@ -41,15 +56,21 @@ class Transaction extends TableView
                 $beneficiaryName .= '<br />' . $transaction->beneficiary->school->name
                     . '<br />' . $transaction->beneficiary->school->city->name;
             }
+            $instructions = $transaction->instructions ?? $transaction->accountNumber;
+            if (!$instructions) {
+                $instructions = PaymentMethod::getHrType($transaction->paymentType);
+            }
 
             $itemData = [
                 'id' => $transaction->getId(),
                 'accountNumber' =>  [
-                    'value' => $transaction->accountNumber,
+                    'value' => $instructions,
                     'editColumn' => true,
                 ],
                 'status' => \Solidarity\Transaction\Entity\Transaction::getHrStatuses()[$transaction->status],
-                'amount' => $transaction->amount,
+//                'accountNumber' => $transaction->accountNumber,
+                'amountEur' => number_format($transaction->amountEur, 0),
+                'amount' => number_format($transaction->amount, 0),
                 'email' => $transaction->donor->firstName .' '. $transaction->donor->lastName .'<br />'. $transaction->donor->email,
                 'name' => $beneficiaryName,
                 'project' => $transaction->project->code,
@@ -70,8 +91,9 @@ class Transaction extends TableView
         $columnDefinitions = [
             ['name' => 'email', 'label' => 'Donator'],
             ['name' => 'name', 'label' => 'Oštećeni'],
-            ['name' => 'accountNumber', 'label' => 'Br računa'],
-            ['name' => 'amount', 'label' => 'Iznos'],
+            ['name' => 'accountNumber', 'label' => 'Br računa / Instrukcije'],
+            ['name' => 'amount', 'label' => 'Iznos (RSD)'],
+            ['name' => 'amountEur', 'label' => 'Iznos (EUR)'],
             ['name' => 'status', 'label' => 'Status', 'filterData' => \Solidarity\Transaction\Entity\Transaction::getHrStatuses()],
             ['name' => 'project', 'label' => 'Projekat', 'filterData' => $this->project->getFilterData()],
             ['name' => 'createdAt', 'label' => 'Datum'],

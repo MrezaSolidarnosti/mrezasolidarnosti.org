@@ -109,6 +109,52 @@ class TransactionController extends AjaxCrudController
         return $this->redirect('/transaction/uploadTransactionListForm/');
     }
 
+    // todo consider if status is 3 or 4, to disable status change completely
+    public function updateStatus(): Response
+    {
+        $id = (int) $this->getRequest()->getAttribute('id');
+        $data = $this->getRequest()->getQueryParams();
+        $status = (int) ($data['status'] ?? 0);
+
+        $validStatuses = [
+            \Solidarity\Transaction\Entity\Transaction::STATUS_CANCELLED,
+            \Solidarity\Transaction\Entity\Transaction::STATUS_CONFIRMED,
+//            \Solidarity\Transaction\Entity\Transaction::STATUS_REJECTED,
+        ];
+        if (!in_array($status, $validStatuses, true)) {
+            $this->getResponse()->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Status transakcije nije validan.',
+            ]));
+            $this->getResponse()->getBody()->rewind();
+            return $this->getResponse()->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        if ($status === \Solidarity\Transaction\Entity\Transaction::STATUS_CONFIRMED) {
+            $message = "Transakcija je potvrđena.";
+        } elseif ($status === \Solidarity\Transaction\Entity\Transaction::STATUS_CANCELLED) {
+            $message = "Transakcija je otkazana.";
+        }
+
+        try {
+            $this->service->updateField('status', $status, $id);
+            $this->getResponse()->getBody()->write(json_encode([
+                'success' => true,
+                'message' => $message,
+            ]));
+        } catch (\Exception $e) {
+            $this->getResponse()->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]));
+            $this->getResponse()->getBody()->rewind();
+            return $this->getResponse()->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+
+        $this->getResponse()->getBody()->rewind();
+        return $this->getResponse()->withHeader('Content-Type', 'application/json');
+    }
+
     public function form(): Response
     {
         $this->formData['projects'] = $this->project->getFilterData();

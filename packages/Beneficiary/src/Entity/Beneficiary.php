@@ -56,6 +56,16 @@ class Beneficiary
     #[ORM\OneToMany(targetEntity: PaymentMethod::class, mappedBy: 'beneficiary')]
     public Collection $paymentMethods;
 
+    public function getAmountForPeriod(Period $period): int
+    {
+        foreach ($this->registeredPeriods as $rp) {
+            if ($rp->period->getId() === $period->getId()) {
+                return $rp->amount;
+            }
+        }
+        return 0;
+    }
+
     public static function getHrStatuses(): array
     {
         return [

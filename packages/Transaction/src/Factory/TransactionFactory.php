@@ -15,6 +15,7 @@ class TransactionFactory extends AbstractFactory
     {
         $transaction = new Transaction();
         $transaction->amount = (int) $data['amount'];
+        $transaction->amountEur = (int) $data['amountEur'];
         $transaction->status = (int) $data['status'];
         $transaction->donorConfirmed = (bool) $data['donorConfirmed'];
         $transaction->comment = $data['comment'] ?? null;
@@ -22,17 +23,10 @@ class TransactionFactory extends AbstractFactory
         $transaction->project = $em->getRepository(Project::class)->find($data['project']);
         $transaction->period = $em->getRepository(Period::class)->find($data['period']);
         $transaction->beneficiary = $em->getRepository(Beneficiary::class)->find($data['beneficiary']);
-
-        // Get account number from beneficiary's payment methods (first bank transfer)
-        $transaction->accountNumber = null;
-        if ($transaction->beneficiary) {
-            foreach ($transaction->beneficiary->paymentMethods as $pm) {
-                if ($pm->accountNumber) {
-                    $transaction->accountNumber = $pm->accountNumber;
-                    break;
-                }
-            }
-        }
+        $paymentType = static::matchPaymentType($transaction->donor, $transaction->beneficiary);
+        $transaction->paymentType = $paymentType['paymentType'];
+        $transaction->accountNumber = $paymentType['accountNumber'] ?? null;
+        $transaction->instructions = $paymentType['instructions'] ?? null;
 
         $em->persist($transaction);
         $em->flush();
@@ -52,5 +46,21 @@ class TransactionFactory extends AbstractFactory
         $transaction->comment = $data['comment'] ?? null;
 
         return $transaction->id;
+    }
+
+    public static function matchPaymentType(Donor $donor, Beneficiary $beneficiary)
+    {
+        foreach ($donor->paymentMethods as $pm) {
+            foreach ($beneficiary->paymentMethods as $bPm) {
+                if ($pm->type === $bPm->type) {
+                    return [
+                        'paymentType' => $pm->type,
+                        'accountNumber' => $bPm->accountNumber,
+                        'instructions' => $bPm->wireInstructions,
+                    ];
+                }
+            }
+        }
+        throw new \Exception('No matching payment type found');
     }
 }

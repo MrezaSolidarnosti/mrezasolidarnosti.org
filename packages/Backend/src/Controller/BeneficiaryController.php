@@ -22,7 +22,7 @@ class BeneficiaryController extends AjaxCrudController
     const TITLE_UPDATE_SUCCESS = "Osteceni izmenjen uspesno.";
     const TITLE_CREATE_SUCCESS = "Osteceni kreiran uspesno.";
     const TITLE_DELETE_SUCCESS = "Osteceni obrisan uspesno.";
-    const PATH = '/beneficiary/beneficiary';
+    const PATH = 'beneficiary/Beneficiary';
 
     /**
      * @param Beneficiary $service
@@ -36,10 +36,25 @@ class BeneficiaryController extends AjaxCrudController
         private \Redis $redis, private Period $period, private Project $project, private Delegate $delegate
     ) {
         parent::__construct($service, $session, $config, $flash, $template);
-//        $this->tableViewConfig['createButton'] = false;
     }
 
+    public function delete(): Response
+    {
+        $id = $this->getRequest()->getAttribute('id');
+        //
+        $this->service->updateField('status', \Solidarity\Beneficiary\Entity\Beneficiary::STATUS_DELETED, $id);
+        $this->getFlash()->success('Oštecena osoba je uspešno označena kao obrisana.');
 
+        $this->getResponse()->getBody()->write(json_encode([
+            'errors' => [],
+            'message' => 'Oštecena osoba je uspešno označena kao obrisana.',
+            'generalErrors' => [],
+            'status' => 1,
+        ]));
+        $this->getResponse()->getBody()->rewind();
+
+        return $this->getResponse()->withHeader('Content-Type', 'application/json');
+    }
 
     public function form(): Response
     {

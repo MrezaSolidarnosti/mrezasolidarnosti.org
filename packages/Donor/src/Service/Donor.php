@@ -7,6 +7,7 @@ use Psr\Log\LoggerInterface as Logger;
 use Skeletor\User\Service\Session;
 use Solidarity\Donor\Filter\Donor as DonorFilter;
 use Solidarity\Mailer\Service\Mailer;
+use Solidarity\Transaction\Service\Project;
 use Tamtamchik\SimpleFlash\Flash;
 
 class Donor extends TableView
@@ -19,14 +20,14 @@ class Donor extends TableView
      */
     public function __construct(
         DonorRepository $repo, Session $user, Logger $logger, DonorFilter $filter, private \DateTime $dt,
-        private Mailer $mailer
+        private Mailer $mailer, private Project $project
     ) {
         parent::__construct($repo, $user, $logger, $filter);
     }
 
-    public function getForMapping()
+    public function getDonorsByProject($project)
     {
-        return $this->repo->fetchForMapping();
+        return $this->repo->getDonorsByProject($project);
     }
 
     public function create(array $data)
@@ -60,9 +61,9 @@ class Donor extends TableView
                     'editColumn' => true,
                 ],
 //                'amount' => number_format($donor->amount, 0, '.', ','),
-                'projects' => '',
+                'p.id' => implode(', ', $projects),
                 'status' => \Solidarity\Donor\Entity\Donor::getHrStatus($donor->status),
-//                'monthly' => ($donor->monthly) ? 'Yes ': 'No',
+                'isActive' => ($donor->isActive) ? 'Da': 'Ne',
                 'createdAt' => $donor->getCreatedAt()->format('d.m.Y'),
                 'updatedAt' => $donor->getUpdatedAt()->format('d.m.Y'),
             ];
@@ -78,8 +79,9 @@ class Donor extends TableView
     {
         $columnDefinitions = [
             ['name' => 'email', 'label' => 'Email'],
+            ['name' => 'p.id', 'label' => 'project', 'filterData' => $this->project->getFilterData()],
             ['name' => 'status', 'label' => 'Status', 'filterData' => \Solidarity\Donor\Entity\Donor::getHrStatuses()],
-//            ['name' => 'monthly', 'label' => 'Monthly', 'filterData' => [0 => 'No', 1 => 'Yes']],
+            ['name' => 'isActive', 'label' => 'Aktivan', 'filterData' => [0 => 'No', 1 => 'Yes']],
 //            ['name' => 'amount', 'label' => 'Amount', 'rangeFilter' => ['type' => 'number']],
             ['name' => 'updatedAt', 'label' => 'Updated at'],
             ['name' => 'createdAt', 'label' => 'Created at'],
