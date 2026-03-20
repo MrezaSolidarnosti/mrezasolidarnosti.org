@@ -20,7 +20,7 @@ class DonorController extends AjaxCrudController
     const TITLE_UPDATE_SUCCESS = "Donor updated successfully.";
     const TITLE_CREATE_SUCCESS = "Donor created successfully.";
     const TITLE_DELETE_SUCCESS = "Donor deleted successfully.";
-    const PATH = '/donor/donor';
+    const PATH = 'donor/Donor';
 
     /**
      * @param Donor $service
@@ -34,6 +34,24 @@ class DonorController extends AjaxCrudController
     ) {
         parent::__construct($service, $session, $config, $flash, $template);
 //        $this->tableViewConfig['createButton'] = false;
+    }
+
+    public function delete(): Response
+    {
+        $id = $this->getRequest()->getAttribute('id');
+        // todo find user if registers again and suggest to restore data?
+        $this->service->updateField('status', \Solidarity\Donor\Entity\Donor::STATUS_DELETED, $id);
+        $this->getFlash()->success('Donator je uspešno označen kao obrisan.');
+
+        $this->getResponse()->getBody()->write(json_encode([
+            'errors' => [],
+            'message' => 'Donator je uspešno označen kao obrisan.',
+            'generalErrors' => [],
+            'status' => 1,
+        ]));
+        $this->getResponse()->getBody()->rewind();
+
+        return $this->getResponse()->withHeader('Content-Type', 'application/json');
     }
 
     public function form(): Response

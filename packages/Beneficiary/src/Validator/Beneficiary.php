@@ -26,25 +26,30 @@ class Beneficiary implements ValidatorInterface
             $this->messages['paymentMethods'][] = 'Bar jedan metod plaćanja mora biti unet.';
         } else {
             foreach ($data['paymentMethods'] as $index => $row) {
-                // Budget of the Republic of Serbia
-                if (str_starts_with($row['accountNumber'], '840')) {
-                    $this->messages['paymentMethods'][] = 'Broj računa pripada budzetu Republike Srbije.';
+                if ($row['type'] === 1) {
+                    // Budget of the Republic of Serbia
+                    if (str_starts_with($row['accountNumber'], '840')) {
+                        $this->messages['paymentMethods'][] = 'Broj računa pripada budzetu Republike Srbije.';
+                    }
+                    // Eurobank Direktna
+                    if (str_starts_with($row['accountNumber'], '150')) {
+                        $this->messages['paymentMethods'][] = 'Broj računa pripada banci "Eurobank Direktna" koja više ne postoji.';
+                    }
+                    // MTS Bank
+                    if (str_starts_with($row['accountNumber'], '360')) {
+                        $this->messages['paymentMethods'][] = 'Broj računa pripada banci "MTS Bank" koja više ne postoji.';
+                    }
+                    if (!$this->validateAccountNumber($row['accountNumber'])) {
+                        $this->messages['paymentMethods'][] = 'Broj računa nije validan, kontrolni broj je pogrešan.';
+                    }
+                    // Check account number uniqueness across beneficiaries
+                    if (!empty($row['accountNumber'])) {
+                        $this->validateAccountNumberUniqueness($row['accountNumber'], $data['id'] ?? null);
+                    }
+                } else if ($row['type'] === 2) {
+                    // todo check if wire info empty?
                 }
-                // Eurobank Direktna
-                if (str_starts_with($row['accountNumber'], '150')) {
-                    $this->messages['paymentMethods'][] = 'Broj računa pripada banci "Eurobank Direktna" koja više ne postoji.';
-                }
-                // MTS Bank
-                if (str_starts_with($row['accountNumber'], '360')) {
-                    $this->messages['paymentMethods'][] = 'Broj računa pripada banci "MTS Bank" koja više ne postoji.';
-                }
-                if (!$this->validateAccountNumber($row['accountNumber'])) {
-                    $this->messages['paymentMethods'][] = 'Broj računa nije validan, kontrolni broj je pogrešan.';
-                }
-                // Check account number uniqueness across beneficiaries
-                if (!empty($row['accountNumber'])) {
-                    $this->validateAccountNumberUniqueness($row['accountNumber'], $data['id'] ?? null);
-                }
+
             }
         }
 

@@ -17,6 +17,32 @@ class DonorRepository extends TableViewRepository
         parent::__construct($entityManager);
     }
 
+    public function getDonorsByProject($project): array
+    {
+        $qb = $this->entityManager->createQueryBuilder();
+
+        $qb->select('d')
+            ->from(Donor::class, 'd')
+            ->innerJoin('d.projects', 'p')
+            ->andWhere('p.id = ' . $project->id)
+            ->andWhere('d.isActive = 1')
+            ->andWhere('d.status = ' . Donor::STATUS_VERIFIED)
+            ->orWhere('d.status = ' . Donor::STATUS_NEW)
+            ->orderBy('d.id', 'ASC');
+//            ->setMaxResults(100);
+
+        $results = $qb->getQuery()->getResult();
+
+        return $results;
+    }
+
+    public function getJoinableEntities(): array
+    {
+        return [
+            'projects' => 'p'
+        ];
+    }
+
     public function getSearchableColumns(): array
     {
         return ['a.email', 'a.status'];

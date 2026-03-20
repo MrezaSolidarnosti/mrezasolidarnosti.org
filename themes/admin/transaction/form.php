@@ -13,15 +13,21 @@ use Skeletor\Form\InputTypes\Select\Select;
 use Skeletor\Form\Renderer\TabbedFormRenderer;
 use Skeletor\Form\Tab\Tab;
 use Skeletor\Form\TabbedForm;
+use Solidarity\Transaction\Entity\Transaction;
 
 $form = new TabbedForm($data['formAction'], $data['dataAction'], $this->formTokenArray());
 
 $action = $data['dataAction'] === 'create' ? 'Create' : 'Edit';
 $readonly = $data['dataAction'] === 'create' ? false : true;
 
-$statuses = \Solidarity\Transaction\Entity\Transaction::getHrStatuses();
-$statusCollection = (new OptionCollection(new Option('1', 'New')))->fromArray($statuses, $data['model']?->status);
-$statusSelect = (new Select('status', $statusCollection, 'Status'))
+$statusEditable = true;
+if ($loggedInEntityType === 'delegate') {
+    $statusEditable = false;
+}
+
+$statuses = Transaction::getHrStatuses();
+$statusCollection = (new OptionCollection(new Option(Transaction::STATUS_NEW, Transaction::getHrStatus(Transaction::STATUS_NEW))))->fromArray($statuses, $data['model']?->status);
+$statusSelect = (new Select(name: 'status', optionsCollection: $statusCollection, label: 'Status', readOnly: !$statusEditable))
     ->required('Status is required', '');
 $amount = (new \Skeletor\Form\InputTypes\Input\Number(name: 'amount', value: $data['model']?->amount, label:'Amount', readOnly: $readonly))
     ->required('amount is required');

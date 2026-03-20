@@ -18,6 +18,7 @@ class Donor
     const STATUS_NEW = 1;
     const STATUS_VERIFIED = 2;
     const STATUS_PROBLEM = 3;
+    const STATUS_DELETED = 4;
 
     const DONATE_TO_ALL = 1;
     const DONATE_TO_SCHOOL = 2;
@@ -54,8 +55,9 @@ class Donor
     {
         return array(
             self::STATUS_NEW => 'New',
-            self::STATUS_VERIFIED => 'Verified',
+            self::STATUS_VERIFIED => 'Potvrdjen email',
             self::STATUS_PROBLEM => 'Problem',
+            self::STATUS_DELETED => 'Obrisan',
         );
     }
 
@@ -76,5 +78,40 @@ class Donor
     public static function getHrDonationOption($option): string
     {
         return static::getHrDonationOptions()[$option];
+    }
+
+    public function getPledgedAmountForProjectAndPaymentType($project, $filteredPm)
+    {
+        foreach ($this->paymentMethods as $paymentMethod) {
+            if ($paymentMethod->project === $project && $paymentMethod->type === $filteredPm->type) {
+                return $paymentMethod->amount;
+            }
+        }
+        return 0;
+    }
+
+    public function getAmountForProject($project)
+    {
+        foreach ($this->paymentMethods as $paymentMethod) {
+            if ($paymentMethod->project == $project) {
+                return $paymentMethod->amount;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Returns all payment methods for a given project.
+     * @return PaymentMethod[]
+     */
+    public function getPaymentMethodsForProject(Project $project): array
+    {
+        $methods = [];
+        foreach ($this->paymentMethods as $paymentMethod) {
+            if ($paymentMethod->project->getId() === $project->getId()) {
+                $methods[] = $paymentMethod;
+            }
+        }
+        return $methods;
     }
 }

@@ -28,14 +28,20 @@ class Transaction implements FilterInterface
         $data = [
             'id' => (isset($postData['id'])) ? $int->filter($postData['id']) : null,
             'beneficiary' => $postData['beneficiary'] ?? null,
-            'project' => $postData['project'],
-            'period' => $postData['period'],
+            'project' => $postData['project'] ?? null,
+            'period' => $postData['period'] ?? null,
             'amount' => (int) ($postData['amount'] ?? 0),
+            'amountEur' => (int) ($postData['amountEur'] ?? 0),
             'comment' => $postData['comment'] ?? '',
             'status' => (int) ($postData['status'] ?? 1),
-            'donor' => $postData['donor'] ?? null,
+            'donor' => $postData['donor'],
             'donorConfirmed' => (int) ($postData['donorConfirmed'] ?? 0),
-            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME],
+//            'paymentType' => isset($postData['paymentType']) ? (int) $postData['paymentType'] : null,
+//            'accountNumber' => $postData['accountNumber'] ?? null,
+//            'instructions' => $postData['instructions'] ?? null,
+            //todo cleanup
+            'skipCsrf' => $postData['skipCsrf'] ?? false,
+            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME] ?? null,
         ];
         if (!$this->validator->isValid($data)) {
             throw new ValidatorException();

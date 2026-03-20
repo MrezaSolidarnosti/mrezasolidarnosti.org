@@ -20,6 +20,7 @@ return [
     // backend
     [['GET'], '/', \Solidarity\Backend\Action\Index::class],
     [['GET'], '/login/logout', \Solidarity\Backend\Action\Logout::class],
+    [['GET'], '/createTransactions', \Solidarity\Backend\Action\CreateTransaction::class],
     [['GET', 'POST'], '/login/user/{action}[/{token}]', \Skeletor\Login\Controller\LoginController::class],
     [['GET', 'POST'], '/login/delegate/{action}[/{token}]', \Solidarity\Backend\Controller\DelegateLoginController::class],
     [['GET', 'POST'], '/image/{action}[/{token}]', \Skeletor\Image\Controller\ImageController::class],

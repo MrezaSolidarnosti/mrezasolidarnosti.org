@@ -67,6 +67,7 @@ return [
         'template.manage' => [User::ROLE_ADMIN],
         'translator.manage' => [User::ROLE_ADMIN],
         'activity.view' => [User::ROLE_ADMIN],
+        'createTransactions' => [User::ROLE_ADMIN],
     ],
 
     // Route to permission mappings
@@ -117,6 +118,7 @@ return [
         '/transaction/create/' => 'transaction.create',
         '/transaction/form/' => 'transaction.create',
         '/transaction/form/*' => 'transaction.edit',
+        '/transaction/updateStatus/*' => 'transaction.edit',
         '/transaction/update/*' => 'transaction.edit',
         '/transaction/delete/*' => 'transaction.delete',
 
@@ -135,6 +137,7 @@ return [
         '/template/*' => 'template.manage',
         '/translator/*' => 'translator.manage',
         '/activity/*' => 'activity.view',
+        '/createTransactions' => 'createTransactions',
     ],
 
     // Role hierarchy (roles inherit permissions from other roles)

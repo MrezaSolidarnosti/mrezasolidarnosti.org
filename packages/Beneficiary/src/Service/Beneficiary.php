@@ -21,6 +21,11 @@ class Beneficiary extends TableView
         parent::__construct($repo, $user, $logger, $filter);
     }
 
+    public function getByPeriod(int $periodId): array
+    {
+        return $this->repo->fetchByPeriod($periodId);
+    }
+
     public function fetchTableData(
         $search, $filter, $offset, $limit, $order, $uncountableFilter = null, $idsToInclude = [], $idsToExclude = []
     ) {

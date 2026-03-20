@@ -5,6 +5,7 @@ namespace Solidarity\Beneficiary\Repository;
 use Doctrine\ORM\EntityManagerInterface;
 use Solidarity\Beneficiary\Entity\Beneficiary;
 use Solidarity\Beneficiary\Factory\BeneficiaryFactory;
+use Solidarity\Transaction\Entity\Transaction;
 use Skeletor\Core\TableView\Repository\TableViewRepository;
 
 class BeneficiaryRepository extends TableViewRepository
@@ -32,6 +33,28 @@ class BeneficiaryRepository extends TableViewRepository
     public function getColumnsToCount(): array
     {
         return [];
+    }
+
+    public function fetchByPeriod(int $periodId): array
+    {
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('b')
+            ->addSelect('COALESCE(SUM(t.amount), 0) AS HIDDEN receivedAmount')
+            ->from(static::ENTITY, 'b')
+            ->join('b.registeredPeriods', 'rp')
+            ->leftJoin('b.transactions', 't', 'WITH', 't.status IN (:transactionStatuses) AND t.period = :periodId')
+            ->where('rp.period = :periodId')
+            ->andWhere('b.status = :status')
+            ->setParameter('periodId', $periodId)
+            ->setParameter('status', Beneficiary::STATUS_NEW)
+            ->setParameter('transactionStatuses', [
+                Transaction::STATUS_CONFIRMED,
+                Transaction::STATUS_PAID,
+            ])
+            ->groupBy('b.id')
+            ->orderBy('receivedAmount', 'ASC');
+
+        return $qb->getQuery()->getResult();
     }
 
     public function nullifyCreatedByForDelegate(int $delegateId): void
