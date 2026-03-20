@@ -1,0 +1,11 @@
+Hvala svima koji su doprineli razvoju ovog projekta, bilo direktno ili indirektno.
+
+Posebnu zahvalnost upucujemo svim ljudima koji su ucestvovali u programiranju:
+stari repo:
+https://github.com/IT-Srbija-Org/solidarityMSP/graphs/contributors
+novi repo:
+https://github.com/MrezaSolidarnosti/mrezasolidarnosti.org/graphs/contributors
+
+Iskreno se zahvaljujemo i svima koji nisu zvanicno navedeni na gore linku, ali su svojim idejama, podrskom i sugestijama pomogli da ovaj projekat realizuje.
+
+Pravljeno sa <3 od zajednice, za zajednicu.
