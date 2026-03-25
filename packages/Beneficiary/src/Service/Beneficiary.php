@@ -8,7 +8,8 @@ use Skeletor\Core\TableView\Service\TableView;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\User\Service\Session;
 use Solidarity\Beneficiary\Filter\Beneficiary as BeneficiaryFilter;
-use Solidarity\Delegate\Entity\Delegate;
+use Solidarity\Delegate\Service\Delegate;
+use Solidarity\School\Service\School;
 use Solidarity\Transaction\Entity\Transaction;
 use Solidarity\Transaction\Service\Project;
 
@@ -16,7 +17,7 @@ class Beneficiary extends TableView
 {
     public function __construct(
         BeneficiaryRepository $repo, Session $user, Logger $logger, BeneficiaryFilter $filter,
-        private Project $project
+        private Project $project, private School $school, private Delegate $delegate
     ) {
         parent::__construct($repo, $user, $logger, $filter);
     }
@@ -53,10 +54,7 @@ class Beneficiary extends TableView
             }
             // Sum confirmed transaction amounts
             $confirmedAmount = 0;
-
             foreach ($beneficiary->transactions as $transaction) {
-//                var_dump($transaction->amount);
-//                die();
                 if ($transaction->status === Transaction::STATUS_CONFIRMED) {
                     $confirmedAmount += $transaction->amount;
                 }
@@ -76,10 +74,11 @@ class Beneficiary extends TableView
                     'editColumn' => true,
                 ],
                 'rp.project' => implode(', ', $projects),
+                'school' => $beneficiary->school->name,
                 'sumAmount' => number_format($totalAmount, 0),
                 'currentAmount' => number_format($confirmedAmount, 0),
                 // TODO add message when delegate not existing
-                'delegateVerified' => ($beneficiary->createdBy?->status === Delegate::STATUS_VERIFIED) ? 'Da' : 'Ne',
+                'delegateVerified' => ($beneficiary->createdBy?->status === \Solidarity\Delegate\Entity\Delegate::STATUS_VERIFIED) ? 'Da' : 'Ne',
                 'pm.accountNumber' => $methods,//$beneficiary->accountNumber,
                 'status' => \Solidarity\Beneficiary\Entity\Beneficiary::getHrStatus($beneficiary->status),
                 'createdBy' => $beneficiary->createdBy?->name,
@@ -101,12 +100,13 @@ class Beneficiary extends TableView
             ['name' => 'currentAmount', 'label' => 'Primljeno'],
             ['name' => 'pm.accountNumber', 'label' => 'Metode plaćanja'],
             ['name' => 'status', 'label' => 'Status', 'filterData' => \Solidarity\Beneficiary\Entity\Beneficiary::getHrStatuses()],
-            ['name' => 'rp.project', 'label' => 'Projekat', 'filterData' => $this->project->getFilterData()]
+            ['name' => 'rp.project', 'label' => 'Projekat', 'filterData' => $this->project->getFilterData()],
+            ['name' => 'school', 'label' => 'Škola', 'filterData' => $this->school->getFilterData()]
         ];
 
         if ($this->getUserSession()->getLoggedInEntityType() === 'user') {
             $items[] = ['name' => 'delegateVerified', 'label' => 'Delegat verifikovan'];
-            $items[] = ['name' => 'createdBy', 'label' => 'Delegat'];
+            $items[] = ['name' => 'createdBy', 'label' => 'Delegat', 'filterData' => $this->delegate->getFilterData()];
         }
         $items[] = ['name' => 'createdAt', 'label' => 'Kreirano'];
 

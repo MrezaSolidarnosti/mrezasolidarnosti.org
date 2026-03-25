@@ -12,11 +12,9 @@ export default class Beneficiary extends CrudPage {
             enableCheckboxes: true,
             shiftCheckboxModifier: true
         };
-        this.modalOptions = {
-            createModalWidth: '70%',
-            createModalHeight: '70%',
-            editModalWidth: '70%',
-            editModalHeight: '70%'
+        this.modalConfig = {
+            width: '70%',
+            height: '70%'
         }
     }
 

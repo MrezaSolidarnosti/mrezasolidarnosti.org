@@ -44,6 +44,7 @@ class DelegateController extends AjaxCrudController
     public function form(): Response
     {
         $this->formData['projects'] = $this->project->getFilterData();
+        $this->formData['schools'] = $this->school->getFilterData();
         return parent::form();
     }
 
@@ -106,7 +107,7 @@ class DelegateController extends AjaxCrudController
                 'phone' => '',
                 'email' => $trxInfo[4],
                 'name' => $trxInfo[6],
-                'school' => $school->id,
+                'schools' => [$school->id],
                 'schoolType' => $trxInfo[7] ?? '',
                 'schoolName' => $schoolName,
                 'city' => $cityName,

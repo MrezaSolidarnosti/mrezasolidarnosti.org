@@ -39,7 +39,9 @@ class DonorRepository extends TableViewRepository
     public function getJoinableEntities(): array
     {
         return [
-            'projects' => 'p'
+            'projects' => 'p',
+            'paymentMethods' => 'pm',
+            'transactions' => 't',
         ];
     }
 

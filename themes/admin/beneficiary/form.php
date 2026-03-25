@@ -20,18 +20,6 @@ $statusSelect = (new Select('status', $statusCollection, 'Status'));
 $name = (new Text('name', $data['model']?->name, 'Name'))->required("Ime je obavezno");
 $comment = (new \Skeletor\Form\InputTypes\TextArea\TextArea('comment', $data['model']?->comment, 'Komentar'));
 
-$delegateMspSelect = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
-    'createdBy',
-    '/delegate/tableHandler/',
-    'name',
-    'id',
-    'Delegat',
-    $data['model']?->createdBy?->id ?? null,
-    $data['model']?->createdBy?->name,
-    'Traži delegate...',
-    ['p.id' => 1]
-))->required('Morate izabrati delegata');
-
 $schoolSelect = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
     'school',
     '/school/tableHandler/',
@@ -41,20 +29,34 @@ $schoolSelect = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
     $data['model']?->school?->id ?? null,
     $data['model']?->school?->name,
     'Trazi škole...',
+    ['delegate' => 'not_null'],
 ));
 
+$schoolGroup = (new InputGroup())
+    ->addInput($name)
+    ->addInput($schoolSelect);
+
+if ($data['dataAction'] === 'update' && $data['model']?->school?->delegate) {
+    $delegateInfo = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
+        'delegateInfo',
+        '/delegate/tableHandler/',
+        'name',
+        'id',
+        'Delegat',
+        $data['model']->school->delegate->id,
+        $data['model']->school->delegate->name,
+        '',
+        [], [], null, null, true
+    ));
+    $schoolGroup->addInput($delegateInfo);
+}
+
 $basicInfo = (new Tab('Osnovne Info'))
+    ->addInputGroup($schoolGroup)
     ->addInputGroup((new InputGroup())
-        ->addInput($name)
-        ->addInput($schoolSelect))
-    ->addInputGroup((new InputGroup())
-        ->addInput($statusSelect)
-        ->addInput($delegateMspSelect))
+        ->addInput($statusSelect))
     ->addInputGroup((new InputGroup(width: InputGroupWidth::HALF_WIDTH))
         ->addInput($comment)
-//    ->addInputGroup((new InputGroup(width: InputGroupWidth::HALF_WIDTH))
-//        ->addInput()
-//        ->addInput()
     );
 
 $form->addTab($basicInfo);
@@ -75,24 +77,17 @@ if ($data['model']?->registeredPeriods) {
 $registeredProjectsTab = (new Tab('Registrovani Projekti'))
     ->addInputGroup((new InputGroup(width: InputGroupWidth::FULL_WIDTH)));
 
-//var_dump($data['assignedProjects']);
-//var_dump($data['assignedPeriods']);
-//var_dump($data['existingRegisteredPeriods']);
-//die();
-
 $registeredPeriodsHTML = $this->fetch('/beneficiary/registeredProjectsInForm',
     ['projects' => $data['assignedProjects'], 'periods' => $data['assignedPeriods'], 'existingRegisteredPeriods' => $existingRegisteredPeriods]
 );
 $formRenderer->setAdditionalTabContent($registeredProjectsTab, $registeredPeriodsHTML);
 $form->addTab($registeredProjectsTab);
 
-
 $paymentMethodsTab = (new Tab('Načini plaćanja'))
     ->addInputGroup((new InputGroup(width: InputGroupWidth::FULL_WIDTH)));
 $paymentMethodsHTML = $this->fetch('/beneficiary/paymentMethodsInForm', ['paymentMethods' => $data['paymentMethods']]);
 $formRenderer->setAdditionalTabContent($paymentMethodsTab, $paymentMethodsHTML);
 $form->addTab($paymentMethodsTab);
-
 
 ?>
 <?= $formRenderer->render() ?>

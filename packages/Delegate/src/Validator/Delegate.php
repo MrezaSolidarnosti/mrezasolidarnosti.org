@@ -22,6 +22,8 @@ class Delegate implements ValidatorInterface
 
     private $delegateRepository;
 
+    private $schoolRepository;
+
     private $messages = [];
 
     /**
@@ -29,10 +31,14 @@ class Delegate implements ValidatorInterface
      *
      * @param CSRF $csrf
      */
-    public function __construct(CSRF $csrf, \Solidarity\Delegate\Repository\DelegateRepository $delegateRepository)
-    {
+    public function __construct(
+        CSRF $csrf,
+        \Solidarity\Delegate\Repository\DelegateRepository $delegateRepository,
+        \Solidarity\School\Repository\SchoolRepository $schoolRepository
+    ) {
         $this->csrf               = $csrf;
         $this->delegateRepository = $delegateRepository;
+        $this->schoolRepository   = $schoolRepository;
     }
 
     /**
@@ -50,16 +56,25 @@ class Delegate implements ValidatorInterface
             $valid = false;
         }
 
-        if (!empty($data['school'])) {
-            $criteria = ['school' => $data['school']];
-            $existingDelegates = $this->delegateRepository->fetchAll($criteria);
-            foreach ($existingDelegates as $existing) {
-                if (isset($data['id']) && $existing->getId() === (int) $data['id']) {
-                    continue;
-                }
-                $this->messages['school'][] = 'Mesto delegata za ovu školu je već zauzeto.';
+        $schoolIds = array_filter(array_map('intval', $data['schools'] ?? []));
+        if (!empty($schoolIds)) {
+            // Check for duplicate school selections
+            if (count($schoolIds) !== count(array_unique($schoolIds))) {
+                $this->messages['schools'][] = 'Ista škola ne može biti izabrana više puta.';
                 $valid = false;
-                break;
+            }
+
+            // Check that each school is not already assigned to another delegate
+            $currentDelegateId = isset($data['id']) ? (int) $data['id'] : null;
+            foreach (array_unique($schoolIds) as $schoolId) {
+                $school = $this->schoolRepository->getById($schoolId);
+                if ($school && $school->delegate && $school->delegate->getId() !== $currentDelegateId) {
+                    $this->messages['schools'][] = sprintf(
+                        'Škola "%s" je već dodeljena drugom delegatu.',
+                        $school->name
+                    );
+                    $valid = false;
+                }
             }
         }
 

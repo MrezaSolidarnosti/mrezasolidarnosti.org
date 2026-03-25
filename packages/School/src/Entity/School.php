@@ -3,6 +3,7 @@
 namespace Solidarity\School\Entity;
 
 use Solidarity\Beneficiary\Entity\Beneficiary;
+use Solidarity\Delegate\Entity\Delegate;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -30,6 +31,10 @@ class School
 
     #[ORM\OneToMany(targetEntity: Beneficiary::class, mappedBy: 'school')]
     private Collection $beneficiaries;
+
+    #[ORM\ManyToOne(targetEntity: Delegate::class, inversedBy: 'schools')]
+    #[ORM\JoinColumn(name: 'delegate_id', referencedColumnName: 'id', nullable: true)]
+    public ?Delegate $delegate = null;
 
     #[ORM\Column(name:'have_payout_priority')]
     private bool $havePayoutPriority = false;

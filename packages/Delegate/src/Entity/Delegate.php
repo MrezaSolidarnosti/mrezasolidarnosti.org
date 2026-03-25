@@ -38,9 +38,8 @@ class Delegate implements AuthenticatableInterface
     public ?string $ipv4;
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     public ?\DateTime $lastLogin;
-    #[ORM\ManyToOne(targetEntity: School::class, inversedBy: 'delegates')]
-    #[ORM\JoinColumn(name: 'schoolId', referencedColumnName: 'id', unique: false, nullable: true)]
-    public ?School $school;
+    #[ORM\OneToMany(targetEntity: School::class, mappedBy: 'delegate')]
+    public Collection $schools;
     #[ORM\ManyToMany(targetEntity: Project::class, inversedBy: 'delegates')]
     #[ORM\JoinTable(name: 'delegate_project')]
     public Collection $projects;

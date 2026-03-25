@@ -7,25 +7,27 @@ use Doctrine\Common\Collections\Collection;
 use Skeletor\Core\Filter\FilterInterface;
 use Solidarity\Beneficiary\Entity\PaymentMethod;
 use Solidarity\Beneficiary\Validator\Beneficiary as BeneficiaryValidator;
+use Solidarity\School\Service\School;
 
 class Beneficiary implements FilterInterface
 {
     public function __construct(
-        private BeneficiaryValidator $validator
-    ) {
+        private BeneficiaryValidator $validator, private School $school    ) {
     }
 
     public function filter($postData): array
     {
         // todo add validation for maxAmount from project if set for registered projects when saving
-
+        $school = $this->school->getById($postData['school']);
+//        var_dump($school->delegate);
+//        die();
         $data = [
             'id' => (isset($postData['id'])) ? $postData['id'] : null,
             'name' => trim($postData['name'] ?? ''),
             'status' => (int) ($postData['status'] ?? \Solidarity\Beneficiary\Entity\Beneficiary::STATUS_NEW),
             'comment' => trim($postData['comment'] ?? ''),
             'school' => $postData['school'] ?? null,
-            'createdBy' => $postData['createdBy'] ?? null,
+            'createdBy' => $school->delegate?->id ?? null,
         ];
 
         // Parse registeredPeriods rows from form
