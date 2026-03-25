@@ -91,7 +91,7 @@ class Transaction extends TableView
         $columnDefinitions = [
             ['name' => 'email', 'label' => 'Donator'],
             ['name' => 'name', 'label' => 'Oštećeni'],
-            ['name' => 'accountNumber', 'label' => 'Br računa / Instrukcije'],
+            ['name' => 'accountNumber', 'label' => 'Br računa'],
             ['name' => 'amount', 'label' => 'Iznos (RSD)'],
             ['name' => 'amountEur', 'label' => 'Iznos (EUR)'],
             ['name' => 'status', 'label' => 'Status', 'filterData' => \Solidarity\Transaction\Entity\Transaction::getHrStatuses()],

@@ -47,7 +47,7 @@ return [
         // Transaction permissions
         'transaction.view_list' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
         'transaction.view' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
-        'transaction.create' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
+        'transaction.create' => [User::ROLE_ADMIN, User::ROLE_STUFF],
         'transaction.edit' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
         'transaction.delete' => [User::ROLE_ADMIN],
 

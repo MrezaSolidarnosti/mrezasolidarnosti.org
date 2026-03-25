@@ -14,6 +14,7 @@ use GuzzleHttp\Psr7\Response;
 use Laminas\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
+use Solidarity\User\Entity\User;
 use Tamtamchik\SimpleFlash\Flash;
 use Turanjanin\SerbianTransliterator\Transliterator;
 
@@ -42,7 +43,9 @@ class TransactionController extends AjaxCrudController
         private Donor  $donor, private Project $project, private Mailer $mailer, private Period $period
     ) {
         parent::__construct($service, $session, $config, $flash, $template);
-//        $this->tableViewConfig['createButton'] = false;
+        if ($this->getSession()->getStorage()->offsetGet('loggedInRole') !== User::ROLE_ADMIN) {
+            $this->tableViewConfig['createButton'] = false;
+        }
     }
 
     public function uploadTransactionListForm()
