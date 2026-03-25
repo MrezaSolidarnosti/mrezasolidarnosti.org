@@ -31,15 +31,17 @@ class DelegateRepository extends TableViewRepository implements LoginRepositoryI
     {
         return [
             'projects' => 'p',
-            'school'   => 's',
+            'schools'  => 's',
         ];
     }
 
     public function getAffectedDelegates()
     {
-        $sql = "SELECT * FROM delegate d where 
+        $sql = "SELECT d.* FROM delegate d where
 (SELECT count(*) FROM transaction where educatorId IN (
-SELECT id FROM educator e WHERE e.schoolid = d.schoolid
+SELECT id FROM educator e WHERE e.schoolid IN (
+    SELECT s.id FROM school s WHERE s.delegate_id = d.id
+)
 ) ) > 0";
 
         $stmt = $this->entityManager->getConnection()->prepare($sql);

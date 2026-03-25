@@ -2,14 +2,12 @@
 namespace Solidarity\Delegate\Service;
 
 use Solidarity\Delegate\Repository\DelegateRepository;
-use Solidarity\Delegate\Entity\Delegate as DelegateEntity;
 use Skeletor\Core\TableView\Service\TableView;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\User\Service\Session;
+use Solidarity\Beneficiary\Repository\BeneficiaryRepository;
 use Solidarity\Delegate\Filter\Delegate as DelegateFilter;
 use Solidarity\Mailer\Service\Mailer;
-use Solidarity\Beneficiary\Repository\BeneficiaryRepository;
-use Solidarity\School\Repository\SchoolTypeRepository;
 use Solidarity\School\Service\SchoolType;
 use Solidarity\Transaction\Service\Project;
 
@@ -24,7 +22,7 @@ class Delegate extends TableView
     public function __construct(
         DelegateRepository $repo, Session $user, Logger $logger, DelegateFilter $filter, private \DateTime $dt,
         private Mailer $mailer, private SchoolType $schoolType, private Project $project,
-        private BeneficiaryRepository $beneficiaryRepo
+        private BeneficiaryRepository $beneficiaryRepo,
     ) {
         parent::__construct($repo, $user, $logger, $filter);
     }
@@ -36,18 +34,14 @@ class Delegate extends TableView
 
     public function create(array $data)
     {
-        $schoolValue = $data['school'] ?? null;
-        $schoolId = is_array($schoolValue) ? (int) ($schoolValue['id'] ?? 0) : (int) $schoolValue;
-        $schoolId = $schoolId ?: null;
+        $schoolIds = array_filter(array_map('intval', $data['schools'] ?? []));
 
         $entity = parent::create($data);
 
-        // Assign orphaned beneficiaries at this school to the new delegate
-        if ($schoolId) {
-            $this->beneficiaryRepo->assignOrphanedBeneficiariesToDelegate(
-                $schoolId,
-                $entity->getId()
-            );
+        if (!empty($schoolIds)) {
+            foreach ($schoolIds as $schoolId) {
+                $this->beneficiaryRepo->assignOrphanedBeneficiariesToDelegate($schoolId, $entity->getId());
+            }
         }
 
         return $entity;
@@ -61,35 +55,28 @@ class Delegate extends TableView
             $data['formLinkSent'] = 1;
         }
 
-        $delegateId = (int) $data['id'];
-        $schoolValue = $data['school'] ?? null;
-        $newSchoolId = is_array($schoolValue) ? (int) ($schoolValue['id'] ?? 0) : (int) $schoolValue;
-        $newSchoolId = $newSchoolId ?: null;
+        $newSchoolIds = array_filter(array_map('intval', $data['schools'] ?? []));
 
-        // Check if school is changing
-        $oldEntity = $this->repo->getById($delegateId);
-        $oldSchoolId = $oldEntity->school?->getId();
+        // Diff old vs new for beneficiary reassignment
+        $oldDelegate = $this->repo->getById((int) $data['id']);
+        $oldSchoolIds = [];
+        foreach ($oldDelegate->schools as $school) {
+            $oldSchoolIds[] = $school->getId();
+        }
+        $removedSchoolIds = array_diff($oldSchoolIds, $newSchoolIds);
+        $addedSchoolIds = array_diff($newSchoolIds, $oldSchoolIds);
 
-        // If school changed, nullify createdBy on beneficiaries of the old school
-        if ($oldSchoolId && $oldSchoolId !== $newSchoolId) {
-            $this->beneficiaryRepo->nullifyCreatedByForDelegate($delegateId);
+        if (!empty($removedSchoolIds)) {
+            $this->beneficiaryRepo->nullifyCreatedByForDelegate((int) $data['id']);
         }
 
         $entity = parent::update($data);
 
-        // Assign orphaned beneficiaries at the new school to this delegate
-        if ($newSchoolId) {
-            $this->beneficiaryRepo->assignOrphanedBeneficiariesToDelegate(
-                $newSchoolId,
-                $delegateId
-            );
+        if (!empty($addedSchoolIds)) {
+            foreach ($addedSchoolIds as $schoolId) {
+                $this->beneficiaryRepo->assignOrphanedBeneficiariesToDelegate($schoolId, (int) $data['id']);
+            }
         }
-
-        // @TODO remove debug
-        file_put_contents(__DIR__ . '/delegate_debug.log', sprintf(
-            "delegateId=%d, newSchoolId=%s, oldSchoolId=%s, data[school]=%s\n",
-            $delegateId, var_export($newSchoolId, true), var_export($oldSchoolId, true), $data['school'] ?? 'NULL'
-        ), FILE_APPEND);
 
         return $entity;
     }
@@ -126,8 +113,8 @@ class Delegate extends TableView
                 ],
                 'name' => $delegate->name .' ('. implode(', ', $projects) . ')',
                 'p.id' => implode(', ', $projects),
-                'school' => $delegate->school?->name,
-                'schoolType' => $delegate->school?->type->name,
+                'school' => implode(', ', array_map(fn($s) => $s->name, $delegate->schools->toArray())),
+                'schoolType' => implode(', ', array_unique(array_filter(array_map(fn($s) => $s->type?->name, $delegate->schools->toArray())))),
                 'phone' => $delegate->phone,
                 'status' => \Solidarity\Delegate\Entity\Delegate::getHrStatus($delegate->status),
 //                'updatedAt' => $delegate->getUpdatedAt()->format('d.m.Y'),

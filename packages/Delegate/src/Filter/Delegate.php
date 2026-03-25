@@ -32,7 +32,7 @@ class Delegate implements FilterInterface
             'verifiedBy' => isset($postData['verifiedBy'])
                 ? Transliterator::toLatin($postData['verifiedBy'])
                 : '',
-            'school' => $postData['school'],
+            'schools' => $postData['schools'] ?? [],
             'projects' => $postData['projects'],
             'comment' => Transliterator::toLatin($postData['comment'] ?? ''),
             'adminComment' => Transliterator::toLatin($postData['adminComment'] ?? ''),

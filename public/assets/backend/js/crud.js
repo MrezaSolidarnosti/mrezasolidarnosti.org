@@ -12,7 +12,7 @@ import(`${configDirectory}/config.js`).then(({config: pageConfig}) => {
     console.error('No page config found.');
 });
 if(pageIdentifier) {
-    const version = '0.0.1';
+    const version = '0.0.2';
     import(`${pagesDirectory}/${pageIdentifier}.js?v=${version}`).then(({default: Page}) => {
         try {
             const page = new Page();

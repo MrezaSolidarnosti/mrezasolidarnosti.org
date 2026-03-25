@@ -11,13 +11,10 @@ export default class Delegate extends CrudPage {
             enableCheckboxes: true,
             shiftCheckboxModifier: true
         };
-        this.modalOptions = {
-            createModalWidth: '70%',
-            createModalHeight: '70%',
-            editModalWidth: '70%',
-            editModalHeight: '70%'
-        }
-    }
+        this.modalConfig = {
+            width: '90%',
+            height: '70%'
+        }    }
 
     actionFilter = (action, entity) => {
         const role = document.getElementById('navigation').dataset.role;
@@ -39,5 +36,9 @@ export default class Delegate extends CrudPage {
             }
         }
         return td;
+    }
+
+    onFormReady(data) {
+        console.log('Form ready with data:', data);
     }
 }

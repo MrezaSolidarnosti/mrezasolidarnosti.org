@@ -21,6 +21,9 @@ class Beneficiary implements ValidatorInterface
         if (empty($data['name'])) {
             $this->messages['name'][] = 'Ime je neophodno.';
         }
+        if (!$data['createdBy']) {
+            $this->messages['createdBy'][] = 'School has no delegate assigned.';
+        }
 
         if (empty($data['paymentMethods'])) {
             $this->messages['paymentMethods'][] = 'Bar jedan metod plaćanja mora biti unet.';
