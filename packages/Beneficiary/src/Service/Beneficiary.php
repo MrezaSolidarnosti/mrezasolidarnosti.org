@@ -11,13 +11,14 @@ use Solidarity\Beneficiary\Filter\Beneficiary as BeneficiaryFilter;
 use Solidarity\Delegate\Service\Delegate;
 use Solidarity\School\Service\School;
 use Solidarity\Transaction\Entity\Transaction;
+use Solidarity\School\Service\City;
 use Solidarity\Transaction\Service\Project;
 
 class Beneficiary extends TableView
 {
     public function __construct(
         BeneficiaryRepository $repo, Session $user, Logger $logger, BeneficiaryFilter $filter,
-        private Project $project, private School $school, private Delegate $delegate
+        private Project $project, private School $school, private Delegate $delegate, private City $city
     ) {
         parent::__construct($repo, $user, $logger, $filter);
     }
@@ -77,11 +78,11 @@ class Beneficiary extends TableView
                 'school' => $beneficiary->school->name,
                 'sumAmount' => number_format($totalAmount, 0),
                 'currentAmount' => number_format($confirmedAmount, 0),
-                // TODO add message when delegate not existing
                 'delegateVerified' => ($beneficiary->createdBy?->status === \Solidarity\Delegate\Entity\Delegate::STATUS_VERIFIED) ? 'Da' : 'Ne',
                 'pm.accountNumber' => $methods,//$beneficiary->accountNumber,
+                's.city' => $beneficiary->school?->city?->name,
                 'status' => \Solidarity\Beneficiary\Entity\Beneficiary::getHrStatus($beneficiary->status),
-                'createdBy' => $beneficiary->createdBy?->name,
+                'createdBy' => sprintf('<a href="/delegate/view/id=%d">%s</a>', $beneficiary->createdBy?->id, $beneficiary->createdBy?->name),
                 'createdAt' => $beneficiary->getCreatedAt()->format('d.m.Y'),
             ];
             $items[] = [
@@ -101,11 +102,12 @@ class Beneficiary extends TableView
             ['name' => 'pm.accountNumber', 'label' => 'Metode plaćanja'],
             ['name' => 'status', 'label' => 'Status', 'filterData' => \Solidarity\Beneficiary\Entity\Beneficiary::getHrStatuses()],
             ['name' => 'rp.project', 'label' => 'Projekat', 'filterData' => $this->project->getFilterData()],
-            ['name' => 'school', 'label' => 'Škola', 'filterData' => $this->school->getFilterData()]
+            ['name' => 'school', 'label' => 'Škola', 'filterData' => $this->school->getFilterData()],
+            ['name' => 's.city', 'label' => 'Grad', 'filterData' => $this->city->getFilterData()]
         ];
 
         if ($this->getUserSession()->getLoggedInEntityType() === 'user') {
-            $items[] = ['name' => 'delegateVerified', 'label' => 'Delegat verifikovan'];
+            $items[] = ['name' => 'delegateVerified', 'label' => 'Delegat postoji <br /> i verifikovan'];
             $items[] = ['name' => 'createdBy', 'label' => 'Delegat', 'filterData' => $this->delegate->getFilterData()];
         }
         $items[] = ['name' => 'createdAt', 'label' => 'Kreirano'];

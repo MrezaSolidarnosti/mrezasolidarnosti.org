@@ -120,6 +120,7 @@ return [
         '/transaction/form/*' => 'transaction.edit',
         '/transaction/updateStatus/*' => 'transaction.edit',
         '/transaction/update/*' => 'transaction.edit',
+        '/transaction/updateStatusBulk*' => 'transaction.edit',
         '/transaction/delete/*' => 'transaction.delete',
 
         // School/City routes

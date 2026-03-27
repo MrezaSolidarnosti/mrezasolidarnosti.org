@@ -48,6 +48,62 @@ class TransactionController extends AjaxCrudController
         }
     }
 
+    public function updateStatusBulk(): Response
+    {
+        $returnStatus = 200;
+        $success = false;
+        try {
+            $status = (int) ($this->getRequest()->getQueryParams()['status'] ?? 0);
+            $data = json_decode($this->getRequest()->getBody(), true);
+            if(!isset($data['ids'])) {
+                throw new \Exception('No ids provided.');
+            }
+            $validStatuses = [
+                \Solidarity\Transaction\Entity\Transaction::STATUS_CANCELLED,
+                \Solidarity\Transaction\Entity\Transaction::STATUS_CONFIRMED,
+//            \Solidarity\Transaction\Entity\Transaction::STATUS_REJECTED,
+            ];
+            if (!in_array($status, $validStatuses, true)) {
+                $response = [
+                    'success' => false,
+                    'message' => 'Status transakcije nije validan.',
+                ];
+                $this->getResponse()->getBody()->write(json_encode($response));
+                $this->getResponse()->getBody()->rewind();
+                return $this->getResponse()->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+            $failed = [];
+            $message = '';
+            foreach($data['ids'] as $id) {
+                try {
+                    $this->service->updateStatus($id, $status);
+                    if ($status === \Solidarity\Transaction\Entity\Transaction::STATUS_CONFIRMED) {
+                        $message = "Transakcija su potvrđene.";
+                    } elseif ($status === \Solidarity\Transaction\Entity\Transaction::STATUS_CANCELLED) {
+                        $message = "Transakcija su otkazane.";
+                    }
+                    $success = true;
+                } catch (\Exception $e) {
+                    $failed[$id] = $e->getMessage();
+                    $success = false;
+                    $message = $e->getMessage();
+                    $returnStatus = 500;
+                }
+            }
+        } catch (\Exception $e) {
+            // todo might not need to translate all exception :)
+            $message = $this->translate($e->getMessage());
+            $success = false;
+        }
+        $this->getResponse()->getBody()->write(json_encode([
+            'message' => $message,
+            'success' => $success,
+        ]));
+        $this->getResponse()->getBody()->rewind();
+
+        return $this->getResponse()->withHeader('Content-Type', 'application/json')->withStatus($returnStatus);
+    }
+
     public function uploadTransactionListForm()
     {
         return $this->respond('uploadTransactionList', []);

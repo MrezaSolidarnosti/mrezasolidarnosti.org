@@ -8,6 +8,7 @@ use Solidarity\Donor\Entity\Donor;
 use Solidarity\Period\Entity\Period;
 use Solidarity\Transaction\Service\Project as ProjectService;
 use Solidarity\Transaction\Entity\Project;
+use Solidarity\Transaction\Entity\Transaction as TransactionEntity;
 use Solidarity\Transaction\Repository\TransactionRepository;
 use Skeletor\Core\TableView\Service\TableView;
 use Psr\Log\LoggerInterface as Logger;
@@ -34,6 +35,39 @@ class Transaction extends TableView
     public function getPaidSumAmountForDonorPerProject(Donor $donor, Project $project, ?int $paymentType = null)
     {
         return $this->repo->getPaidSumAmountForDonorPerProject($donor, $project, $paymentType);
+    }
+
+    private const LOCKED_STATUSES = [
+        TransactionEntity::STATUS_CONFIRMED,
+        TransactionEntity::STATUS_CANCELLED,
+        TransactionEntity::STATUS_EXPIRED,
+        TransactionEntity::STATUS_PAID,
+    ];
+
+    private const VALID_TARGET_STATUSES = [
+        TransactionEntity::STATUS_CONFIRMED,
+        TransactionEntity::STATUS_CANCELLED,
+    ];
+
+    public function updateStatus(int $id, int $newStatus): void
+    {
+        if (!in_array($newStatus, self::VALID_TARGET_STATUSES, true)) {
+            throw new \InvalidArgumentException('Invalid target status.');
+        }
+
+        $transaction = $this->repo->getById($id);
+        if (!$transaction) {
+            throw new \Exception('Transaction not found.');
+        }
+
+        if (in_array($transaction->status, self::LOCKED_STATUSES, true)) {
+            throw new \Exception(sprintf(
+                'Status "%s" ne moze biti promenjen.',
+                TransactionEntity::getHrStatus($transaction->status)
+            ));
+        }
+
+        $this->repo->updateField('status', $newStatus, $id);
     }
 
     public function getTransactionsBySchool($schoolId)

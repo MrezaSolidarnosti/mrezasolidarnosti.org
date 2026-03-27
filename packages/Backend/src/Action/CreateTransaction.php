@@ -30,9 +30,9 @@ class CreateTransaction extends Html
      * @param Engine $template
      */
     public function __construct(
-        Logger $logger, Config $config, Engine $template, private Session $session, private Flash $flash,
-        public readonly EntityManagerInterface $entityManager, public readonly TransactionService $transaction,
-        public readonly Beneficiary $beneficiary, public readonly Project $project, public readonly Donor $donor
+        Logger $logger, Config $config, Engine $template, public readonly EntityManagerInterface $entityManager,
+        public readonly TransactionService $transaction, public readonly Beneficiary $beneficiary,
+        public readonly Project $project, public readonly Donor $donor
     ) {
         parent::__construct($logger, $config, $template);
     }
@@ -54,12 +54,9 @@ class CreateTransaction extends Html
             $this->getLogger()->log(\Monolog\Level::Info, 'Holiday detected. Not creating transactions.');
             return $response;
         }
-
         $projects = $this->project->getEntities([], 2);
-
-        // todo should be no more than 1 period for processing per project ?
         foreach ($projects as $project) {
-
+            // todo what should be the ordering for periods? probably date asc?
             foreach ($project->periods as $period) {
                 if ($period->processing) {
                     foreach ($this->donor->getDonorsByProject($project) as $donor) {

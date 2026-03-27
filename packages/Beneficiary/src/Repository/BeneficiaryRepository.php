@@ -21,7 +21,7 @@ class BeneficiaryRepository extends TableViewRepository
 
     public function getJoinableEntities()
     {
-        return ['paymentMethods' => 'pm', 'registeredPeriods' => 'rp'];
+        return ['paymentMethods' => 'pm', 'registeredPeriods' => 'rp', 'school' => 's'];
     }
 
 

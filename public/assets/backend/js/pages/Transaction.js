@@ -40,7 +40,7 @@ export default class Educator extends CrudPage {
                             container: this.getMessagesContainerFixed(),
                             type: Message.VIEW_TYPES.NOTIFICATION,
                         },
-                        ephemeralTimeout: 2000
+                        ephemeralTimeout: 4000
                     });
                 } else {
                     Message.spawn({
@@ -50,7 +50,7 @@ export default class Educator extends CrudPage {
                             container: this.getMessagesContainerFixed(),
                             type: Message.VIEW_TYPES.NOTIFICATION,
                         },
-                        ephemeralTimeout: 2000
+                        ephemeralTimeout: 4000
                     });
                 }
 
@@ -75,7 +75,7 @@ export default class Educator extends CrudPage {
                             container: this.getMessagesContainerFixed(),
                             type: Message.VIEW_TYPES.NOTIFICATION,
                         },
-                        ephemeralTimeout: 2000
+                        ephemeralTimeout: 4000
                     });
                 } else {
                     Message.spawn({
@@ -85,11 +85,111 @@ export default class Educator extends CrudPage {
                             container: this.getMessagesContainerFixed(),
                             type: Message.VIEW_TYPES.NOTIFICATION,
                         },
-                        ephemeralTimeout: 2000
+                        ephemeralTimeout: 4000
                     });
                 }
 
                 this.reloadTable(true);
+            }
+        });
+
+        this.setDataTableBulkAction({
+            name: 'confirm',
+            content: 'Potvrdi',
+            useLoader: true,
+            // promptMessage: Translator.translate('Are you sure?'),
+            callback: async (ids) => {
+                if(ids.length === 0) {
+                    return;
+                }
+                const req = await fetch('/transaction/updateStatusBulk/?status=3', {
+                    method: 'POST',
+                    body: JSON.stringify({ids: ids})
+                });
+                if(req.redirected && req.url.includes('loginForm')) {
+                    Message.spawn({
+                        message: `<div>${'Your session has expired'}. ${'Please'} <a style="color:#4fc46d" href="/" title="log in">${'log in'}</a> ${'again'}.</div>`,
+                        type: Message.TYPES.ERROR,
+                        view: {
+                            container: this.getMessagesContainerFixed(),
+                            type: Message.VIEW_TYPES.NOTIFICATION,
+                        }
+                    });
+                    return;
+                }
+                const res = await req.json();
+                if(res.success) {
+                    Message.spawn({
+                        message: res.message,
+                        type: Message.TYPES.SUCCESS,
+                        view: {
+                            container: this.getMessagesContainerFixed(),
+                            type: Message.VIEW_TYPES.NOTIFICATION,
+                        },
+                        ephemeralTimeout: 4000
+                    });
+                    this.reloadTable();
+                } else {
+                    Message.spawn({
+                        message: res.message,
+                        type: Message.TYPES.ERROR,
+                        view: {
+                            container: this.getMessagesContainerFixed(),
+                            type: Message.VIEW_TYPES.NOTIFICATION,
+                        },
+                        ephemeralTimeout: 4000
+                    });
+                }
+            }
+        });
+
+        this.setDataTableBulkAction({
+            name: 'cancel',
+            content: 'Otkaži',
+            useLoader: true,
+            // promptMessage: Translator.translate('Are you sure?'),
+            callback: async (ids) => {
+                if(ids.length === 0) {
+                    return;
+                }
+                const req = await fetch('/transaction/updateStatusBulk/?status=4', {
+                    method: 'POST',
+                    body: JSON.stringify({ids: ids})
+                });
+                if(req.redirected && req.url.includes('loginForm')) {
+                    Message.spawn({
+                        message: `<div>${'Your session has expired'}. ${'Please'} <a style="color:#4fc46d" href="/" title="log in">${'log in'}</a> ${'again'}.</div>`,
+                        type: Message.TYPES.ERROR,
+                        view: {
+                            container: this.getMessagesContainerFixed(),
+                            type: Message.VIEW_TYPES.NOTIFICATION,
+                        }
+                    });
+                    return;
+                }
+                const res = await req.json();
+                if(res.success) {
+                    Message.spawn({
+                        message: res.message,
+                        type: Message.TYPES.SUCCESS,
+                        view: {
+                            container: this.getMessagesContainerFixed(),
+                            type: Message.VIEW_TYPES.NOTIFICATION,
+                        },
+                        ephemeralTimeout: 4000
+                    });
+                    this.reloadTable();
+                } else {
+                    Message.spawn({
+                        message: res.message,
+                        type: Message.TYPES.ERROR,
+                        view: {
+                            container: this.getMessagesContainerFixed(),
+                            type: Message.VIEW_TYPES.NOTIFICATION,
+                        },
+                        ephemeralTimeout: 4000
+                    });
+                }
             }
         });
     }

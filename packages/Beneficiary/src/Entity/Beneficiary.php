@@ -25,14 +25,9 @@ class Beneficiary
     public const STATUS_GAVE_UP = 4;
     public const STATUS_PROBLEM = 7;
 
-    // @TODO not needed?
-    public const TYPE_EDUCATOR = 1;
-    public const TYPE_REPRESSED_PERSON = 2;
-
     #[ORM\Column(type: Types::STRING, length: 255)]
     public string $name;
-//    #[ORM\Column(type: Types::INTEGER)]
-//    public int $type;
+
     #[ORM\Column(type: Types::INTEGER)]
     public int $status;
 
@@ -78,18 +73,5 @@ class Beneficiary
     public static function getHrStatus($status): string
     {
         return static::getHrStatuses()[$status];
-    }
-
-    public static function getHrTypes(): array
-    {
-        return [
-            self::TYPE_EDUCATOR => 'Zaposleni u prosveti',
-            self::TYPE_REPRESSED_PERSON => 'Građani pogođeni represijom',
-        ];
-    }
-
-    public static function getHrType($type): string
-    {
-        return static::getHrTypes()[$type];
     }
 }

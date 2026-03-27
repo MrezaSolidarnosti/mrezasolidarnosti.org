@@ -47,8 +47,8 @@ class Delegate implements AuthenticatableInterface
     public static function getHrStatuses(): array
     {
         return array(
-            self::STATUS_NEW => 'New',
-            self::STATUS_VERIFIED => 'Verified',
+            self::STATUS_NEW => 'Nov',
+            self::STATUS_VERIFIED => 'Verifikovan',
             self::STATUS_PROBLEM => 'Problem',
         );
     }
@@ -75,7 +75,7 @@ class Delegate implements AuthenticatableInterface
 
     public function getAuthRole(): int
     {
-        // Delegates have a fixed role @TODO
+        // Delegates have a fixed role
         return 10;
     }
 

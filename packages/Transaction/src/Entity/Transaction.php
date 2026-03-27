@@ -26,16 +26,11 @@ class Transaction
     const PER_PERSON_LIMIT = 30000;
     const EUR_TO_RSD_RATE = 117.5;
 
-//    const BENEFICIARY_TYPE_EDUCATOR = 1;
-//    const BENEFICIARY_TYPE_BENEFICIARY = 2;
-
     #[ORM\Column(type: Types::SMALLINT)]
     public int $paymentType;
 
-    // @todo one of these two must be entered; accNumber can contain phone number when using WU
     #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
     public ?string $accountNumber;
-    // should contain textual instruction if required
     #[ORM\Column(type: Types::STRING, length: 512, nullable: true)]
     public ?string $instructions;
     #[ORM\Column(type: Types::INTEGER)]

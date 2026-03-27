@@ -36,10 +36,8 @@ class Transaction implements FilterInterface
             'status' => (int) ($postData['status'] ?? 1),
             'donor' => $postData['donor'],
             'donorConfirmed' => (int) ($postData['donorConfirmed'] ?? 0),
-//            'paymentType' => isset($postData['paymentType']) ? (int) $postData['paymentType'] : null,
-//            'accountNumber' => $postData['accountNumber'] ?? null,
-//            'instructions' => $postData['instructions'] ?? null,
-            //todo cleanup
+            'accountNumber' => $postData['accountNumber'] ?? null,
+            'instructions' => $postData['instructions'] ?? null,
             'skipCsrf' => $postData['skipCsrf'] ?? false,
             CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME] ?? null,
         ];

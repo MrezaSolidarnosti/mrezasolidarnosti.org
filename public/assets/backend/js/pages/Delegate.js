@@ -27,7 +27,7 @@ export default class Delegate extends CrudPage {
     tdStyler = (td, columnName, columnValue, entity) => {
         if (columnName === 'status') {
             switch (columnValue) {
-                case 'Verified':
+                case 'Verifikovan':
                     this.makeTDValueToBadge(td, columnValue, CrudPage.BADGE_TYPES.GREEN);
                     break;
                 case 'Problem':

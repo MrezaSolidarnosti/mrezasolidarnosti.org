@@ -8,6 +8,7 @@ use Skeletor\User\Service\Session;
 use Solidarity\Beneficiary\Repository\BeneficiaryRepository;
 use Solidarity\Delegate\Filter\Delegate as DelegateFilter;
 use Solidarity\Mailer\Service\Mailer;
+use Solidarity\School\Service\School;
 use Solidarity\School\Service\SchoolType;
 use Solidarity\Transaction\Service\Project;
 
@@ -22,7 +23,7 @@ class Delegate extends TableView
     public function __construct(
         DelegateRepository $repo, Session $user, Logger $logger, DelegateFilter $filter, private \DateTime $dt,
         private Mailer $mailer, private SchoolType $schoolType, private Project $project,
-        private BeneficiaryRepository $beneficiaryRepo,
+        private BeneficiaryRepository $beneficiaryRepo, private School $school
     ) {
         parent::__construct($repo, $user, $logger, $filter);
     }
@@ -113,7 +114,7 @@ class Delegate extends TableView
                 ],
                 'name' => $delegate->name .' ('. implode(', ', $projects) . ')',
                 'p.id' => implode(', ', $projects),
-                'school' => implode(', ', array_map(fn($s) => $s->name, $delegate->schools->toArray())),
+                'school' => implode(',<br /> ', array_map(fn($s) => $s->name, $delegate->schools->toArray())),
                 'schoolType' => implode(', ', array_unique(array_filter(array_map(fn($s) => $s->type?->name, $delegate->schools->toArray())))),
                 'phone' => $delegate->phone,
                 'status' => \Solidarity\Delegate\Entity\Delegate::getHrStatus($delegate->status),
@@ -134,13 +135,13 @@ class Delegate extends TableView
             ['name' => 'email', 'label' => 'Email'],
             ['name' => 'name', 'label' => 'Ime'],
             ['name' => 'phone', 'label' => 'Telefon'],
-            ['name' => 'p.id', 'label' => 'project', 'filterData' => $this->project->getFilterData()],
+            ['name' => 'p.id', 'label' => 'Projekat', 'filterData' => $this->project->getFilterData()],
             ['name' => 'status', 'label' => 'Status', 'filterData' => \Solidarity\Delegate\Entity\Delegate::getHrStatuses()],
             ['name' => 'schoolType', 'label' => 'Tip škole', 'filterData' => $this->schoolType->getFilterData()],
-            ['name' => 'school', 'label' => 'Škola'],
+            ['name' => 'school', 'label' => 'Škola', 'filterData' => $this->school->getFilterData()],
 //            ['name' => 'city', 'label' => 'City'],
 //            ['name' => 'updatedAt', 'label' => 'Updated at', 'priority' => 8],
-            ['name' => 'createdAt', 'label' => 'Kreirano u', 'priority' => 9],
+            ['name' => 'createdAt', 'label' => 'Registrovan', 'priority' => 9],
         ];
 
         return $columnDefinitions;

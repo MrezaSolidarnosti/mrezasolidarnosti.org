@@ -3,32 +3,19 @@
 namespace Solidarity\Transaction\Validator;
 
 use Skeletor\Core\Validator\ValidatorInterface;
+use Solidarity\Beneficiary\Repository\BeneficiaryRepository;
+use Solidarity\Donor\Repository\DonorRepository;
 use Volnix\CSRF\CSRF;
 
-/**
- * Class Client.
- * User validator.
- *
- * @package Fakture\Client\Validator
- */
 class Transaction implements ValidatorInterface
 {
-
-    /**
-     * @var CSRF
-     */
-    private $csrf;
-
     private $messages = [];
 
-    /**
-     * User constructor.
-     *
-     * @param CSRF $csrf
-     */
-    public function __construct(CSRF $csrf)
-    {
-        $this->csrf = $csrf;
+    public function __construct(
+        private CSRF $csrf,
+        private DonorRepository $donorRepo,
+        private BeneficiaryRepository $beneficiaryRepo,
+    ) {
     }
 
     /**
@@ -44,7 +31,51 @@ class Transaction implements ValidatorInterface
 
         // @TODO verify that donor has entered more than entered amount in the form
 
-        // todo verify that assigned donor matches beneficiary type/project (educator, beneficiary)
+        // Validate donor matches beneficiary payment method and project
+        $donorId = $data['donor'] ?? null;
+        $beneficiaryId = $data['beneficiary'] ?? null;
+        $projectId = $data['project'] ?? null;
+
+        if ($donorId && $beneficiaryId && $projectId) {
+            $donor = $this->donorRepo->getById((int) $donorId);
+            $beneficiary = $this->beneficiaryRepo->getById((int) $beneficiaryId);
+
+            if ($donor && $beneficiary) {
+                // Check donor has a payment method for the selected project
+                $donorHasProject = false;
+                $donorTypesForProject = [];
+                foreach ($donor->paymentMethods as $pm) {
+                    if ($pm->project->getId() === (int) $projectId) {
+                        $donorHasProject = true;
+                        $donorTypesForProject[] = $pm->type;
+                    }
+                }
+
+                if (!$donorHasProject) {
+                    $this->messages['donor'][] = 'Donor does not have a payment method for the selected project.';
+                    $valid = false;
+                } else {
+                    // Check donor has a matching payment type with beneficiary
+                    $beneficiaryTypes = [];
+                    foreach ($beneficiary->paymentMethods as $bPm) {
+                        $beneficiaryTypes[] = $bPm->type;
+                    }
+
+                    $matchingTypes = array_intersect($donorTypesForProject, $beneficiaryTypes);
+                    if (empty($matchingTypes)) {
+                        $this->messages['donor'][] = 'Donor and beneficiary have no matching payment method type for the selected project.';
+                        $valid = false;
+                    }
+                }
+            }
+        }
+
+        $accountNumber = trim($data['accountNumber'] ?? '');
+        $instructions = trim($data['instructions'] ?? '');
+        if ($accountNumber === '' && $instructions === '') {
+            $this->messages['accountNumber'][] = 'Either account number or instructions must be entered.';
+            $valid = false;
+        }
 
         if (!$data['skipCsrf']) {
             if (!$this->csrf->validate($data)) {

@@ -309,3 +309,8 @@ form:has(.selectedService) .fullWidth:has(#totalWithoutVAT) .inputContainer {
 }
 
 /*# sourceMappingURL=style.css.map */
+
+#crudTable td a {
+  text-decoration: underline;
+  color: var(--colorPrimary-500);
+}
