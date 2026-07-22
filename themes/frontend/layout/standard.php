@@ -47,8 +47,6 @@
 	<meta property="og:type" content="website">
 	<meta property="og:url" content="https://mrezasolidarnosti.org/">
 
-    <link rel="icon" type="image/svg+xml" href="/assets/img/serbian-flag.svg">
-    <link rel="apple-touch-icon" href="/assets/img/serbian-flag.svg">
     <meta name="description" content="<?=$this->t('Mreža solidarnosti je inicijativa grupe neformalnih stručnjaka iz raznih oblasti. Služi za  direktnu finansijsku podršku nastavnicima i vannastavnom osoblju, kao i za donacije protiv represije. Pridruži se, doniraj i podrži one koji se bore za bolje obrazovanje i protiv represije!')?>">
     <meta name="keywords" content="<?=$this->t('Mreža solidarnosti, prosveta, donacije, podrška nastavnicima, solidarnost, pomoć nastavnicima, obustava rada, direktna podrška')?>">
     <!-- Open Graph / Facebook --><meta property="og:type" content="website">
@@ -66,8 +64,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
     <!-- Tabler Icons -->
 
-<!--	<link rel="icon" href="/assets/img/favicon.ico" sizes="any">-->
-<!--	<link rel="apple-touch-icon" href="/assets/img/favicon.png">-->
+	<link rel="icon" href="/favicon.ico" sizes="any">
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
     <link rel="stylesheet" href="<?=FRONT_ASSET_URL?>/css/style.css?v=0.0.7">
 </head>
