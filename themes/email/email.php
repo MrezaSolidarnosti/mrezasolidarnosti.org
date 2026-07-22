@@ -17,8 +17,9 @@
     </div>
 
     <div>
-        <div>Solidarno,</div>
+        <div><?=$this->t('Solidarno')?>,</div>
         <div><b>Mreža solidarnosti</b></div>
+        <div><a target="_blank" href="https://mrezasolidarnosti.org">https://mrezasolidarnosti.org</a></div>
     </div>
 </div>
 </body>

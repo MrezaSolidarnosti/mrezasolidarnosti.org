@@ -56,6 +56,21 @@ class Mailer extends \Skeletor\Core\Mailer\Service\MailerSendMailer
         $mail->send();
     }
 
+    public function sendDonorInstructionsMail($email, $name)
+    {
+        $body = $this->render('donorInstructions', [
+            'name' => $name,
+            'baseUrl' => $this->config->offsetGet('baseUrl')
+        ]);
+        $recipients = [
+            new Recipient($email, $name),
+        ];
+        $subject = 'Stigle su ti nove instrukcije za uplatu';
+
+        $this->send($recipients, $subject, $body);
+    }
+
+
     public function sendDonorRegisteredMail($email, $name, $token)
     {
         $body = $this->render('donorRegistered', [
@@ -66,7 +81,7 @@ class Mailer extends \Skeletor\Core\Mailer\Service\MailerSendMailer
         $recipients = [
             new Recipient($email, $email),
         ];
-        $subject = 'Potvrda registracije na Mrežu solidarnosti';
+        $subject = 'Potvrda registracije donatora na Mrežu solidarnosti';
 
         $this->send($recipients, $subject, $body);
     }

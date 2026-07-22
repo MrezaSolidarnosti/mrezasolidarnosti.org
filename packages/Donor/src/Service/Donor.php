@@ -3,7 +3,6 @@ namespace Solidarity\Donor\Service;
 
 use Skeletor\Core\Validator\ValidatorException;
 use Skeletor\Login\Service\MagicLinkService;
-use Solidarity\Donor\Filter\DonorFilterInterface;
 use Solidarity\Donor\Filter\DonorProfileData;
 use Solidarity\Donor\Repository\DonorRepository;
 use Skeletor\Core\TableView\Service\TableView;

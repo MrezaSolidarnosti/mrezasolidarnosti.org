@@ -7,6 +7,7 @@ use Laminas\Config\Config;
 use \League\Plates\Engine;
 use Skeletor\Core\Action\Web\Html;
 use Solidarity\Donor\Service\Donor;
+use Solidarity\Mailer\Service\Mailer;
 use Solidarity\Transaction\Service\Transaction as TransactionService;
 use Solidarity\Transaction\Service\Project;
 
@@ -16,7 +17,8 @@ class CreateTransaction extends Html
         Logger $logger, Config $config, Engine $template,
         public readonly TransactionService $transaction,
         public readonly Project $project,
-        public readonly Donor $donor
+        public readonly Donor $donor,
+        private Mailer $mailer
     ) {
         parent::__construct($logger, $config, $template);
     }
@@ -58,11 +60,11 @@ class CreateTransaction extends Html
         foreach ($donors as $donor) {
             $this->getLogger()->log(\Monolog\Level::Info, sprintf('Processing donor %s at %s', $donor->email, date('Y-m-d H:i:s')));
             $this->transaction->createBalancedForDonor($donor, $projects);
-            //todo send notification mail to donor about new instructions
+            $this->mailer->sendDonorInstructionsMail($donor->email, $donor->getDisplayName());
         }
 
-        echo 'success';
-        die();
+        echo 1;
+        exit();
     }
 
     public function isHoliday(): bool

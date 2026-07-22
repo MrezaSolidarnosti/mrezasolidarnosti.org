@@ -2,7 +2,6 @@
 namespace Solidarity\Transaction\Service;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use Skeletor\Translator\Service\Translator;
 use Solidarity\Beneficiary\Entity\Beneficiary;
 use Solidarity\Beneficiary\Entity\PaymentMethod;
 use Solidarity\Donor\Entity\Donor;
@@ -31,8 +30,6 @@ class Transaction extends TableView
     public function __construct(
         TransactionRepository $repo, Session $user, Logger $logger, TransactionFilter $filter, private ProjectService $project,
         private BeneficiaryRepository $beneficiaryRepo, private PeriodRepository $periodRepo,
-        // @TODO should not be here
-        private Translator $translator
     ) {
         parent::__construct($repo, $user, $logger, $filter);
     }
@@ -481,7 +478,8 @@ class Transaction extends TableView
                     'value' => $instructions,
                     'editColumn' => true,
                 ],
-                'status' => $this->translator->translate(\Solidarity\Transaction\Entity\Transaction::getHrStatuses()[$transaction->status]),
+                // @TODO find a clean way to translate
+                'status' => \Solidarity\Transaction\Entity\Transaction::getHrStatuses()[$transaction->status],
                 'amountEur' => number_format($transaction->amountEur, 0),
                 'amount' => number_format($transaction->amount, 0),
                 'email' => $transaction->donor
