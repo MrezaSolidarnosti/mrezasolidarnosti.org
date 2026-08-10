@@ -1,18 +1,14 @@
 <?php if(isset($block)): ?>
-    <?php $isForInstruction = isset($_GET['action']) && $_GET['action'] === 'instruction';?>
     <div id="profileContent">
         <div id="profileHeroText">
             <?php
                 $title = $this->t('Izaberite pravac podrške za koji želite da donirate');
-                if($isForInstruction) {
-//                    $title = $this->t('Izaberite pravac podrške za koji želite da kreirate instrukciju.');
-                }
                 //@TODO check link for en
             ?>
             <h1><?=$title?></h1>
             <p><?=$this->t('Na ovoj stranici možete menjati načine svojih donacija. Mesečne instrukcije se generišu svakog ponedeljka i četvrtka.');?>
                 <?=$this->t('Pročitaj više');?> <a href="/kako-funkcionise-mreza"><?=$this->t('ovde');?></a></p>
-            <?php if ($block['existingProjectId']): ?>
+            <?php if (isset($block['existingProjectId']) && $block['existingProjectId']): ?>
             <p><?=$this->t('Vaše trenutno opredeljenje je za: ');?> <?=$block['existingProjectName']?></p>
             <?php endif;?>
         </div>
@@ -169,9 +165,6 @@
         <?=$this->formToken()?>
         <?php
             $changeTitle = $this->t('Izmenite pravac podrške za koji želite da donirate');
-            if($isForInstruction) {
-                $changeTitle = $this->t('Izmenite pravac podrške za koji želite da kreirate instrukciju.');
-            }
         ?>
         <input type="hidden" name="project" id="projectInput">
         <div id="donationFormTopBar">
@@ -196,24 +189,46 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4ZM12 11C12.5523 11 13 11.4477 13 12V15H13.5C14.0523 15 14.5 15.4477 14.5 16C14.5 16.5523 14.0523 17 13.5 17H10.5C9.94772 17 9.5 16.5523 9.5 16C9.5 15.4477 9.94772 15 10.5 15H11V13H10.5C9.94772 13 9.5 12.5523 9.5 12C9.5 11.4477 9.94772 11 10.5 11H12ZM11.75 7C12.4404 7 13 7.55964 13 8.25C13 8.94036 12.4404 9.5 11.75 9.5C11.0596 9.5 10.5 8.94036 10.5 8.25C10.5 7.55964 11.0596 7 11.75 7Z" fill="#262185"/>
                 </svg>
-                <span><?=$this->t('Ovde možete uneti informacije o frenkfenciji, iznosu i načinima na koje možete izvršiti donaciju. Kada bude bilo potrebe, sistem će Vam poslate instrukcije za uplatu, koje će se nalaziti na stranici Instrukcije za uplatu.')?></span>
+                <span><?=$this->t('Ovde možete uneti informacije o frenkvenciji, iznosu i načinima na koje možete izvršiti donaciju. Kada bude bilo potrebe, sistem će Vam poslate instrukcije za uplatu, koje će se nalaziti na stranici Instrukcije za uplatu.')?></span>
             </p>
             <div id="donationFormFields">
-                <?php if(!$isForInstruction):?>
+                <?php
+                    // A mode switch, not a form field: it swaps which action the form performs
+                    // and which set of amounts is on screen, so the two never share values.
+                    // Always rendered — hasUnmetNeeds is only a hint here, because it cannot
+                    // know which project and payment types the donor is about to pick. The
+                    // authoritative answer comes from the submit, which reports exactly which
+                    // condition blocked the allocation.
+                    // Keeps the #frequencyFields id so the existing per-project trigger
+                    // styling applies unchanged.
+                    $monthlyLabel = $this->t('Sačuvaj mesečnu donaciju');
+                    $monthlyInfo = $this->t('Kod mesečna donacije sistem sam generiše instrukcije na osnovu sačuvanog izbora kada se ukaže potreba.');
+                    $oneTimeInfo = $this->t('Jednokratna instrukcija se kreira odmah i ne menja vašu mesečnu donaciju.');
+                    if (empty($block['hasUnmetNeeds'])) {
+                        $oneTimeInfo .= ' ' . $this->t('Trenutno nema otvorenih potreba, pa instrukcija možda neće biti kreirana.');
+                    }
+                ?>
                 <div class="formFields" id="frequencyFields">
-                    <h3><?=$this->t('Frekfencija donacije')?></h3>
+                    <h3><?=$this->t('Vrsta donacije')?></h3>
                     <div class="inputs">
-                        <input id="frequencyInput" type="hidden" name="frequency" value="0">
-                        <div class="trigger active" data-value="0" data-action="/donor/createTransaction">
-                            <?=$this->t('Jednokratno')?>
-                        </div>
-                        <div class="trigger" data-value="1" data-action="/donor/updateDonationData">
+                        <div class="trigger active" data-mode="monthly" data-action="/donor/updateDonationData" data-label="<?=$monthlyLabel?>">
                             <?=$this->t('Mesečno')?>
                         </div>
+                        <div class="trigger" data-mode="onetime" data-action="/donor/createInstruction" data-label="<?=$this->t('Doniraj jednokratno')?>">
+                            <?=$this->t('Jednokratno')?>
+                        </div>
                     </div>
-                    <span class="info"><?=$this->t('Izaberite Vašu željenu frenkfenciju donacije')?></span>
+                    <?php // The icon lives outside the text node on purpose — #applyMode swaps
+                          // the copy with textContent, which would wipe an inline SVG sibling. ?>
+                    <span class="info withIcon" id="donationModeInfo"
+                          data-info-monthly="<?=$monthlyInfo?>"
+                          data-info-onetime="<?=$oneTimeInfo?>">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4ZM12 11C12.5523 11 13 11.4477 13 12V15H13.5C14.0523 15 14.5 15.4477 14.5 16C14.5 16.5523 14.0523 17 13.5 17H10.5C9.94772 17 9.5 16.5523 9.5 16C9.5 15.4477 9.94772 15 10.5 15H11V13H10.5C9.94772 13 9.5 12.5523 9.5 12C9.5 11.4477 9.94772 11 10.5 11H12ZM11.75 7C12.4404 7 13 7.55964 13 8.25C13 8.94036 12.4404 9.5 11.75 9.5C11.0596 9.5 10.5 8.94036 10.5 8.25C10.5 7.55964 11.0596 7 11.75 7Z" fill="#262185"/>
+                        </svg>
+                        <span class="infoText"><?=$monthlyInfo?></span>
+                    </span>
                 </div>
-                <?php endif;?>
                 <div class="formFields" id="paymentMethodFields">
                     <h3><?=$this->t('Način plaćanja')?></h3>
                     <span class="info"><?=$this->t('Izaberete jedan, više ili sve načine plaćanja')?></span>
@@ -246,7 +261,9 @@
                 </div>
             </div>
             <div id="donationFormActions">
-                <button type="submit" class="buttonPrimary" title="<?=$this->t('Sačuvaj')?>"><?=$this->t('Sačuvaj')?></button>
+                <?php // Label and target follow the selected mode; defaults to monthly, which is
+                      // also the only option when no one-time donation is possible. ?>
+                <button type="submit" class="buttonPrimary" title="<?=$monthlyLabel?>"><?=$monthlyLabel?></button>
             </div>
         </div>
     </form>
@@ -264,8 +281,7 @@
     </template>
     <script type="application/json" id="donationExistingData"><?=json_encode([
         'projectId' => $block['existingProjectId'] ?? null,
-        'frequency' => $block['existingFrequency'] ?? null,
         'paymentMethods' => $block['existingPaymentMethods'] ?? [],
     ])?></script>
-    <script type="module" src="<?=FRONT_ASSET_URL?>/js/donate.js?v=0.0.4"></script>
+    <script type="module" src="<?=FRONT_ASSET_URL?>/js/donate.js?v=0.0.8"></script>
 <?php endif; ?>

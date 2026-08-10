@@ -2,7 +2,7 @@ import LanguageSwitcher from "./languageSwitcher/LanguageSwitcher.js";
 import Navigation from "./navigation/Navigation.js";
 import Faq from "./faq/faq.js";
 import LineGrid from "./lineGrid/lineGrid.js";
-import InstructionsTable from "./instructionsTable/InstructionsTable.js?v=0.01";
+import InstructionsTable from "./instructionsTable/InstructionsTable.js?v=0.02";
 import Translator from "./Translator/Translator.js";
 import {translations} from "./config/translations.js?v=0.01";
 

@@ -108,6 +108,18 @@
                             <input id="amountInput" type="text" readonly>
                         </div>
                     </div>
+                    <?php // Dinarski transfer only — shown/hidden per payment type in InstructionsTable.js ?>
+                    <div class="inputContainer refCode">
+                        <label><?=$this->t('Poziv na broj:')?></label>
+                        <div class="inputWrapper">
+                            <input id="refCodeInput" type="text" readonly>
+                            <div class="copyInput">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 18C8.45 18 7.97933 17.8043 7.588 17.413C7.19667 17.0217 7.00067 16.5507 7 16V4C7 3.45 7.196 2.97933 7.588 2.588C7.98 2.19667 8.45067 2.00067 9 2H18C18.55 2 19.021 2.196 19.413 2.588C19.805 2.98 20.0007 3.45067 20 4V16C20 16.55 19.8043 17.021 19.413 17.413C19.0217 17.805 18.5507 18.0007 18 18H9ZM9 16H18V4H9V16ZM5 22C4.45 22 3.97933 21.8043 3.588 21.413C3.19667 21.0217 3.00067 20.5507 3 20V7C3 6.71667 3.096 6.47933 3.288 6.288C3.48 6.09667 3.71733 6.00067 4 6C4.28267 5.99933 4.52033 6.09533 4.713 6.288C4.90567 6.48067 5.00133 6.718 5 7V20H15C15.2833 20 15.521 20.096 15.713 20.288C15.905 20.48 16.0007 20.7173 16 21C15.9993 21.2827 15.9033 21.5203 15.712 21.713C15.5207 21.9057 15.2833 22.0013 15 22H5Z" fill="#262185"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="column">
                     <div class="inputContainer qrCode">

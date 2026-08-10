@@ -18,6 +18,7 @@ class TransactionFactory extends AbstractFactory
         $transaction->amountEur = (int) $data['amountEur'];
         $transaction->status = (int) $data['status'];
         $transaction->comment = $data['comment'] ?? null;
+        $transaction->manual = (bool) ($data['manual'] ?? false);
         $transaction->donor = $em->getRepository(Donor::class)->find($data['donor']);
         $transaction->project = $em->getRepository(Project::class)->find($data['project']);
         $transaction->period = $em->getRepository(Period::class)->find($data['period']);

@@ -4,11 +4,12 @@ namespace Solidarity\Backend\Blocks\Donate;
 
 use Skeletor\ContentEditor\Contracts\BlockViewFilterInterface;
 use Solidarity\Frontend\Service\Session;
+use Solidarity\Transaction\Service\Transaction;
 
 class DonateViewFilter implements BlockViewFilterInterface
 {
     public function __construct(
-        protected Session $session
+        protected Session $session, private Transaction $transaction
     )
     {
 
@@ -17,9 +18,8 @@ class DonateViewFilter implements BlockViewFilterInterface
     public function filter(array $data): array
     {
         $data['existingProjectId'] = null;
-        $data['existingFrequency'] = null;
         $data['existingPaymentMethods'] = [];
-
+        $data['hasUnmetNeeds'] = false;
         if (!$this->session->isDonor()) {
             return $data;
         }
@@ -28,6 +28,7 @@ class DonateViewFilter implements BlockViewFilterInterface
         if (!$donor) {
             return $data;
         }
+        $data['hasUnmetNeeds'] = $this->transaction->hasUnmetNeeds($donor);
 
         $paymentMethodsByProject = [];
         foreach ($donor->paymentMethods as $paymentMethod) {
@@ -48,18 +49,11 @@ class DonateViewFilter implements BlockViewFilterInterface
                 'amount' => $paymentMethod->amount,
                 'currency' => $paymentMethod->currency,
             ];
-            if ($data['existingFrequency'] === null) {
-                $data['existingFrequency'] = $paymentMethod->monthly;
-            }
         }
 
-        $data['existingProjectName'] = '';
-        foreach ($donor->projects as $project) {
-            $data['existingProjectName'] = $project->name;
-        }
-        if (count($donor->projects) > 1) {
-            $data['existingProjectName'] = 'Oba pravca podrške';
-        }
+        $data['existingProjectName'] = $data['existingProjectId'] === -1
+            ? 'Oba pravca podrške'
+            : $paymentMethodsByProject[$representativeProjectId][0]->project->name;
 
         return $data;
     }

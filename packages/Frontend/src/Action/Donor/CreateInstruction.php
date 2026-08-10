@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Validator\ValidatorException;
 use Skeletor\ThemeSettings\Navigation\Service\Navigation;
 use Skeletor\ThemeSettings\SocialLinks\Service\SocialLinks;
+use Solidarity\Donor\Service\NoNeedsException;
 use Solidarity\Frontend\Action\BaseAction;
 use Volnix\CSRF\CSRF;
 
@@ -42,7 +43,11 @@ class CreateInstruction extends BaseAction
         try {
             $data['donorId'] = $this->session->getId();
             $this->donor->createTransaction($data);
-            $responseData['redirect'] = $this->locale->localizeUrl('/instrukcije-za-uplatu');
+            $responseData['redirect'] = $this->locale->localizeUrl('/instrukcije-za-uplatu?message=created');
+        } catch (NoNeedsException $e) {
+            $success = false;
+            $statusCode = 400;
+            $responseData['errors'][] = $e->getMessage();
         } catch (ValidatorException $e) {
             $success = false;
             foreach ($this->donor->getDonationDataFilterErrors() as $error) {

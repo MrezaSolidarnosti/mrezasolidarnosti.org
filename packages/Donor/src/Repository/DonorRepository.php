@@ -104,7 +104,6 @@ class DonorRepository extends TableViewRepository implements LoginRepositoryInte
         }
 
         $projectIds = $data['project'] === -1 ? [1, 2] : [$data['project']];
-        $monthly = $data['frequency'];
 
         $projectRepository = $this->entityManager->getRepository(Project::class);
         $paymentMethodRepository = $this->entityManager->getRepository(PaymentMethod::class);
@@ -129,7 +128,9 @@ class DonorRepository extends TableViewRepository implements LoginRepositoryInte
                 $paymentMethod->type = (int) $type;
                 $paymentMethod->amount = $payment['amount'];
                 $paymentMethod->currency = $payment['currency'];
-                $paymentMethod->monthly = $monthly;
+                // This endpoint only ever saves the standing monthly pledge — the one-time
+                // action creates instructions directly and does not come through here.
+                $paymentMethod->monthly = 1;
                 $this->entityManager->persist($paymentMethod);
             }
 

@@ -18,7 +18,8 @@ class UpdateDonationData extends BaseAction
         Logger $logger, Config $config, Engine $template, private \Solidarity\Donor\Service\Donor $donor,
         protected Navigation $navigationService,
         protected SocialLinks $socialLinks,
-        protected \Solidarity\Frontend\Service\Session $session
+        protected \Solidarity\Frontend\Service\Session $session,
+        private \Solidarity\Frontend\Service\Locale $locale,
     ) {
         parent::__construct($logger, $config, $template, $this->navigationService, $this->socialLinks, $session);
 
@@ -42,6 +43,7 @@ class UpdateDonationData extends BaseAction
         try {
             $data['donorId'] = $this->session->getId();
             $this->donor->updateDonationData($data);
+            $responseData['redirect'] = $this->locale->localizeUrl('/instrukcije-za-uplatu?message=saved');
         } catch (ValidatorException $e) {
             $success = false;
             foreach ($this->donor->getDonationDataFilterErrors() as $error) {
