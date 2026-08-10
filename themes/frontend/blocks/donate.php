@@ -9,7 +9,7 @@
             <p><?=$this->t('Na ovoj stranici možete menjati načine svojih donacija. Mesečne instrukcije se generišu svakog ponedeljka i četvrtka.');?>
                 <?=$this->t('Pročitaj više');?> <a href="/kako-funkcionise-mreza"><?=$this->t('ovde');?></a></p>
             <?php if (isset($block['existingProjectId']) && $block['existingProjectId']): ?>
-            <p><?=$this->t('Vaše trenutno opredeljenje je za: ');?> <?=$block['existingProjectName']?></p>
+            <p><?=$this->t('Vaše trenutno opredeljenje je za: ');?> <b><?=$block['existingProjectName']?></b></p>
             <?php endif;?>
         </div>
         <div id="projectsProfile">
