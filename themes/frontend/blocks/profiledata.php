@@ -34,19 +34,6 @@
                     <h2><?=$this->t('Ukupno transakcija')?></h2>
                     <div class="amount big"><?=$block['totalTransactions']?></div>
                 </div>
-                <a class="instructions buttonPrimary centered" href="<?=$this->localizeUrl('/instrukcije-za-uplatu')?>" title="<?=$this->t('Kreiraj instrukcije za uplatu')?>">
-                    <svg width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g clip-path="url(#clip0_759_2558)">
-                            <path d="M5.41118 10.0395H2.09539C1.65569 10.0395 1.234 9.86478 0.923086 9.55387C0.612171 9.24295 0.4375 8.82126 0.4375 8.38156V3.96051C0.4375 3.52081 0.612171 3.09911 0.923086 2.7882C1.234 2.47728 1.65569 2.30261 2.09539 2.30261H8.72697C9.16667 2.30261 9.58837 2.47728 9.89928 2.7882C10.2102 3.09911 10.3849 3.52081 10.3849 3.96051V6.44735M0.4375 5.06577H10.3849M7.62171 10.0395H10.9375M9.2796 11.6973L10.9375 10.0395L9.2796 8.38156M2.65079 7.82893H2.65355M4.85855 7.82893H5.96382" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
-                        </g>
-                        <defs>
-                            <clipPath id="clip0_759_2558">
-                                <rect width="11.375" height="14" fill="white"/>
-                            </clipPath>
-                        </defs>
-                    </svg>
-                    <?=$this->t('Kreiraj instrukcije za uplatu')?>
-                </a>
             </div>
             <div id="profileDataLinks">
                 <p><?=$this->t('Pregled svih dosadašnjih kao i nove instrukcija možeš videti na stranici')?> <a href="<?=$this->localizeUrl('/instrukcije-za-uplatu')?>" title="<?=$this->t('Instrukcije za uplatu')?>"><?=$this->t('Instrukcije za uplatu')?></a>.</p>
