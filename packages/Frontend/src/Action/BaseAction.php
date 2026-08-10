@@ -30,6 +30,9 @@ class BaseAction extends Html
         // Logged-in state available to every template (cheap — read straight from session).
         $this->setGlobalVariable('currentUserName', $this->session->getDisplayName());
         $this->setGlobalVariable('isDonorLoggedIn', $this->session->isDonor());
+        // Every frontend action passes through here, which makes this the analog of the
+        // legacy app's kernel.request listener: one throttled stamp per authenticated donor.
+        $this->session->touchVisit();
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $slug = basename(trim($path, '/'));
         $this->setGlobalVariable('slug', $slug);

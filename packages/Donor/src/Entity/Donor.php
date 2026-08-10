@@ -49,6 +49,13 @@ class Donor implements AuthenticatableInterface
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     public ?\DateTime $lastLogin;
 
+    // Last time the donor loaded any page while logged in — distinct from lastLogin, which
+    // only moves when a magic link is clicked. A session lives 30 days, so a donor can read
+    // their instructions for weeks without ever logging in again; ExpireInstructions needs
+    // "did they come back and see this", not "did they re-authenticate".
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    public ?\DateTime $lastVisit = null;
+
     #[ORM\OneToMany(targetEntity: PaymentMethod::class, mappedBy: 'donor')]
     public Collection $paymentMethods;
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'donor')]
