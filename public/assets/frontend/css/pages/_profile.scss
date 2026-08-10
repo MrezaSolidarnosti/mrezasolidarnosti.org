@@ -27,6 +27,12 @@ main {
       color: var(--colorDarkBlue);
       text-align:center;
     }
+    a {
+      text-decoration:underline;
+      &:hover {
+        color:var(--colorOrange);
+      }
+    }
   }
   #projectsProfile {
     margin-top:3rem;
