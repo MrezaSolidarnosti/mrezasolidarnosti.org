@@ -108,7 +108,7 @@ export default class InstructionsTable {
                        this.messagesContainer.appendChild(this.getMessageElement(error, 'error'));
                    });
                } else {
-                   this.messagesContainer.appendChild(this.getMessageElement('Dogodila se neočekivana greška, osvežite stranicu i probajte ponovo.', 'error'));
+                   this.messagesContainer.appendChild(this.getMessageElement(Translator.translate('An unexpected error occurred, please refresh the page and try again.'), 'error'));
                }
                this.messagesContainer.scrollIntoView();
             }
@@ -152,19 +152,19 @@ export default class InstructionsTable {
     </head><body>
         <div class="inputContainer">
            <label>
-                Ime i prezime oštećenog:
+                ${Translator.translate('Beneficiary name:')}
             </label>
             <input type="text" value="${this.activeInstruction.beneficiaryName}">
         </div>
         <div class="inputContainer">
            <label>
-                Iznos:
+                ${Translator.translate('Amount:')}
             </label>
           <input type="text" value="${this.activeInstruction.amount} ${this.activeInstruction.paymentType === 1 ? 'RSD' : 'EUR'}">
         </div>
-        ${printAccountNum ? '<div class="inputContainer"><label>Broj žiro računa:</label><input type="text" value="' + this.activeInstruction.accountNumber +'"></div>' : ''}
-        ${printRefCode ? '<div class="inputContainer"><label>Poziv na broj:</label><input type="text" value="' + this.activeInstruction.referenceCode +'"></div>' : ''}
-        ${printQR ? '<p>Ili skeniraj NBS QR Code:</p><img src="' + this.activeInstruction.qrCode  +'">' : ''}
+        ${printAccountNum ? '<div class="inputContainer"><label>' + Translator.translate('Bank account number:') + '</label><input type="text" value="' + this.activeInstruction.accountNumber +'"></div>' : ''}
+        ${printRefCode ? '<div class="inputContainer"><label>' + Translator.translate('Payment reference:') + '</label><input type="text" value="' + this.activeInstruction.referenceCode +'"></div>' : ''}
+        ${printQR ? '<p>' + Translator.translate('Or scan the NBS QR code:') + '</p><img src="' + this.activeInstruction.qrCode  +'">' : ''}
 </body></html>`);
 
             doc.close();
