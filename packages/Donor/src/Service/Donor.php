@@ -273,7 +273,33 @@ class Donor extends TableView
             $budgets[(int) $type] = ($budgets[(int) $type] ?? 0) + $rsd;
         }
 
-        return $this->transaction->createForDonor($donor, $projects, $budgets);
+        $allocated = $this->transaction->createForDonor($donor, $projects, $budgets);
+        if ($allocated === 0) {
+            $types = array_keys($budgets);
+            // Each rung isolates exactly one variable, so the message names the real blocker.
+            // The donor is passed only on the last one — with it, the project and payment-type
+            // rungs would also be answering "is this donor eligible", and report the wrong cause.
+            if (!$this->transaction->hasUnmetNeeds()) {
+                throw new NoNeedsException('Trenutno ne postoje potrebe.');
+            }
+            if (!$this->transaction->hasUnmetNeeds(null, $projects)) {
+                throw new NoNeedsException('Trenutno ne postoje potrebe za izabrani pravac podrške.');
+            }
+            if (!$this->transaction->hasUnmetNeeds(null, $projects, $types)) {
+                throw new NoNeedsException('Trenutne potrebe ne mogu da se pokriju izabranim načinom plaćanja.');
+            }
+            if (!$this->transaction->hasUnmetNeeds($donor, $projects, $types)) {
+                throw new NoNeedsException(
+                    'Trenutne potrebe ne odgovaraju vašem profilu: ili ste dostigli godišnji limit '
+                    . 'po osobi, ili se vaše opredeljenje (škole/fakulteti) ne poklapa sa trenutnim potrebama.'
+                );
+            }
+            // needs exist and match — the blocker is amount-side (per-type minimum, or the
+            // 10.000 minSlice once the total passes 100.000)
+            throw new NoNeedsException('Uneti iznos je premali za kreiranje instrukcije.');
+        }
+
+        return $allocated;
     }
 
 }

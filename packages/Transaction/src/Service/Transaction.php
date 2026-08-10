@@ -35,23 +35,87 @@ class Transaction extends TableView
     }
 
     /**
-     * Is there at least one active beneficiary in a processing period whose registered
-     * need for that period is not yet covered by allocated transactions? Gates the donor's
-     * on-demand donation button, so it uses the SAME period set (processing — the periods
-     * open for transaction creation) and the same unmet-need math as createForDonor — if
-     * the button shows, createForDonor has something to allocate.
+     * First payment method the beneficiary accepts from $types, or null when none match.
+     * Shared by the allocator and hasUnmetNeeds() so "can this beneficiary be paid" is
+     * answered in exactly one place.
      *
-     * "Covered" uses the allocated statuses (NEW, WAITING_CONFIRMATION, CONFIRMED, PAID)
-     * via getSumAmountForBeneficiary — same as allocateToBeneficiary — so a need already
-     * pledged by pending instructions is treated as met. Short-circuits on the first hit.
+     * @param int[] $types donor payment types, in no particular order
      */
-    public function hasUnmetNeeds(): bool
+    private function findPaymentMethod(Beneficiary $beneficiary, array $types): ?PaymentMethod
     {
+        foreach ($beneficiary->paymentMethods as $pm) {
+            if (in_array($pm->type, $types, true)) {
+                return $pm;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The donor's school/uni preference (MSP only). Cheap — no queries beyond the
+     * beneficiary's school/type it already needs.
+     */
+    private function matchesDonorPreference(Donor $donor, Project $project, Beneficiary $beneficiary): bool
+    {
+        if ($project->code !== 'MSP') {
+            return true;
+        }
+
+        // School types 9 and 17 are universities.
+        $isUni = in_array($beneficiary->school->type->id ?? null, [9, 17], true);
+        if ($donor->wantsToDonateTo === Donor::DONATE_TO_SCHOOL && $isUni) {
+            return false;
+        }
+
+        return !($donor->wantsToDonateTo === Donor::DONATE_TO_UNI && !$isUni);
+    }
+
+    /**
+     * Is there at least one beneficiary in a processing period with an uncovered need that
+     * this donor could actually be matched to? Gates the donor's on-demand donation button.
+     *
+     * Every argument narrows the question with the same gate the allocator applies:
+     *   hasUnmetNeeds()                            — anyone, anywhere (global "are we open")
+     *   hasUnmetNeeds($donor)                      — plus the donor's school/uni preference
+     *                                                and their remaining per-person cap
+     *   hasUnmetNeeds($donor, $projects)           — plus: only in these projects
+     *   hasUnmetNeeds($donor, $projects, $types)   — plus: payable by these payment types
+     *
+     * The last form answers exactly what createForDonor() will do, so it's the one to use
+     * when explaining a zero allocation. Short-circuits on the first hit.
+     *
+     * @param Project[] $projects  empty means every project
+     * @param int[]     $paymentTypes  empty means any payment type
+     */
+    public function hasUnmetNeeds(?Donor $donor = null, array $projects = [], array $paymentTypes = []): bool
+    {
+        $projectIds = [];
+        foreach ($projects as $project) {
+            $projectIds[$project->getId()] = true;
+        }
+
         foreach ($this->periodRepo->fetchProcessing() as $period) {
+            if ($projectIds && !isset($projectIds[$period->project->getId()])) {
+                continue;
+            }
+
             foreach ($this->beneficiaryRepo->fetchByPeriod($period->getId()) as $beneficiary) {
                 $received = $this->repo->getSumAmountForBeneficiary($beneficiary, null, $period);
-                $remaining = $beneficiary->getAmountForPeriod($period) - $received;
-                if ($remaining > self::MIN_TRANSACTION_DONATION_AMOUNT) {
+                if ($beneficiary->getAmountForPeriod($period) - $received <= self::MIN_TRANSACTION_DONATION_AMOUNT) {
+                    continue;
+                }
+                if ($paymentTypes && !$this->findPaymentMethod($beneficiary, $paymentTypes)) {
+                    continue;
+                }
+                if ($donor === null) {
+                    return true;
+                }
+                if (!$this->matchesDonorPreference($donor, $period->project, $beneficiary)) {
+                    continue;
+                }
+                // Last — it's the only gate here that costs a query per candidate.
+                if ($this->repo->getRemainingPerPersonLimit($donor, $beneficiary) > 0) {
                     return true;
                 }
             }
@@ -232,7 +296,7 @@ class Transaction extends TableView
                     $queues[$qi]['cursor']++;
                     $result = $this->allocateToBeneficiary(
                         $donor, $queues[$qi]['project'], $candidate['period'], $candidate['beneficiary'],
-                        $budgets, $minSlice
+                        $budgets, $minSlice, manual: true
                     );
                     if ($result['amount'] > 0) {
                         break;
@@ -362,39 +426,26 @@ class Transaction extends TableView
      *
      * @param array<int,int> $typeBudgets available RSD keyed by payment type
      * @param int $minSlice a type must have at least this much budget to be used (the 10k rule for large donors)
+     * @param bool $manual true when the donor triggered this themselves (one-time action) rather than the cron
      * @return array{type: int|null, amount: int} the type used and RSD allocated, or amount 0 when skipped
      */
     private function allocateToBeneficiary(
         Donor $donor, Project $project, Period $period, Beneficiary $beneficiary, array $typeBudgets,
-        int $minSlice = self::MIN_TRANSACTION_DONATION_AMOUNT
+        int $minSlice = self::MIN_TRANSACTION_DONATION_AMOUNT, bool $manual = false
     ): array {
         $skip = ['type' => null, 'amount' => 0];
 
-        // Donor's school/uni preference (MSP only). School types 9 and 17 are universities.
-        if ($project->code === 'MSP') {
-            $typeId = $beneficiary->school->type->id ?? null;
-            $isUni = in_array($typeId, [9, 17], true);
-            if ($donor->wantsToDonateTo === Donor::DONATE_TO_SCHOOL && $isUni) {
-                return $skip;
-            }
-            if ($donor->wantsToDonateTo === Donor::DONATE_TO_UNI && !$isUni) {
-                return $skip;
-            }
+        if (!$this->matchesDonorPreference($donor, $project, $beneficiary)) {
+            return $skip;
         }
 
-        // Match a beneficiary payment method to a donor payment type that still has budget.
-        $beneficiaryPM = null;
-        $paymentType = null;
-        foreach ($beneficiary->paymentMethods as $pm) {
-            if (($typeBudgets[$pm->type] ?? 0) >= $minSlice) {
-                $beneficiaryPM = $pm;
-                $paymentType = $pm->type;
-                break;
-            }
-        }
+        // A type is usable only while it still holds at least $minSlice.
+        $affordableTypes = array_keys(array_filter($typeBudgets, static fn($rsd) => $rsd >= $minSlice));
+        $beneficiaryPM = $this->findPaymentMethod($beneficiary, $affordableTypes);
         if (!$beneficiaryPM) {
             return $skip;
         }
+        $paymentType = $beneficiaryPM->type;
 
         $receivedSoFar = $this->repo->getSumAmountForBeneficiary($beneficiary, $project, $period);
         $beneficiaryRemaining = $beneficiary->getAmountForPeriod($period) - $receivedSoFar;
@@ -432,6 +483,7 @@ class Transaction extends TableView
                 'paymentType' => $paymentType,
                 'accountNumber' => $accountNumber,
                 'instructions' => $instructions,
+                'manual' => $manual,
                 // Allocator-generated, not a form submission — CSRF was already validated
                 // upstream (cron has no request; the donor's on-demand form is CSRF-checked
                 // in DonorDonationData). Without this the Transaction validator rejects it.

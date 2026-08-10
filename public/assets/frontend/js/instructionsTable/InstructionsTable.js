@@ -144,6 +144,7 @@ export default class InstructionsTable {
 
             const printAccountNum = this.activeInstruction.paymentType === 1 || this.activeInstruction.paymentType === 2;
             const printQR = this.activeInstruction.paymentType === 1;
+            const printRefCode = this.activeInstruction.paymentType === 1;
             const doc = iframe.contentWindow.document;
             doc.open();
             doc.write(`<!DOCTYPE html><html><head>
@@ -162,6 +163,7 @@ export default class InstructionsTable {
           <input type="text" value="${this.activeInstruction.amount} ${this.activeInstruction.paymentType === 1 ? 'RSD' : 'EUR'}">
         </div>
         ${printAccountNum ? '<div class="inputContainer"><label>Broj žiro računa:</label><input type="text" value="' + this.activeInstruction.accountNumber +'"></div>' : ''}
+        ${printRefCode ? '<div class="inputContainer"><label>Poziv na broj:</label><input type="text" value="' + this.activeInstruction.referenceCode +'"></div>' : ''}
         ${printQR ? '<p>Ili skeniraj NBS QR Code:</p><img src="' + this.activeInstruction.qrCode  +'">' : ''}
 </body></html>`);
 
@@ -361,8 +363,14 @@ export default class InstructionsTable {
             const amountInput =  this.paymentDialog.querySelector('#amountInput');
             const paymentInfoLogo =  this.paymentDialog.querySelector('#paymentInfoLogo');
             const refNumInput = this.paymentDialog.querySelector('#refNumInput');
+            const refCodeInput = this.paymentDialog.querySelector('#refCodeInput');
             const qrCodeImage = this.paymentDialog.querySelector('#qrCodeImage');
             let currency = 'RSD';
+
+            // Poziv na broj belongs to the dinarski transfer only; the foreign-currency
+            // methods have no such field on their payment slips.
+            refCodeInput.value = instruction.referenceCode;
+            refCodeInput.parentElement.parentElement.classList.toggle('hidden', instruction.paymentType !== 1);
 
             switch(instruction.paymentType) {
                 case 1:

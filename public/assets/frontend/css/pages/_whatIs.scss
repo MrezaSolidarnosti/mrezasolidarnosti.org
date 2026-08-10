@@ -1,13 +1,13 @@
 @use '../setup/typography';
 .instructionsWhatIs {
   display:flex;
-  padding:5rem 11rem 2rem 11rem;
+  padding:1.5rem 11rem 2rem 11rem;
   position:relative;
   gap:8rem;
   align-items:center;
   @media(max-width:1200px) {
     flex-direction:column;
-    padding: 3rem 1.25rem;
+    padding: 1rem 1.25rem 3rem 1.25rem;
     gap:2rem;
   }
   h1 {
@@ -23,15 +23,20 @@
       margin-top:1rem;
       margin-bottom:1rem;
     }
-    .instructionsLink {
-      display:flex;
-      align-items:center;
-      gap:0.5rem;
-      @include typography.type(text);
-      color:var(--colorDarkBlue);
-      a {
-        text-decoration:underline;
-      }
+  }
+  // Deliberately not nested under .left — the markup does not always carry that class,
+  // and without the flex the CMS rich text (a <p>) drops below the arrow.
+  .instructionsLink {
+    display:flex;
+    align-items:center;
+    gap:0.5rem;
+    @include typography.type(text);
+    color:var(--colorDarkBlue);
+    p {
+      margin:0;
+    }
+    a {
+      text-decoration:underline;
     }
   }
   .right {

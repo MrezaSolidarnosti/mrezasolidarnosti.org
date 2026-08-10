@@ -38,6 +38,8 @@ class Transaction implements FilterInterface
             'paymentType' => $postData['paymentType'] ?? null,
             'accountNumber' => $postData['accountNumber'] ?? null,
             'instructions' => $postData['instructions'] ?? null,
+            // Donor-initiated one-time instruction vs. cron-allocated monthly pledge.
+            'manual' => (bool) ($postData['manual'] ?? false),
             'skipCsrf' => $postData['skipCsrf'] ?? false,
             // Allocator-generated transactions already matched donor↔beneficiary by the
             // donor's *chosen* types (on-demand) or pledged methods (cron); the validator's

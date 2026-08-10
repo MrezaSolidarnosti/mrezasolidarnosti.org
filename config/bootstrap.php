@@ -155,7 +155,8 @@ $container->set(\Skeletor\ContentEditor\Contracts\BlockViewInterface::class, fun
     ));
 
     $view->registerViewFilter(Donate::NAME, new \Solidarity\Backend\Blocks\Donate\DonateViewFilter(
-        $container->get(\Solidarity\Frontend\Service\Session::class)
+        $container->get(\Solidarity\Frontend\Service\Session::class),
+        $container->get(\Solidarity\Transaction\Service\Transaction::class)
     ));
 
     $view->registerViewFilter(Instructionsintro::NAME, new \Solidarity\Backend\Blocks\Instructionsintro\InstructionsintroViewFilter(

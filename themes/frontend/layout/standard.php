@@ -67,7 +67,7 @@
 	<link rel="icon" href="/favicon.ico" sizes="any">
 	<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-    <link rel="stylesheet" href="<?=FRONT_ASSET_URL?>/css/style.css?v=0.0.8">
+    <link rel="stylesheet" href="<?=FRONT_ASSET_URL?>/css/style.css?v=0.0.9">
 </head>
 <body>
 <?=$this->section('header', $this->fetch('partialsGlobal::header'))?>
@@ -88,7 +88,7 @@ if(!empty($isDonorLoggedIn)) {
 <?=$this->section('footer', $this->fetch('partialsGlobal::footer'))?>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script type="module" src="<?=FRONT_ASSET_URL?>/js/global.js?v=0.0.5"></script>
+<script type="module" src="<?=FRONT_ASSET_URL?>/js/global.js?v=0.0.6"></script>
 <?php if (isset($jsPath) && $jsPath != ""): ?>
     <script src="<?=$jsPath?>" type="module"></script>
 <?php endif; ?>
