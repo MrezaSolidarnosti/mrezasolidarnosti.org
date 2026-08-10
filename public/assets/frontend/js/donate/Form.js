@@ -17,7 +17,6 @@ export default class Form {
     #formFieldsContainer;
     #projectInput;
     #messagesContainer;
-    #changeDonationButton;
     #isForInstruction;
     paymentLogoURLs =  {
         2: {
@@ -62,8 +61,6 @@ export default class Form {
         this.#formFieldsContainer = document.getElementById('donationFormFields');
         this.#projectInput = document.getElementById('projectInput');
         this.#messagesContainer = document.querySelector('.messagesContainer');
-        this.#changeDonationButton = document.getElementById('changeDonation');
-
     }
 
     #listenToEvents() {
@@ -132,7 +129,6 @@ export default class Form {
 
     #addListeners() {
         this.#backToProfileButton.addEventListener('click', this.#close);
-        this.#changeDonationButton.addEventListener('click', this.#resetForm);
         this.#closeFormButton.addEventListener('click', this.#close);
         this.#frequencyTriggers.forEach((trigger) => {
             trigger.addEventListener('click', () => {
