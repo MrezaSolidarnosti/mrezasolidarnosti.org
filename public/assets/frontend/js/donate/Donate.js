@@ -1,6 +1,7 @@
 import Project from "./Project.js?v=0.0.8";
 import EventEmitter from "../EventEmitter/EventEmitter.js?v=0.0.8";
 import Form from "./Form.js?v=0.0.8";
+import Translator from "../Translator/Translator.js";
 
 export default class Donate {
     #setupComplete = false;
@@ -108,7 +109,8 @@ export default class Donate {
         this.#initiatorElements.forEach((initiatorElement) => {
            const project = new Project({
                container:initiatorElement,
-               thankYouTitle: initiatorElement.getAttribute('data-title') ?? 'Hvala što ste izabrali da donirate za Mrežu solidarnosti',
+               thankYouTitle: initiatorElement.getAttribute('data-title')
+                   ?? Translator.translate('Thank you for choosing to donate to the Solidarity Network'),
                eventEmitter: this.eventEmitter
            });
            project.init();

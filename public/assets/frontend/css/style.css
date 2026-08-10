@@ -701,7 +701,7 @@ strong {
   align-items: center;
   gap: 2rem;
   justify-content: center;
-  padding: 7.75rem 13.5rem;
+  padding: 3rem 13.5rem;
 }
 @media (max-width: 1200px) {
   #footerMain #footerMessage {
@@ -726,7 +726,7 @@ strong {
   display: flex;
   flex-direction: column;
   gap: 3rem;
-  padding: 5rem;
+  padding: 3rem 5rem;
 }
 @media (max-width: 1100px) {
   #footerMain #partners {
@@ -1777,7 +1777,7 @@ strong {
 }
 
 .contactCards {
-  padding: 5rem 11rem;
+  padding: 3rem 11rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(533px, 533px));
   justify-content: center;

@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     replaceCsrf(nlSignupForm, resData.data.token);
                 }
             } else {
-                messagesContainer.appendChild(getMessageElement('Uspešno ste se prijavili.', 'success'));
+                messagesContainer.appendChild(getMessageElement(Translator.translate('You have successfully subscribed.'), 'success'));
             }
         });
     }

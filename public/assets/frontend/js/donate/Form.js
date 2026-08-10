@@ -215,7 +215,7 @@ export default class Form {
                 } else {
                     trigger.classList.add('active');
                     const template = this.#paymentTemplate.content.cloneNode(true);
-                    template.querySelector('h3').textContent = 'IZNOS ' + trigger.parentElement.querySelector(':scope >span').textContent;
+                    template.querySelector('h3').textContent = Translator.translate('AMOUNT') + ' ' + trigger.parentElement.querySelector(':scope >span').textContent;
                     template.querySelector('.formFields').setAttribute('data-method', method);
                     template.querySelector('input[type="number"]').name = `payment[${method}][value]`;
                     const img = trigger.querySelector('img');
