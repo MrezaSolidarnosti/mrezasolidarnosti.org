@@ -59,5 +59,5 @@
             </div>
         </div>
     </div>
-    <script type="module" src="<?=FRONT_ASSET_URL?>/js/profileData.js?v=0.0.1"></script>
+    <script type="module" src="<?=FRONT_ASSET_URL?>/js/profileData.js?v=0.0.2"></script>
 <?php endif; ?>

@@ -283,5 +283,5 @@
         'projectId' => $block['existingProjectId'] ?? null,
         'paymentMethods' => $block['existingPaymentMethods'] ?? [],
     ])?></script>
-    <script type="module" src="<?=FRONT_ASSET_URL?>/js/donate.js?v=0.0.8"></script>
+    <script type="module" src="<?=FRONT_ASSET_URL?>/js/donate.js?v=0.0.9"></script>
 <?php endif; ?>
