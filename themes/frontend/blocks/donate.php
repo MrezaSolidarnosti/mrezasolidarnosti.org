@@ -5,12 +5,15 @@
             <?php
                 $title = $this->t('Izaberite pravac podrške za koji želite da donirate');
                 if($isForInstruction) {
-                    $title = $this->t('Izaberite pravac podrške za koji želite da kreirate instrukciju.');
+//                    $title = $this->t('Izaberite pravac podrške za koji želite da kreirate instrukciju.');
                 }
+                //@TODO check link for en
             ?>
             <h1><?=$title?></h1>
-            <?php if(!$isForInstruction):?>
-                <p><?=$this->t('Na ovoj stranici možete kreirati i menjati načine svojih donacija.');?></p>
+            <p><?=$this->t('Na ovoj stranici možete menjati načine svojih donacija. Mesečne instrukcije se generišu svakog ponedeljka i četvrtka.');?>
+                <?=$this->t('Pročitaj više');?> <a href="/kako-funkcionise-mreza"><?=$this->t('ovde');?></a></p>
+            <?php if ($block['existingProjectId']): ?>
+            <p><?=$this->t('Vaše trenutno opredeljenje je za: ');?> <?=$block['existingProjectName']?></p>
             <?php endif;?>
         </div>
         <div id="projectsProfile">
@@ -201,10 +204,10 @@
                     <h3><?=$this->t('Frekfencija donacije')?></h3>
                     <div class="inputs">
                         <input id="frequencyInput" type="hidden" name="frequency" value="0">
-                        <div class="trigger active" data-value="0">
+                        <div class="trigger active" data-value="0" data-action="/donor/createTransaction">
                             <?=$this->t('Jednokratno')?>
                         </div>
-                        <div class="trigger" data-value="1">
+                        <div class="trigger" data-value="1" data-action="/donor/updateDonationData">
                             <?=$this->t('Mesečno')?>
                         </div>
                     </div>
@@ -244,7 +247,6 @@
             </div>
             <div id="donationFormActions">
                 <button type="submit" class="buttonPrimary" title="<?=$this->t('Sačuvaj')?>"><?=$this->t('Sačuvaj')?></button>
-                <button id="changeDonation" class="buttonSecondary small" href="" title="<?=$this->t('Izmeni')?>"><?=$this->t('Izmeni')?></button>
             </div>
         </div>
     </form>

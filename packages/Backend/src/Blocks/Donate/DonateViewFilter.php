@@ -53,6 +53,14 @@ class DonateViewFilter implements BlockViewFilterInterface
             }
         }
 
+        $data['existingProjectName'] = '';
+        foreach ($donor->projects as $project) {
+            $data['existingProjectName'] = $project->name;
+        }
+        if (count($donor->projects) > 1) {
+            $data['existingProjectName'] = 'Oba pravca podrške';
+        }
+
         return $data;
     }
 }
