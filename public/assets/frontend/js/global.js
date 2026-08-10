@@ -7,7 +7,7 @@ import Translator from "./Translator/Translator.js";
 import {translations} from "./config/translations.js?v=0.02";
 
 Translator.setTranslations(translations);
-const isEnglish = window.location.pathname.startsWith('/en/');
+const isEnglish = window.location.pathname === '/en' || window.location.pathname.startsWith('/en/');
 Translator.setLanguage(isEnglish ? 'en' : 'sr');
 
 document.addEventListener('DOMContentLoaded', () => {
