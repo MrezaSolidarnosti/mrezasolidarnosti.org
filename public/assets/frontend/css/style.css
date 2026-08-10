@@ -4511,6 +4511,12 @@ main:has(#donationForm.active) {
   color: var(--colorDarkBlue);
   text-align: center;
 }
+#profileContent #profileHeroText a {
+  text-decoration: underline;
+}
+#profileContent #profileHeroText a:hover {
+  color: var(--colorOrange);
+}
 #profileContent #projectsProfile {
   margin-top: 3rem;
   margin-bottom: 3rem;
