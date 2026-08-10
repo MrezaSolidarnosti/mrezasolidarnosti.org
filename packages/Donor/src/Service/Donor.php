@@ -3,6 +3,7 @@ namespace Solidarity\Donor\Service;
 
 use Skeletor\Core\Validator\ValidatorException;
 use Skeletor\Login\Service\MagicLinkService;
+use Skeletor\Translator\Service\Translator;
 use Solidarity\Donor\Filter\DonorProfileData;
 use Solidarity\Donor\Repository\DonorRepository;
 use Skeletor\Core\TableView\Service\TableView;
@@ -32,7 +33,8 @@ class Donor extends TableView
         private \Solidarity\Donor\Validator\DonorProfileData $donorProfileDataValidator,
         private DonorDonationData $donorDonationDataValidator,
         private \Solidarity\Donor\Filter\DonorDonationData $donorDonationDataFilter,
-        private TransactionService $transaction, private QrCode $qrCode
+        private TransactionService $transaction, private QrCode $qrCode,
+        private Translator $translator
     ) {
         parent::__construct($repo, $user, $logger, $filter);
     }
@@ -225,7 +227,13 @@ class Donor extends TableView
                 'expiresAt' => $transaction->status === Transaction::STATUS_NEW ?
                     $transaction->getExpiryDate()->format('d.m.Y h:i') :
                     null,
-                'status' => ['label' => Transaction::getHrStatus($transaction->status), 'value' => $transaction->status],
+                // The label is rendered client-side but authored here, so it goes through the
+                // PHP Translator rather than the JS one. On the default locale the service has
+                // no language set and translate() is a pass-through, returning the Serbian source.
+                'status' => [
+                    'label' => $this->translator->translate(Transaction::getHrStatus($transaction->status)),
+                    'value' => $transaction->status,
+                ],
                 'projectId' => $transaction->project->id,
                 'paymentType' => $transaction->paymentType,
                 'accountNumber' => $transaction->accountNumber,
