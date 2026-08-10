@@ -91,6 +91,36 @@ class Session
     }
 
     /**
+     * Record that the logged-in donor is here, for ExpireInstructions to tell "never came
+     * back" from "came back and did not pay". Deliberately does not hydrate the entity —
+     * this runs on every request, so it delegates to a throttled UPDATE. Silent on failure:
+     * a visit stamp is never worth breaking a page render over.
+     */
+    public function touchVisit(): void
+    {
+        if (!$this->isDonor()) {
+            return;
+        }
+
+        $id = $this->getId();
+        $type = $this->getEntityType();
+        if (!$id || !$type || !$this->entityRegistry->has($type)) {
+            return;
+        }
+
+        $repository = $this->entityRegistry->getRepository($type);
+        if (!method_exists($repository, 'touchLastVisit')) {
+            return;
+        }
+
+        try {
+            $repository->touchLastVisit($id);
+        } catch (\Throwable $e) {
+            // swallowed on purpose — see docblock
+        }
+    }
+
+    /**
      * Lazily reload the logged-in entity (DB hit, cached per request).
      * Returns null when nobody is logged in or the record no longer exists.
      */

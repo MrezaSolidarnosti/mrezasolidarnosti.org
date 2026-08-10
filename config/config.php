@@ -79,6 +79,10 @@ return array(
         // Cron entry point. CliSkeletor invokes Action classes via __invoke().
         // Run: php public/cli.php createTransactions run   (the 2nd arg is ignored)
         'createTransactions' => \Solidarity\Backend\Action\CreateTransaction::class,
+        // Expire unpaid instructions past 72h. MUST run immediately before createTransactions
+        // so the freed budget is reallocated in the same cycle.
+        // Run: php public/cli.php expireInstructions run   (use "dry" to preview)
+        'expireInstructions' => \Solidarity\Backend\Action\ExpireInstructions::class,
         // Legacy data migration. Dry-run: `php public/cli.php migrateLegacy run`
         // Commit:                `php public/cli.php migrateLegacy commit`
         'migrateLegacy' => \Solidarity\Backend\Action\MigrateLegacy::class,
