@@ -51,4 +51,5 @@ return [
     [['GET', 'POST'], '/city/{action}[/{id}]', \Solidarity\Backend\Controller\CityController::class],
     [['GET', 'POST'], '/emails/{action}[/{id}]', \Solidarity\Backend\Controller\EmailListController::class],
     [['GET', 'POST'], '/page/{action}[/{id}]', PageController::class],
+    [['GET', 'POST'], '/post/{action}[/{id}]', \Solidarity\Backend\Controller\PostController::class],
 ];

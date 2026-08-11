@@ -434,6 +434,7 @@ $container->set(EntityManagerInterface::class, function() use ($container) {
             APP_PATH . "/packages/User/src/Entity",
             APP_PATH . "/packages/Page/src/Entity",
             APP_PATH . "/packages/EmailList/src/Entity",
+            APP_PATH . "/packages/Post/src/Entity",
             APP_PATH . '/vendor/dj_avolak/skeletor/src/ThemeSettings',
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Image",
             APP_PATH . '/vendor/dj_avolak/skeletor/src/File',

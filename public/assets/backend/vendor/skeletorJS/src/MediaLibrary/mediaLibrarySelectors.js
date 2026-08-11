@@ -1,0 +1,37 @@
+export const mediaLibrarySelectors = {
+    ids: {
+        overlay: 'mediaLibraryOverlay',
+        uploadMediaButton: 'uploadMedia',
+        uploadInput: 'uploadMediaInput',
+        searchInput: 'searchMediaLibraryInput',
+        fileTypeSelect: 'mediaLibraryFileTypeSelect',
+        closeButton: 'closeMediaLibrary',
+        cellsScrollableContainer: 'cellsWrapper',
+        cellsContainer: 'cells',
+        sidebar: 'mediaLibrarySidebar',
+        sidebarMessageContainer: 'mediaLibrarySidebarMessageContainer',
+        insertMediaButton: 'insertMedia',
+        bottomBar: 'mediaLibraryBottomBar',
+        topBar: 'mediaLibraryTopBar',
+        progressBarContainer: 'mediaLibraryProgressBarContainer',
+        filterFrom: 'mediaLibraryDateFrom',
+        filterTo: 'mediaLibraryDateTo',
+    },
+    classes: {
+        initiator: 'mediaLibraryInitiator',
+        hidden: 'hidden',
+        cell: 'cell',
+        documentCell: 'documentCell',
+        documentIcon: 'documentIcon',
+        documentLabel: 'documentLabel',
+        dummyCell: 'dummyCell',
+        selectedCell: 'selected',
+        sidebarFormSubmitContainer: 'mediaLibrarySidebarFormSubmitContainer',
+    },
+    attributes: {
+        insertable: 'data-insertable',
+        multiple: 'data-multiple',
+        allowDocuments: 'data-documents',
+        allowImages: 'data-images',
+    }
+}
