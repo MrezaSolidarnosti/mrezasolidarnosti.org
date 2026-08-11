@@ -1,12 +1,19 @@
 import {contentEditorSelectors} from "../contentEditorSelectors.js";
 import {events} from "./events.js";
 import BaseModule from "../BaseModule.js";
+import Loader from "../../Loader/Loader.js";
 
 
 export default class SaveButton extends BaseModule {
 
     #setupComplete = false;
     button;
+    loader = new Loader({
+        size: '20px',
+        thickness: '2px',
+        trackColor: '#575757',
+        innerTrackColor: '#a587fa'
+    });
     init() {
         if(this.#setupComplete) {
             return;
@@ -38,10 +45,21 @@ export default class SaveButton extends BaseModule {
         this.eventEmitter.emit(events.saveInitiated);
     }
 
+    saving() {
+        this.loader.start(this.button, ['svg', 'span']);
+        this.button.classList.add(contentEditorSelectors.classes.saving);
+    }
+
+    notSaving() {
+        this.loader.stop(this.button, ['svg', 'span']);
+        this.button.classList.remove(contentEditorSelectors.classes.saving);
+    }
+
     destroy() {
         super.destroy();
         if(this.button) {
             this.button.removeEventListener('click', this.#handleSaveButtonClick);
         }
+        this.loader.destroy();
     }
 }

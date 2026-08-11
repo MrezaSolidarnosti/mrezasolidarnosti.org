@@ -11,6 +11,7 @@ use Laminas\Config\Config;
 use Skeletor\Core\Mailer\Service\MailerInterface;
 use Skeletor\Core\Security\Authorization\AuthorizationService;
 use Skeletor\Core\Security\EntityRegistry;
+use Skeletor\Image\Service\Image;
 use Solidarity\Backend\Blocks\About\About;
 use Solidarity\Backend\Blocks\Banner\Banner;
 use Solidarity\Backend\Blocks\Connect\Connect;
@@ -39,6 +40,10 @@ use Solidarity\Backend\Blocks\Testimonials\Testimonials;
 use Solidarity\Backend\Blocks\Whywearedifferent\Whywearedifferent;
 use Solidarity\Backend\Blocks\Find\Find;
 use Solidarity\Backend\Blocks\HeroStats\HeroStats;
+use Solidarity\ContentEditor\BlockFilterFactory;
+use Solidarity\ContentEditor\BlockFilters\Paragraph;
+use Solidarity\ContentEditor\Contracts\BlockFilterFactoryInterface;
+use Solidarity\ContentEditor\Contracts\ContentEditorFilterInterface;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Tamtamchik\SimpleFlash\Flash;
@@ -80,40 +85,53 @@ $container->set(ManagerInterface::class, function() use ($container) {
     return $session;
 });
 
+$container->set(BlockFilterFactoryInterface::class, function() use ($container) {
+    $blockFilterFactory = new BlockFilterFactory(
+        $container->get(Image::class)
+    );
+    $blockFilterFactory->registerBlockFilter('core/paragraph', new Paragraph());
+    return $blockFilterFactory;
+});
+
+$container->set(ContentEditorFilterInterface::class, function() use ($container) {
+    return $container->get(\Solidarity\ContentEditor\Filter::class);
+});
+// Content Editor
+
 $container->set(\Skeletor\ContentEditor\Contracts\BlockParserFactoryInterface::class, function() use ($container) {
     $blockParserFactory =  new \Skeletor\ContentEditor\Factory\BlockParserFactory(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     );
 
     $blockParserFactory->registerBlockParser(HeroStats::NAME, new HeroStats());
     $blockParserFactory->registerBlockParser(Find::NAME, new Find(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Direction::NAME, new Direction());
     $blockParserFactory->registerBlockParser(Connect::NAME, new Connect());
     $blockParserFactory->registerBlockParser(Whywearedifferent::NAME, new Whywearedifferent());
     $blockParserFactory->registerBlockParser(Howitworks::NAME, new Howitworks(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Testimonials::NAME, new Testimonials());
     $blockParserFactory->registerBlockParser(Faq::NAME, new Faq());
     $blockParserFactory->registerBlockParser(Herotext::NAME, new Herotext());
     $blockParserFactory->registerBlockParser(Contactcards::NAME, new Contactcards(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Sidebyside::NAME, new Sidebyside());
     $blockParserFactory->registerBlockParser(Projectsdisplay::NAME, new Projectsdisplay(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Threepillars::NAME, new Threepillars(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Banner::NAME, new Banner());
     $blockParserFactory->registerBlockParser(Whotocall::NAME, new Whotocall());
     $blockParserFactory->registerBlockParser(Ctabanner::NAME, new Ctabanner());
     $blockParserFactory->registerBlockParser(About::NAME, new About());
     $blockParserFactory->registerBlockParser(Valuecards::NAME, new Valuecards(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Howitworkstimeline::NAME, new Howitworkstimeline());
     $blockParserFactory->registerBlockParser(Registerform::NAME, new Registerform());

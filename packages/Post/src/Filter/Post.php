@@ -6,11 +6,12 @@ use Laminas\Filter\ToInt;
 use Skeletor\Blog\Service\UrlHelper;
 use Skeletor\Core\Filter\FilterInterface;
 use Skeletor\Core\Validator\ValidatorException;
+use Solidarity\ContentEditor\Contracts\ContentEditorFilterInterface;
 use Volnix\CSRF\CSRF;
 
 class Post implements FilterInterface
 {
-    public function __construct(private \Solidarity\Post\Validator\Post $validator) {}
+    public function __construct(private \Solidarity\Post\Validator\Post $validator, private ContentEditorFilterInterface $blockFilter) {}
 
     public function getErrors(): array
     {
@@ -32,6 +33,7 @@ class Post implements FilterInterface
             'slug' => $slug,
             'shortDescription' => 'filter hardcoded value',
             'status' => (new ToInt())->filter($statusData['status']),
+            'blockData' => $this->blockFilter->filter(json_decode($data['blocks'] ?? [], true) ?? []),
             'featuredImageId' => $data['featuredImageId'] ?? '',
             'publishAt' => isset($statusData['schedule']) ? new \DateTime($statusData['schedule']) : null,
             'seoTitle' => $seoData['title'] ?? null,

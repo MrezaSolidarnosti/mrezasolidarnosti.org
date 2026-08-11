@@ -14,12 +14,11 @@ class Post
     use Timestampable;
     use Seo;
 
-    const STATUS_PUBLISHED = 1;
-    const STATUS_DRAFT = 2;
+    const int STATUS_PUBLISHED = 1;
+    const int STATUS_DRAFT = 2;
 
-    const STATUS_PENDING = 3;
-
-    const STATUS_SCHEDULED = 4;
+    const int STATUS_PENDING = 3;
+    const int STATUS_SCHEDULED = 4;
 
     #[ORM\Column(type: Types::STRING, length: 128, nullable: false)]
     public string $title;

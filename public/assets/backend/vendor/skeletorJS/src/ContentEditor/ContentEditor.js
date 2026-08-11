@@ -545,6 +545,7 @@ export default class ContentEditor {
         }
         this.dataForSave = this.getDataForSave();
         this.eventEmitter.emit(events.beforeSave, this.dataForSave);
+        this.saveHandler.saving();
         const response = await this.save(this.dataForSave);
         this.clearMessages();
         if(response.messages) {
@@ -559,6 +560,7 @@ export default class ContentEditor {
             }
             this.eventEmitter.emit(events.afterSave, this.dataForSave);
         }
+        this.saveHandler.notSaving();
     }
 
     save = async (data) => {

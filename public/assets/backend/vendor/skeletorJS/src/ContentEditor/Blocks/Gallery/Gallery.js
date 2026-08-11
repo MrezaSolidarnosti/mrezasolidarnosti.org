@@ -157,7 +157,9 @@ export default class Gallery extends Block {
             wrapper.insertAdjacentHTML('afterbegin', imgHtml);
         } else {
             const img = document.createElement('img');
-            img.src = this.config.imagePath ?? '' + src;
+            // Parenthesised on purpose: `+` binds tighter than `??`, so without them this reads
+            // as `imagePath ?? ('' + src)` and resolves to the bare path whenever imagePath is set.
+            img.src = (this.config.imagePath ?? '') + src;
             wrapper.appendChild(img);
         }
         wrapper.querySelectorAll('img').forEach((img) => {

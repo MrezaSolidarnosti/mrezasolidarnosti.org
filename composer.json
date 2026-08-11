@@ -45,7 +45,8 @@
       "Solidarity\\Period\\": "packages/Period/src",
       "Solidarity\\Page\\": "packages/Page/src",
       "Solidarity\\EmailList\\": "packages/EmailList/src",
-      "Solidarity\\Post\\": "packages/Post/src"
+      "Solidarity\\Post\\": "packages/Post/src",
+      "Solidarity\\ContentEditor\\": "packages/ContentEditor/src"
     }
   },
   "autoload-dev": {

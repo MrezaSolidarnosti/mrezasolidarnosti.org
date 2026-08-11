@@ -31,7 +31,7 @@ class Post extends TableView
                     'editColumn' => true,
                 ],
                 'slug' => $entity->slug,
-                'status' => \Skeletor\Blog\Entity\Post::getStatusHR($entity->status),
+                'status' => \Solidarity\Post\Entity\Post::getStatusHR($entity->status),
                 'publishAt' => $entity->publishAt?->format('d.m.Y'),
                 'createdAt' => $entity->createdAt->format('d.m.Y'),
                 'updatedAt' => $entity->updatedAt->format('d.m.Y'),

@@ -55,7 +55,10 @@ export default class Image extends Block {
 
         if(this.data.mediaId && this.data.src) {
             const img = document.createElement('img');
-            img.src = this.data.src;
+            // Saved content stores the bare filename, so the display path goes on here. `this.src`
+            // stays unprefixed — it is what getData() saves, and prefixing it would compound the
+            // path on every save/load round trip.
+            img.src = (this.config.imagePath ?? '') + this.data.src;
             this.src = this.data.src;
             this.imageId = this.data.mediaId;
             this.previewElement.appendChild(img);
@@ -73,7 +76,9 @@ export default class Image extends Block {
                     if(existingImg) {
                         existingImg.remove();
                     }
-                    this.previewElement.insertAdjacentHTML('beforeend', this.config.imagePath ?? '' + data.mediaData[0].img);
+                    // `img` is markup the media library already built with the full path in it —
+                    // no prefix here, or the path would be doubled. Same as FeaturedImage.
+                    this.previewElement.insertAdjacentHTML('beforeend', data.mediaData[0].img);
                     this.imageId = data?.mediaData[0].id
                     this.src = data?.mediaData[0].filename;
                 }

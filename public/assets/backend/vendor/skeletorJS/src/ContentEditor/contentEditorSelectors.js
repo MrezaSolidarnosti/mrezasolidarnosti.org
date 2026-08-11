@@ -304,7 +304,8 @@ export const contentEditorSelectors = Object.freeze({
         editLockAvatarFallback: 'editLockAvatarFallback',
         editLockActions: 'editLockActions',
         editLockAction: 'editLockAction',
-        editLockActionPrimary: 'editLockActionPrimary'
+        editLockActionPrimary: 'editLockActionPrimary',
+        saving: 'saving'
     },
     // CSS custom properties a block writes so the stylesheet keeps ownership of how the
     // setting is drawn, rather than the block pinning concrete values inline.
