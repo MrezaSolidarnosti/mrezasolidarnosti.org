@@ -74,6 +74,14 @@ return [
         'page.delete' => [User::ROLE_ADMIN],
         'page.create_translation' => [User::ROLE_ADMIN],
 
+        // Post permissions
+        'post.view_list' => [User::ROLE_ADMIN],
+        'post.view' => [User::ROLE_ADMIN],
+        'post.create' => [User::ROLE_ADMIN],
+        'post.edit' => [User::ROLE_ADMIN],
+        'post.delete' => [User::ROLE_ADMIN],
+        'post.create_translation' => [User::ROLE_ADMIN],
+
         // Image permissions
         'image.view_list' => [User::ROLE_ADMIN],
         'image.view' => [User::ROLE_ADMIN],
@@ -188,6 +196,16 @@ return [
         '/page/update/*' => 'page.edit',
         '/page/delete/*' => 'page.delete',
         '/page/createTranslation/*' => 'page.create_translation',
+
+        // Post routes
+        '/post/view/' => 'post.view_list',
+        '/post/view/*' => 'post.view',
+        '/post/tableHandler/' => 'post.view_list',
+        '/post/create/' => 'post.create',
+        '/post/form/' => 'post.create',
+        '/post/form/*' => 'post.edit',
+        '/post/update/*' => 'post.edit',
+        '/post/delete/*' => 'post.delete',
 
         // Email list routes
         '/emails/view/' => 'emailList.view_list',

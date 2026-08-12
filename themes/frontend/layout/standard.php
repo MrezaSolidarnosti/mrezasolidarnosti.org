@@ -67,7 +67,7 @@
 	<link rel="icon" href="/favicon.ico" sizes="any">
 	<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-    <link rel="stylesheet" href="<?=FRONT_ASSET_URL?>/css/style.css?v=0.1.0">
+    <link rel="stylesheet" href="<?=FRONT_ASSET_URL?>/css/style.css?v=0.0.9">
 </head>
 <body>
 <?=$this->section('header', $this->fetch('partialsGlobal::header'))?>

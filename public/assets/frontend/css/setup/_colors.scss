@@ -16,4 +16,17 @@
   --colorGray: #6B728080;
   --colorGrayLight:#DADAE4;
   --colorBackgroundGray:#F3F4F6;
+
+  /* Surface ramp the Chart component's styles read. Skeletor ships a dark ramp (Surface-100
+     is near black there); these are the light-theme equivalents, so the roles are the same:
+     0 is what sits on a filled shape, 700 is body text, 200 is the tooltip bubble. */
+  --colorSurface-0:#ffffff;
+  --colorSurface-100:#F3F4F6;
+  --colorSurface-200:#262185;
+  --colorSurface-300:#DADAE4;
+  --colorSurface-400:#B4B4C4;
+  --colorSurface-500:#9CA3AF;
+  --colorSurface-600:#6B7280;
+  --colorSurface-700:#262185;
+  --colorGrayTransparent:rgba(38, 33, 133, 0.15);
 }
