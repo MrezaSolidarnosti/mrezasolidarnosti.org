@@ -57,8 +57,13 @@ class Post extends TableView
         ];
     }
 
-    public function getPublicPosts(): array
+    public function getPublicPosts(int $offset = 0, ?int $limit = null): array
     {
-        return $this->repo->getPublicPosts();
+        return $this->repo->getPublicPosts($offset, $limit);
+    }
+
+    public function countPublicPosts(): int
+    {
+        return $this->repo->countPublicPosts();
     }
 }

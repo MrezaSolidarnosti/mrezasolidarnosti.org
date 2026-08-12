@@ -7,6 +7,11 @@ use Solidarity\Post\Service\Post;
 
 class BlogViewFilter implements BlockViewFilterInterface
 {
+    /** Posts per batch - the initial render and every load more request. */
+    const int PER_PAGE = 9;
+
+    const string LOAD_MORE_URL = '/blog/load-more';
+
     public function __construct(
         private Post $postService
     )
@@ -16,7 +21,9 @@ class BlogViewFilter implements BlockViewFilterInterface
 
     public function filter(array $data): array
     {
-        $data['posts'] = $this->postService->getPublicPosts();
+        $data['posts'] = $this->postService->getPublicPosts(0, self::PER_PAGE);
+        $data['hasMore'] = $this->postService->countPublicPosts() > count($data['posts']);
+        $data['loadMoreUrl'] = self::LOAD_MORE_URL;
         return $data;
     }
 }
