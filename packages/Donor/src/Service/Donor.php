@@ -3,6 +3,7 @@ namespace Solidarity\Donor\Service;
 
 use Skeletor\Core\Validator\ValidatorException;
 use Skeletor\Login\Service\MagicLinkService;
+use Skeletor\Translator\Service\Translator;
 use Solidarity\Donor\Filter\DonorProfileData;
 use Solidarity\Donor\Repository\DonorRepository;
 use Skeletor\Core\TableView\Service\TableView;
@@ -32,7 +33,8 @@ class Donor extends TableView
         private \Solidarity\Donor\Validator\DonorProfileData $donorProfileDataValidator,
         private DonorDonationData $donorDonationDataValidator,
         private \Solidarity\Donor\Filter\DonorDonationData $donorDonationDataFilter,
-        private TransactionService $transaction, private QrCode $qrCode
+        private TransactionService $transaction, private QrCode $qrCode,
+        private Translator $translator
     ) {
         parent::__construct($repo, $user, $logger, $filter);
     }
@@ -225,7 +227,13 @@ class Donor extends TableView
                 'expiresAt' => $transaction->status === Transaction::STATUS_NEW ?
                     $transaction->getExpiryDate()->format('d.m.Y h:i') :
                     null,
-                'status' => ['label' => Transaction::getHrStatus($transaction->status), 'value' => $transaction->status],
+                // The label is rendered client-side but authored here, so it goes through the
+                // PHP Translator rather than the JS one. On the default locale the service has
+                // no language set and translate() is a pass-through, returning the Serbian source.
+                'status' => [
+                    'label' => $this->translator->translate(Transaction::getHrStatus($transaction->status)),
+                    'value' => $transaction->status,
+                ],
                 'projectId' => $transaction->project->id,
                 'paymentType' => $transaction->paymentType,
                 'accountNumber' => $transaction->accountNumber,
@@ -273,7 +281,33 @@ class Donor extends TableView
             $budgets[(int) $type] = ($budgets[(int) $type] ?? 0) + $rsd;
         }
 
-        return $this->transaction->createForDonor($donor, $projects, $budgets);
+        $allocated = $this->transaction->createForDonor($donor, $projects, $budgets);
+        if ($allocated === 0) {
+            $types = array_keys($budgets);
+            // Each rung isolates exactly one variable, so the message names the real blocker.
+            // The donor is passed only on the last one — with it, the project and payment-type
+            // rungs would also be answering "is this donor eligible", and report the wrong cause.
+            if (!$this->transaction->hasUnmetNeeds()) {
+                throw new NoNeedsException('Trenutno ne postoje potrebe.');
+            }
+            if (!$this->transaction->hasUnmetNeeds(null, $projects)) {
+                throw new NoNeedsException('Trenutno ne postoje potrebe za izabrani pravac podrške.');
+            }
+            if (!$this->transaction->hasUnmetNeeds(null, $projects, $types)) {
+                throw new NoNeedsException('Trenutne potrebe ne mogu da se pokriju izabranim načinom plaćanja.');
+            }
+            if (!$this->transaction->hasUnmetNeeds($donor, $projects, $types)) {
+                throw new NoNeedsException(
+                    'Trenutne potrebe ne odgovaraju vašem profilu: ili ste dostigli godišnji limit '
+                    . 'po osobi, ili se vaše opredeljenje (škole/fakulteti) ne poklapa sa trenutnim potrebama.'
+                );
+            }
+            // needs exist and match — the blocker is amount-side (per-type minimum, or the
+            // 10.000 minSlice once the total passes 100.000)
+            throw new NoNeedsException('Uneti iznos je premali za kreiranje instrukcije.');
+        }
+
+        return $allocated;
     }
 
 }

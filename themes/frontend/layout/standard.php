@@ -88,7 +88,7 @@ if(!empty($isDonorLoggedIn)) {
 <?=$this->section('footer', $this->fetch('partialsGlobal::footer'))?>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script type="module" src="<?=FRONT_ASSET_URL?>/js/global.js?v=0.0.5"></script>
+<script type="module" src="<?=FRONT_ASSET_URL?>/js/global.js?v=0.0.8"></script>
 <?php if (isset($jsPath) && $jsPath != ""): ?>
     <script src="<?=$jsPath?>" type="module"></script>
 <?php endif; ?>

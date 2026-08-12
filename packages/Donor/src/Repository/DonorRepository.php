@@ -33,6 +33,30 @@ class DonorRepository extends TableViewRepository implements LoginRepositoryInte
         $this->entityManager->flush();
     }
 
+    /**
+     * Stamp the donor's last visit. Runs on every authenticated frontend request, so it is
+     * a single indexed UPDATE rather than a load-compare-flush cycle, and the throttle is
+     * part of the WHERE clause: rows already stamped within the window are simply not
+     * matched, costing one cheap write per donor per window instead of one per page view.
+     */
+    public function touchLastVisit(int $donorId, int $throttleSeconds = 300): void
+    {
+        $this->entityManager->createQueryBuilder()
+            ->update(Donor::class, 'd')
+            ->set('d.lastVisit', ':now')
+            ->where('d.id = :id')
+            // Parentheses are mandatory: Doctrine does not add them around a raw string,
+            // and AND binds tighter than OR — without them this reads as
+            // "(id = :id AND lastVisit IS NULL) OR lastVisit < :threshold"
+            // and stamps every donor in the table on every request.
+            ->andWhere('(d.lastVisit IS NULL OR d.lastVisit < :threshold)')
+            ->setParameter('now', new \DateTime())
+            ->setParameter('id', $donorId)
+            ->setParameter('threshold', new \DateTime('-' . $throttleSeconds . ' seconds'))
+            ->getQuery()
+            ->execute();
+    }
+
     public function getDonorsByProject($project): array
     {
         $qb = $this->entityManager->createQueryBuilder();
@@ -104,7 +128,6 @@ class DonorRepository extends TableViewRepository implements LoginRepositoryInte
         }
 
         $projectIds = $data['project'] === -1 ? [1, 2] : [$data['project']];
-        $monthly = $data['frequency'];
 
         $projectRepository = $this->entityManager->getRepository(Project::class);
         $paymentMethodRepository = $this->entityManager->getRepository(PaymentMethod::class);
@@ -129,7 +152,9 @@ class DonorRepository extends TableViewRepository implements LoginRepositoryInte
                 $paymentMethod->type = (int) $type;
                 $paymentMethod->amount = $payment['amount'];
                 $paymentMethod->currency = $payment['currency'];
-                $paymentMethod->monthly = $monthly;
+                // This endpoint only ever saves the standing monthly pledge — the one-time
+                // action creates instructions directly and does not come through here.
+                $paymentMethod->monthly = 1;
                 $this->entityManager->persist($paymentMethod);
             }
 

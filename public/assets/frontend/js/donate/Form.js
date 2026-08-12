@@ -9,15 +9,18 @@ export default class Form {
     #titleElement;
     #backToProfileButton;
     #closeFormButton;
-    #frequencyTriggers;
-    #frequencyInput;
-    #frequencyActiveTrigger;
+    #modeTriggers;
+    #modeInfo;
+    #submitButton;
+    #currentMode = 'monthly';
+    // Each mode keeps its own amounts, so switching never carries the monthly pledge into
+    // a one-time donation — and switching back restores what was there.
+    #amountsByMode = {monthly: [], onetime: []};
     #paymentMethodsTriggers;
     #paymentTemplate;
     #formFieldsContainer;
     #projectInput;
     #messagesContainer;
-    #isForInstruction;
     paymentLogoURLs =  {
         2: {
             dark: '/assets/frontend/images/payment/sepa.png',
@@ -32,10 +35,9 @@ export default class Form {
             light: '/assets/frontend/images/payment/mgW.png'
         }
     }
-    constructor({form, eventEmitter, isForInstruction}) {
+    constructor({form, eventEmitter}) {
         this.#form = form;
         this.eventEmitter = eventEmitter;
-        this.#isForInstruction = isForInstruction;
     }
 
     init() {
@@ -53,9 +55,9 @@ export default class Form {
         this.#titleElement = this.#form.querySelector('h2');
         this.#backToProfileButton = this.#form.querySelector('#backToProfile');
         this.#closeFormButton = this.#form.querySelector('#closeForm');
-        this.#frequencyTriggers = this.#form.querySelectorAll('#frequencyFields .trigger');
-        this.#frequencyInput = this.#form.querySelector('#frequencyInput');
-        this.#frequencyActiveTrigger = this.#form.querySelector('#frequencyFields .trigger.active');
+        this.#modeTriggers = this.#form.querySelectorAll('#frequencyFields .trigger');
+        this.#modeInfo = this.#form.querySelector('#donationModeInfo');
+        this.#submitButton = this.#form.querySelector('#donationFormActions button[type="submit"]');
         this.#paymentMethodsTriggers = this.#form.querySelectorAll('#paymentMethodFields .trigger');
         this.#paymentTemplate = document.getElementById('paymentTemplate');
         this.#formFieldsContainer = document.getElementById('donationFormFields');
@@ -75,26 +77,62 @@ export default class Form {
             this.#logoElement.innerHTML = project.logo;
             this.#titleElement.textContent = project.thankYouTitle;
             this.#projectInput.value = project.projectId;
+            // Every open starts clean on the monthly mode; prefillForm (if the donor has a
+            // pledge for this project) arrives right after and fills it in.
+            this.#amountsByMode = {monthly: [], onetime: []};
+            this.#applyMode('monthly');
         });
         this.eventEmitter.on('prefillForm', (data) => {
             this.#prefill(data);
         });
     }
 
-    // Pre-fills the form with the donor's existing donation data: frequency and,
-    // for each saved payment method, its amount (currency is derived from the method).
+    // Pre-fills the form with the donor's saved monthly pledge: one amount field per
+    // saved payment method (currency is derived from the method). The one-time action
+    // persists nothing, so there is never anything else to restore.
     #prefill(data) {
-        if (data.frequency !== null && data.frequency !== undefined) {
-            const frequencyTrigger = Array.from(this.#frequencyTriggers)
-                .find((trigger) => trigger.getAttribute('data-value') === String(data.frequency));
-            if (frequencyTrigger) {
-                this.#frequencyActiveTrigger?.classList.remove('active');
-                frequencyTrigger.classList.add('active');
-                this.#frequencyActiveTrigger = frequencyTrigger;
-                this.#frequencyInput.value = frequencyTrigger.getAttribute('data-value');
+        this.#amountsByMode.monthly = data.paymentMethods ?? [];
+        if (this.#currentMode === 'monthly') {
+            this.#applyPaymentMethods(this.#amountsByMode.monthly);
+        }
+    }
+
+    /**
+     * Switch the form between saving a monthly pledge and creating a one-time instruction:
+     * retarget the submit, relabel it, swap the explanatory line, and put that mode's own
+     * amounts on screen. Falls back gracefully when the toggle is not rendered (no unmet
+     * needs) — the markup defaults already describe the monthly mode.
+     */
+    #applyMode(mode) {
+        this.#currentMode = mode;
+        const trigger = Array.from(this.#modeTriggers).find((t) => t.getAttribute('data-mode') === mode);
+        if (trigger) {
+            this.#modeTriggers.forEach((t) => t.classList.remove('active'));
+            trigger.classList.add('active');
+            this.#form.action = trigger.getAttribute('data-action');
+            const label = trigger.getAttribute('data-label');
+            this.#submitButton.textContent = label;
+            this.#submitButton.title = label;
+            if (this.#modeInfo) {
+                // Write into the text node only, so the info icon beside it survives.
+                const infoText = this.#modeInfo.querySelector('.infoText') ?? this.#modeInfo;
+                infoText.textContent = this.#modeInfo.getAttribute(`data-info-${mode}`) ?? '';
             }
         }
+        this.#applyPaymentMethods(this.#amountsByMode[mode]);
+    }
 
+    /** Read the amount fields currently on screen, so a mode switch can restore them later. */
+    #snapshotPaymentMethods() {
+        return Array.from(this.#formFieldsContainer.querySelectorAll('.formFields[data-method]'))
+            .map((fields) => ({
+                type: parseInt(fields.getAttribute('data-method'), 10),
+                amount: fields.querySelector('input[type="number"]')?.value ?? '',
+            }));
+    }
+
+    /** Rebuild the amount fields from a list of {type, amount}; an empty list clears them. */
+    #applyPaymentMethods(paymentMethods) {
         // Clear any previously built payment fields / active triggers first.
         this.#paymentMethodsTriggers.forEach((trigger) => trigger.classList.remove('active'));
         this.#formFieldsContainer.querySelectorAll('.formFields[data-method]').forEach((fields) => fields.remove());
@@ -110,7 +148,7 @@ export default class Form {
 
         }
 
-        (data.paymentMethods ?? []).forEach((paymentMethod) => {
+        (paymentMethods ?? []).forEach((paymentMethod) => {
             const trigger = Array.from(this.#paymentMethodsTriggers)
                 .find((trigger) => trigger.getAttribute('data-method') === String(paymentMethod.type));
             if (!trigger) {
@@ -130,12 +168,15 @@ export default class Form {
     #addListeners() {
         this.#backToProfileButton.addEventListener('click', this.#close);
         this.#closeFormButton.addEventListener('click', this.#close);
-        this.#frequencyTriggers.forEach((trigger) => {
+        this.#modeTriggers.forEach((trigger) => {
             trigger.addEventListener('click', () => {
-                this.#frequencyActiveTrigger.classList.remove('active');
-                this.#frequencyInput.value = trigger.getAttribute('data-value');
-                trigger.classList.add('active');
-                this.#frequencyActiveTrigger = trigger;
+                const mode = trigger.getAttribute('data-mode');
+                if (mode === this.#currentMode) {
+                    return;
+                }
+                // Stash what is on screen before swapping, so coming back restores it.
+                this.#amountsByMode[this.#currentMode] = this.#snapshotPaymentMethods();
+                this.#applyMode(mode);
             });
         });
         this.#paymentMethodsTriggers.forEach((trigger) => {
@@ -174,7 +215,7 @@ export default class Form {
                 } else {
                     trigger.classList.add('active');
                     const template = this.#paymentTemplate.content.cloneNode(true);
-                    template.querySelector('h3').textContent = 'IZNOS ' + trigger.parentElement.querySelector(':scope >span').textContent;
+                    template.querySelector('h3').textContent = Translator.translate('AMOUNT') + ' ' + trigger.parentElement.querySelector(':scope >span').textContent;
                     template.querySelector('.formFields').setAttribute('data-method', method);
                     template.querySelector('input[type="number"]').name = `payment[${method}][value]`;
                     const img = trigger.querySelector('img');
@@ -228,12 +269,29 @@ export default class Form {
         this.#form.addEventListener('submit', async (e) => {
             e.preventDefault();
             this.#messagesContainer.innerHTML = '';
-            const action = this.#isForInstruction ? '/donor/createInstruction' : this.#form.action;
+            // Retargeted by #applyMode: the monthly pledge and the one-time instruction are
+            // different endpoints. (Deliberately not e.submitter.formAction — with no
+            // formaction attribute that getter returns the document URL, not the form's.)
+            const action = this.#form.action;
             const res = await fetch(action, {
                 method: 'POST',
                 body: new FormData(this.#form)
             });
-            const resData = await res.json();
+            // A 400/401 still carries a JSON body with the errors to show, so status alone
+            // is not the check — only a body we cannot parse (a 404's or a fatal's HTML) is
+            // unrecoverable. Without this the rejected json() killed the handler silently.
+            let resData;
+            try {
+                resData = await res.json();
+            } catch (parseError) {
+                console.error(`${action} responded ${res.status} with a non-JSON body`, parseError);
+                this.#messagesContainer.appendChild(this.#getMessageElement(
+                    Translator.translate('Došlo je do greške, pokušajte ponovo.'),
+                    'error'
+                ));
+                this.#scrollToMessagesContainer();
+                return;
+            }
             if(!resData.success) {
                 if(resData.data.errors.length) {
                     resData.data.errors.forEach((error) => {
@@ -249,44 +307,25 @@ export default class Form {
                     });
                 }
             } else {
+                // A save is the only thing that moves the donor's chosen direction — merely
+                // opening a card and closing it must leave the previous choice alone.
+                this.eventEmitter.emit('donationSaved', this.#projectInput.value);
                 if(resData?.data?.redirect) {
                     window.location.href = resData.data.redirect;
                 }
-                this.#messagesContainer.appendChild(this.#getMessageElement('Uspešno ste sačuvali izmene.', 'success'));
-                const url = Translator.getLanguage() === 'en' ? '/en/how-it-works' : '/kako-funkcionise-mreza';
-                this.#messagesContainer.appendChild(this.#getMessageElement(
-                    `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                   <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4ZM12 11C12.5523 11 13 11.4477 13 12V15H13.5C14.0523 15 14.5 15.4477 14.5 16C14.5 16.5523 14.0523 17 13.5 17H10.5C9.94772 17 9.5 16.5523 9.5 16C9.5 15.4477 9.94772 15 10.5 15H11V13H10.5C9.94772 13 9.5 12.5523 9.5 12C9.5 11.4477 9.94772 11 10.5 11H12ZM11.75 7C12.4404 7 13 7.55964 13 8.25C13 8.94036 12.4404 9.5 11.75 9.5C11.0596 9.5 10.5 8.94036 10.5 8.25C10.5 7.55964 11.0596 7 11.75 7Z" fill="#FE5101"></path>\n' +
-                    </svg><a href="${url}" title="${Translator.translate('Check out next steps.')}">${Translator.translate('Check out next steps.')}</a>`,
-                    'info', true));
-                this.#scrollToMessagesContainer();
+                // this.#messagesContainer.appendChild(this.#getMessageElement(Translator.translate('Uspešno ste sačuvali izmene.'), 'success'));
+                // const url = Translator.getLanguage() === 'en' ? '/en/how-it-works' : '/kako-funkcionise-mreza';
+                // this.#messagesContainer.appendChild(this.#getMessageElement(
+                //     `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                //    <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4ZM12 11C12.5523 11 13 11.4477 13 12V15H13.5C14.0523 15 14.5 15.4477 14.5 16C14.5 16.5523 14.0523 17 13.5 17H10.5C9.94772 17 9.5 16.5523 9.5 16C9.5 15.4477 9.94772 15 10.5 15H11V13H10.5C9.94772 13 9.5 12.5523 9.5 12C9.5 11.4477 9.94772 11 10.5 11H12ZM11.75 7C12.4404 7 13 7.55964 13 8.25C13 8.94036 12.4404 9.5 11.75 9.5C11.0596 9.5 10.5 8.94036 10.5 8.25C10.5 7.55964 11.0596 7 11.75 7Z" fill="#FE5101"></path>\n' +
+                //     </svg><a href="${url}" title="${Translator.translate('Check out next steps.')}">${Translator.translate('Check out next steps.')}</a>`,
+                //     'info', true));
+                // this.#scrollToMessagesContainer();
             }
             if(resData.data.token) {
                 this.#replaceCsrf(resData.data.token);
             }
         });
-    }
-
-    #resetForm = (e) => {
-        e.preventDefault();
-        const defaultFrequencyTrigger = this.#form.querySelector('#frequencyFields .trigger[data-value="0"]');
-        this.#frequencyActiveTrigger.classList.remove('active');
-        this.#frequencyInput.value = defaultFrequencyTrigger.getAttribute('data-value');
-        defaultFrequencyTrigger.classList.add('active');
-        this.#frequencyActiveTrigger = defaultFrequencyTrigger;
-        this.#paymentMethodsTriggers.forEach((trigger) => {
-           trigger.classList.remove('active');
-        });
-        const payments = document.querySelectorAll('.paymentInputContainer');
-        if(payments) {
-            payments.forEach((payment) => {
-               payment.remove();
-            });
-        }
-        setTimeout(() => {
-            this.#scrollToMessagesContainer();
-        }, 200);
-
     }
 
     #scrollToMessagesContainer() {

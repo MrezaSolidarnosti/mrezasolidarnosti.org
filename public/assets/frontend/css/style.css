@@ -713,7 +713,7 @@ strong {
   align-items: center;
   gap: 2rem;
   justify-content: center;
-  padding: 7.75rem 13.5rem;
+  padding: 3rem 13.5rem;
 }
 @media (max-width: 1200px) {
   #footerMain #footerMessage {
@@ -738,7 +738,7 @@ strong {
   display: flex;
   flex-direction: column;
   gap: 3rem;
-  padding: 5rem;
+  padding: 3rem 5rem;
 }
 @media (max-width: 1100px) {
   #footerMain #partners {
@@ -1789,7 +1789,7 @@ strong {
 }
 
 .contactCards {
-  padding: 5rem 11rem;
+  padding: 3rem 11rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(533px, 533px));
   justify-content: center;
@@ -3893,7 +3893,7 @@ strong {
 
 .instructionsWhatIs {
   display: flex;
-  padding: 5rem 11rem 2rem 11rem;
+  padding: 1.5rem 11rem 2rem 11rem;
   position: relative;
   gap: 8rem;
   align-items: center;
@@ -3901,7 +3901,7 @@ strong {
 @media (max-width: 1200px) {
   .instructionsWhatIs {
     flex-direction: column;
-    padding: 3rem 1.25rem;
+    padding: 1rem 1.25rem 3rem 1.25rem;
     gap: 2rem;
   }
 }
@@ -3923,7 +3923,7 @@ strong {
   margin-top: 1rem;
   margin-bottom: 1rem;
 }
-.instructionsWhatIs .left .instructionsLink {
+.instructionsWhatIs .instructionsLink {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -3932,7 +3932,10 @@ strong {
   line-height: 1.4;
   color: var(--colorDarkBlue);
 }
-.instructionsWhatIs .left .instructionsLink a {
+.instructionsWhatIs .instructionsLink p {
+  margin: 0;
+}
+.instructionsWhatIs .instructionsLink a {
   text-decoration: underline;
 }
 .instructionsWhatIs .right {
@@ -4800,6 +4803,22 @@ main:has(#donationForm.active) {
   font-weight: 400;
   line-height: 1.4;
   color: var(--colorDarkBlue);
+}
+#donationForm #donationFormInner #donationFormFields .formFields .info.withIcon {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+@media (max-width: 768px) {
+  #donationForm #donationFormInner #donationFormFields .formFields .info.withIcon {
+    align-items: flex-start;
+  }
+}
+#donationForm #donationFormInner #donationFormFields .formFields .info.withIcon svg {
+  flex: 0 0 auto;
+}
+#donationForm #donationFormInner #donationFormFields .formFields .info.withIcon .infoText {
+  flex: 1;
 }
 #donationForm #donationFormInner #donationFormFields #frequencyFields .inputs {
   display: grid;

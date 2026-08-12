@@ -1,8 +1,17 @@
 <?php if(isset($block)): ?>
+    <div class="messagesContainer">
+        <?php if (isset($_GET['message'])): ?>
+            <?php if ($_GET['message'] == 'saved'): ?>
+            <span class="success">Uspešno ste sačuvali podešavanja za mesečne donacije.</span>
+            <?php else: ?>
+            <span class="success">Uspešno ste kreirali instrukciju.</span>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
     <div class="whatIsSection instructionsWhatIs">
-        <div class="left">
-            <h1><?=nl2br(htmlentities($block['title'] ?? ''))?></h1>
-            <p><?=nl2br(htmlentities($block['description'] ?? ''))?></p>
+        <div>
+            <h1><?=nl2br(htmlentities($block['title'] ?? ''))?></h1><br />
+            <p><?=nl2br(htmlentities($block['description'] ?? ''))?></p><br />
             <?php if(!empty($block['linkText'])): ?>
                 <div class="instructionsLink">
                     <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -13,14 +22,7 @@
                 </div>
             <?php endif; ?>
         </div>
-        <div class="right">
-            <?php if(!empty($block['buttonText'])): ?>
-                <a class="donateButton" title="<?=htmlentities($block['buttonText'])?>" href="<?=$this->localizeUrl('/doniraj?action=instruction')?>">
-                    <?=$block['buttonSvg'] ?? ''?>
-                    <?=htmlentities($block['buttonText'])?>
-                </a>
-            <?php endif; ?>
-        </div>
+
     </div>
     <div class="whatIsSection instructionsWhatIs infoWhatIs">
         <div class="infoSection">
@@ -30,6 +32,9 @@
                 <path d="M13.2949 16.3781H11.2461V18.0798H13.2949V16.3781Z" fill="#CF3443"/>
             </svg>
             <div>
+                <p><?=$this->t('<b>Ukoliko ste odabrali mesečne donacije</b>, instrukcije za uplatu se automatski generišu ponedeljkom i četvrtkom u 7:00 časova i važe ograničeno vreme.')?></p>
+                <p><?=$this->t('<b>Instrukcije se mogu generisati i drugim danima</b>, kada postoji potreba za donacijom. Za ovu opciju je potrebno izabrati jednokratnu donaciju.')?></p>
+                <p><?=$this->t('<b>Sve aktivne instrukcije</b> možete videti i na ovoj stranici u tabeli ispod, u zelenom polju, gde se nalazi dugme "Uplati". Klikom na dugme možete preuzeti instrukcije za uplatu.')?></p><br />
                 <h2><?=htmlentities($block['infoTitle'] ?? '')?></h2>
                 <p><?=nl2br(htmlentities($block['infoDescription'] ?? ''))?></p>
             </div>

@@ -108,7 +108,7 @@ export default class InstructionsTable {
                        this.messagesContainer.appendChild(this.getMessageElement(error, 'error'));
                    });
                } else {
-                   this.messagesContainer.appendChild(this.getMessageElement('Dogodila se neočekivana greška, osvežite stranicu i probajte ponovo.', 'error'));
+                   this.messagesContainer.appendChild(this.getMessageElement(Translator.translate('An unexpected error occurred, please refresh the page and try again.'), 'error'));
                }
                this.messagesContainer.scrollIntoView();
             }
@@ -144,6 +144,7 @@ export default class InstructionsTable {
 
             const printAccountNum = this.activeInstruction.paymentType === 1 || this.activeInstruction.paymentType === 2;
             const printQR = this.activeInstruction.paymentType === 1;
+            const printRefCode = this.activeInstruction.paymentType === 1;
             const doc = iframe.contentWindow.document;
             doc.open();
             doc.write(`<!DOCTYPE html><html><head>
@@ -151,18 +152,19 @@ export default class InstructionsTable {
     </head><body>
         <div class="inputContainer">
            <label>
-                Ime i prezime oštećenog:
+                ${Translator.translate('Beneficiary name:')}
             </label>
             <input type="text" value="${this.activeInstruction.beneficiaryName}">
         </div>
         <div class="inputContainer">
            <label>
-                Iznos:
+                ${Translator.translate('Amount:')}
             </label>
           <input type="text" value="${this.activeInstruction.amount} ${this.activeInstruction.paymentType === 1 ? 'RSD' : 'EUR'}">
         </div>
-        ${printAccountNum ? '<div class="inputContainer"><label>Broj žiro računa:</label><input type="text" value="' + this.activeInstruction.accountNumber +'"></div>' : ''}
-        ${printQR ? '<p>Ili skeniraj NBS QR Code:</p><img src="' + this.activeInstruction.qrCode  +'">' : ''}
+        ${printAccountNum ? '<div class="inputContainer"><label>' + Translator.translate('Bank account number:') + '</label><input type="text" value="' + this.activeInstruction.accountNumber +'"></div>' : ''}
+        ${printRefCode ? '<div class="inputContainer"><label>' + Translator.translate('Payment reference:') + '</label><input type="text" value="' + this.activeInstruction.referenceCode +'"></div>' : ''}
+        ${printQR ? '<p>' + Translator.translate('Or scan the NBS QR code:') + '</p><img src="' + this.activeInstruction.qrCode  +'">' : ''}
 </body></html>`);
 
             doc.close();
@@ -361,8 +363,14 @@ export default class InstructionsTable {
             const amountInput =  this.paymentDialog.querySelector('#amountInput');
             const paymentInfoLogo =  this.paymentDialog.querySelector('#paymentInfoLogo');
             const refNumInput = this.paymentDialog.querySelector('#refNumInput');
+            const refCodeInput = this.paymentDialog.querySelector('#refCodeInput');
             const qrCodeImage = this.paymentDialog.querySelector('#qrCodeImage');
             let currency = 'RSD';
+
+            // Poziv na broj belongs to the dinarski transfer only; the foreign-currency
+            // methods have no such field on their payment slips.
+            refCodeInput.value = instruction.referenceCode;
+            refCodeInput.parentElement.parentElement.classList.toggle('hidden', instruction.paymentType !== 1);
 
             switch(instruction.paymentType) {
                 case 1:

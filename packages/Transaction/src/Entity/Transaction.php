@@ -45,6 +45,12 @@ class Transaction
     #[ORM\Column(type: Types::STRING, length: 256, nullable: true)]
     public ?string $paymentCode;
 
+    // True when the donor created this instruction themselves through the one-time action;
+    // false for everything the cron allocated from a standing monthly pledge. Kept so the
+    // two sources can be reported on separately.
+    #[ORM\Column(type: Types::BOOLEAN, options: ['default' => false])]
+    public bool $manual = false;
+
     #[ORM\ManyToOne(inversedBy: 'transactions')]
     #[ORM\JoinColumn(name: 'projectId', referencedColumnName: 'id', unique: false, nullable: false)]
     public Project $project;
@@ -100,7 +106,7 @@ class Transaction
 
     public function getReferenceCode(): string
     {
-        return $this->project->code . ' - ' . $this->getId();
+        return $this->project->code . '-' . $this->getId();
     }
 
     /**
