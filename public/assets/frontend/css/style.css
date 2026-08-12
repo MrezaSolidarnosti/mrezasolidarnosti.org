@@ -314,7 +314,6 @@ strong {
   justify-content: space-between;
   position: sticky;
   background: var(--colorBackgroundGray);
-  scroll-margin-top: 80px;
   top: 0;
   left: 0;
   right: 0;
