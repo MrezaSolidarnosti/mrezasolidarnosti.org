@@ -41,7 +41,7 @@ contentEditor.save = async (data) => {
     }
     if(resData.generalErrors.length > 0) {
         resData.generalErrors.forEach((error) => {
-            messages.push(error);
+            messages.push(error.message);
         });
     }
     if(resData.status) {

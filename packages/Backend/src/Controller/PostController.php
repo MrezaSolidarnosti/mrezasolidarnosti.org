@@ -9,6 +9,7 @@ use League\Plates\Engine;
 use Skeletor\Core\Controller\AjaxCrudController;
 use Skeletor\Core\Validator\InvalidFormTokenException;
 use Skeletor\Core\Validator\ValidatorException;
+use Solidarity\ContentEditor\Exceptions\BlockFilterNotFoundException;
 use Solidarity\Post\Service\Post;
 use Tamtamchik\SimpleFlash\Flash;
 
@@ -85,7 +86,10 @@ class PostController extends AjaxCrudController
             foreach ($this->service->parseErrors() as $key => $error) {
                 $errors[] = ['message' => $this->translate($error['message'])];
             }
-        } catch (\Exception $e) {
+        } catch (BlockFilterNotFoundException $e) {
+            $errors[] = ['message' => $this->translate($e->getMessage())];
+        }
+        catch (\Exception $e) {
 //            $this->logger->error('Update failed: ' . $e->getMessage(), ['exception' => $e]);
             $generalErrors[] = ['message' => $this->translate('An unexpected error occurred. Please try again.')];
         }
