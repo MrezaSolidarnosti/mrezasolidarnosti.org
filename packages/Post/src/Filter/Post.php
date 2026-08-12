@@ -27,14 +27,15 @@ class Post implements FilterInterface
         }
         $statusData = json_decode($data['status'], true);
         $seoData = json_decode($data['seo'], true);
+        $featuredImage = json_decode($data['featuredImage'], true);
         $filteredData = [
             'id' => (isset($data['id'])) ? (new ToInt())->filter($data['id']) : null,
             'title' => $data['title'],
             'slug' => $slug,
-            'shortDescription' => 'filter hardcoded value',
+            'shortDescription' => $data['excerpt'],
             'status' => (new ToInt())->filter($statusData['status']),
             'blockData' => $this->blockFilter->filter(json_decode($data['blocks'] ?? [], true) ?? []),
-            'featuredImageId' => $data['featuredImageId'] ?? '',
+            'featuredImageId' => $featuredImage['id'] ?? null,
             'publishAt' => isset($statusData['schedule']) ? new \DateTime($statusData['schedule']) : null,
             'seoTitle' => $seoData['title'] ?? null,
             'seoDescription' => $seoData['description'] ?? null,

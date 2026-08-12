@@ -39,10 +39,10 @@ class PostFactory extends AbstractFactory
         $post = $em->getRepository(Post::class)->find($data['id']);
         $post->title = $data['title'];
         $post->slug = $data['slug'];
-        $post->shortDescription = $data['shortDescription'];
         $post->status = $data['status'];
         $post->publishAt = $data['publishAt'];
         $post->blockData = $data['blockData'];
+        $post->shortDescription = $data['shortDescription'];
         if(isset($data['featuredImageId'])) {
             $image = $em->getRepository(Image::class)->find($data['featuredImageId']);
             $post->featuredImage = $image;

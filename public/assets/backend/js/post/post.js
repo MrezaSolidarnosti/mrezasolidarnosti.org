@@ -3,10 +3,14 @@ import { config } from "./config.js";
 import MediaLibrary from "../../vendor/skeletorJS/src/MediaLibrary/MediaLibrary.js";
 import SaveResponse from "../../vendor/skeletorJS/src/ContentEditor/SaveResponse.js";
 import {events} from "../../vendor/skeletorJS/src/ContentEditor/events.js";
+import Excerpt from "./Modules/Excerpt.js";
 
 window.mediaLibrary = new MediaLibrary();
 window.mediaLibrary.init();
 
+ContentEditor.registerModule('excerpt', {
+    class: Excerpt
+});
 
 const contentEditor = new ContentEditor({
     config: config.contentEditor,

@@ -130,6 +130,15 @@
                 <label>Slug</label>
                 <input type="text" id="slug" placeholder="your-slug">
             </div>
+            <div class="sidebarContentSection" data-module="excerpt">
+                <div class="sidebarContentSectionHandle">
+                    <span><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"/></svg>Excerpt</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M201.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 338.7 54.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+                </div>
+                <div class="sidebarContentSectionContent">
+                    <textarea spellcheck="false" id="excerpt" class="input"></textarea>
+                </div>
+            </div>
         </div>
         <div id="sidebarBlockContent" class="sidebarContent">
         </div>

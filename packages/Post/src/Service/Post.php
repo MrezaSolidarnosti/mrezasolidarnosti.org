@@ -56,4 +56,9 @@ class Post extends TableView
             ['name' => 'updatedAt', 'label' => 'Updated', 'rangeFilter' => ['type' => 'date']]
         ];
     }
+
+    public function getPublicPosts(): array
+    {
+        return $this->repo->getPublicPosts();
+    }
 }

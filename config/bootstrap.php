@@ -14,6 +14,7 @@ use Skeletor\Core\Security\EntityRegistry;
 use Skeletor\Image\Service\Image;
 use Solidarity\Backend\Blocks\About\About;
 use Solidarity\Backend\Blocks\Banner\Banner;
+use Solidarity\Backend\Blocks\Blog\Blog;
 use Solidarity\Backend\Blocks\Connect\Connect;
 use Solidarity\Backend\Blocks\Contactcards\Contactcards;
 use Solidarity\Backend\Blocks\Ctabanner\Ctabanner;
@@ -41,7 +42,30 @@ use Solidarity\Backend\Blocks\Whywearedifferent\Whywearedifferent;
 use Solidarity\Backend\Blocks\Find\Find;
 use Solidarity\Backend\Blocks\HeroStats\HeroStats;
 use Solidarity\ContentEditor\BlockFilterFactory;
+use Solidarity\ContentEditor\BlockFilters\Accordion;
+use Solidarity\ContentEditor\BlockFilters\Chart;
+use Solidarity\ContentEditor\BlockFilters\Columns;
+use Solidarity\ContentEditor\BlockFilters\Divider;
+use Solidarity\ContentEditor\BlockFilters\Embed;
+use Solidarity\ContentEditor\BlockFilters\File;
+use Solidarity\ContentEditor\BlockFilters\Footnotes;
+use Solidarity\ContentEditor\BlockFilters\Gallery;
+use Solidarity\ContentEditor\BlockFilters\Heading;
+use Solidarity\ContentEditor\BlockFilters\HeadingFive;
+use Solidarity\ContentEditor\BlockFilters\HeadingFour;
+use Solidarity\ContentEditor\BlockFilters\HeadingSix;
+use Solidarity\ContentEditor\BlockFilters\HeadingThree;
+use Solidarity\ContentEditor\BlockFilters\HeadingTwo;
+use Solidarity\ContentEditor\BlockFilters\Html;
+use Solidarity\ContentEditor\BlockFilters\Image as ImageBlockFilter;
+use Solidarity\ContentEditor\BlockFilters\OrderedList;
 use Solidarity\ContentEditor\BlockFilters\Paragraph;
+use Solidarity\ContentEditor\BlockFilters\Quote;
+use Solidarity\ContentEditor\BlockFilters\Spacer;
+use Solidarity\ContentEditor\BlockFilters\Table;
+use Solidarity\ContentEditor\BlockFilters\Tabs;
+use Solidarity\ContentEditor\BlockFilters\Timeline;
+use Solidarity\ContentEditor\BlockFilters\UnorderedList;
 use Solidarity\ContentEditor\Contracts\BlockFilterFactoryInterface;
 use Solidarity\ContentEditor\Contracts\ContentEditorFilterInterface;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -90,6 +114,29 @@ $container->set(BlockFilterFactoryInterface::class, function() use ($container) 
         $container->get(Image::class)
     );
     $blockFilterFactory->registerBlockFilter('core/paragraph', new Paragraph());
+    $blockFilterFactory->registerBlockFilter('core/heading', new Heading());
+    $blockFilterFactory->registerBlockFilter('core/headingtwo', new HeadingTwo());
+    $blockFilterFactory->registerBlockFilter('core/headingthree', new HeadingThree());
+    $blockFilterFactory->registerBlockFilter('core/headingfour', new HeadingFour());
+    $blockFilterFactory->registerBlockFilter('core/headingfive', new HeadingFive());
+    $blockFilterFactory->registerBlockFilter('core/headingsix', new HeadingSix());
+    $blockFilterFactory->registerBlockFilter('core/unorderedList', new UnorderedList());
+    $blockFilterFactory->registerBlockFilter('core/orderedList', new OrderedList());
+    $blockFilterFactory->registerBlockFilter('core/quote', new Quote());
+    $blockFilterFactory->registerBlockFilter('core/html', new Html());
+    $blockFilterFactory->registerBlockFilter('core/image', new ImageBlockFilter());
+    $blockFilterFactory->registerBlockFilter('core/gallery', new Gallery());
+    $blockFilterFactory->registerBlockFilter('core/divider', new Divider());
+    $blockFilterFactory->registerBlockFilter('core/embed', new Embed());
+    $blockFilterFactory->registerBlockFilter('core/spacer', new Spacer());
+    $blockFilterFactory->registerBlockFilter('core/columns', new Columns());
+    $blockFilterFactory->registerBlockFilter('core/file', new File());
+    $blockFilterFactory->registerBlockFilter('core/table', new Table());
+    $blockFilterFactory->registerBlockFilter('core/chart', new Chart());
+    $blockFilterFactory->registerBlockFilter('core/footnotes', new Footnotes());
+    $blockFilterFactory->registerBlockFilter('core/accordion', new Accordion());
+    $blockFilterFactory->registerBlockFilter('core/tabs', new Tabs());
+    $blockFilterFactory->registerBlockFilter('core/timeline', new Timeline());
     return $blockFilterFactory;
 });
 
@@ -143,6 +190,7 @@ $container->set(\Skeletor\ContentEditor\Contracts\BlockParserFactoryInterface::c
     $blockParserFactory->registerBlockParser(Donate::NAME, new Donate());
     $blockParserFactory->registerBlockParser(Instructionsintro::NAME, new Instructionsintro());
     $blockParserFactory->registerBlockParser(Instructionstable::NAME, new Instructionstable());
+    $blockParserFactory->registerBlockParser(Blog::NAME, new Blog());
 
     return $blockParserFactory;
 });
@@ -165,6 +213,10 @@ $container->set(\Skeletor\ContentEditor\Contracts\BlockViewInterface::class, fun
         $container->get(\Solidarity\Donor\Service\Donor::class),
         $container->get(\Solidarity\Beneficiary\Service\Beneficiary::class),
         $container->get(\Solidarity\Transaction\Service\Transaction::class)
+    ));
+
+    $view->registerViewFilter(Blog::NAME, new \Solidarity\Backend\Blocks\Blog\BlogViewFilter(
+        $container->get(\Solidarity\Post\Service\Post::class)
     ));
 
     $view->registerViewFilter(Profiledata::NAME, new \Solidarity\Backend\Blocks\Profiledata\ProfiledataViewFilter(

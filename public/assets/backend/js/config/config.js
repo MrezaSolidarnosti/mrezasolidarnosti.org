@@ -48,7 +48,8 @@ export const config = Object.freeze({
             'app/profiledata',
             'app/donate',
             'app/instructionsintro',
-            'app/instructionstable'
+            'app/instructionstable',
+            'app/blog'
         ],
     },
     page: {

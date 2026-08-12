@@ -32,6 +32,7 @@ return [
     [['POST'], '/donor/createInstruction', \Solidarity\Frontend\Action\Donor\CreateInstruction::class],
     [['POST'], '/donor/confirmPayment', \Solidarity\Frontend\Action\Donor\ConfirmPayment::class],
     [['POST'], '/emailList', \Solidarity\Frontend\Action\EmailList::class],
+    [['POST'], '/blog/{slug}', \Solidarity\Frontend\Action\EmailList::class],
 
     [['GET'], '/{slug}', PageAction::class],
 

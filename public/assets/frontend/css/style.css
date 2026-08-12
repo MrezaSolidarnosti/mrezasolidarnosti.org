@@ -5110,4 +5110,108 @@ main.loggedIn #notFound {
   margin-top: 0;
 }
 
+.blogWrapper {
+  background: var(--colorBackgroundGray);
+  padding-bottom: 4rem;
+}
+.blogWrapper .blog {
+  padding: 1rem 4.25rem 3rem 4.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  justify-items: center;
+  gap: 1rem;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+.blogWrapper .blog .post {
+  max-width: 428px;
+}
+.blogWrapper .blog .post:first-of-type {
+  margin-top: 4rem;
+}
+.blogWrapper .blog .post:nth-of-type(3) {
+  margin-top: 4rem;
+}
+.blogWrapper .blog .post .top img {
+  width: 428px;
+  height: 260px;
+  object-fit: cover;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  vertical-align: bottom;
+}
+.blogWrapper .blog .post .bottom {
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+  padding: 1.3rem;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+.blogWrapper .blog .post .bottom .date {
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--colorDarkBlue);
+}
+.blogWrapper .blog .post .bottom h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--colorDarkBlue);
+  text-wrap: auto;
+  white-space: normal;
+  word-break: break-all;
+}
+.blogWrapper .blog .post .bottom p {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--colorDarkBlue);
+  text-wrap: auto;
+  white-space: normal;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  min-height: 90px;
+}
+.blogWrapper .blog .post .bottom .readMore {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--colorDarkBlue);
+}
+.blogWrapper .blog .post .bottom .readMore svg {
+  transition: 0.3s ease all;
+  margin-top: 3px;
+}
+.blogWrapper .blog .post .bottom .readMore:hover {
+  color: var(--colorOrange);
+}
+.blogWrapper .blog .post .bottom .readMore:hover svg {
+  transform: translateX(4px);
+}
+.blogWrapper #loadMoreBlogPosts {
+  padding: 1rem 2.5rem;
+  border: 1px solid var(--colorBlue);
+  width: max-content;
+  margin: 0 auto;
+  display: block;
+  border-radius: 8px;
+  color: var(--colorBlue);
+  font-weight: 600;
+  transition: 0.3s ease all;
+  cursor: pointer;
+}
+.blogWrapper #loadMoreBlogPosts:hover {
+  background: var(--colorBlue);
+  color: white;
+}
+
 /*# sourceMappingURL=style.css.map */

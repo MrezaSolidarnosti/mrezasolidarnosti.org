@@ -8,7 +8,7 @@ export const config = Object.freeze({
         // handler is never built and its [data-module] section is removed from the DOM.
         // A "pages" editor might be: ['title', 'slug', 'seo'].
         // readOnly: true, // defaults to false
-        modules: ['title', 'slug', 'seo', 'featuredImage', 'status'],
+        modules: ['title', 'slug', 'seo', 'featuredImage', 'status', 'excerpt'],
         // unsavedGuard: false, // true by default
         // Per-person editor preferences (font size, content width), kept in localStorage under
         // this key. Give the posts and pages editors the *same* key and a writer sets their

@@ -20,6 +20,8 @@ class Post
     const int STATUS_PENDING = 3;
     const int STATUS_SCHEDULED = 4;
 
+    const int SHORT_DESCRIPTION_LENGTH = 200;
+
     #[ORM\Column(type: Types::STRING, length: 128, nullable: false)]
     public string $title;
 

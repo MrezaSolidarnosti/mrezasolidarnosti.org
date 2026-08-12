@@ -15,4 +15,19 @@ class PostRepository extends TableViewRepository
     {
         return ['title', 'shortDescription'];
     }
+
+    public function getPublicPosts(): array
+    {
+        return $this->entityManager->createQueryBuilder()
+            ->select('p')
+            ->from(static::ENTITY, 'p')
+            ->where('p.status = :published OR (p.status = :scheduled AND p.publishAt IS NOT NULL AND p.publishAt <= :now)')
+            ->setParameter('published', Post::STATUS_PUBLISHED)
+            ->setParameter('scheduled', Post::STATUS_SCHEDULED)
+            ->setParameter('now', new \DateTime())
+            ->orderBy('p.publishAt', 'DESC')
+            ->addOrderBy('p.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

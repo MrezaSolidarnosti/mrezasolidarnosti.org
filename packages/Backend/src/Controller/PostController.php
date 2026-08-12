@@ -142,6 +142,7 @@ class PostController extends AjaxCrudController
                 'blocks' => $model->blockData,
                 'featuredImage' => ['id' => $model->featuredImage?->id, 'src' => $model->featuredImage?->filename],
                 'status' => $status,
+                'excerpt' => $model->shortDescription,
                 'seo' => [
                     'title' => $model->seoTitle,
                     'description' => $model->seoDescription,
