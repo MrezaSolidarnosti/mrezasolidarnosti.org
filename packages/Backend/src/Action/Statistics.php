@@ -160,14 +160,16 @@ class Statistics extends Html
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
+    /**
+     * A pledge is a promise about the future, so a deleted donor has none — their rows are
+     * excluded here, matching getDonorCount(). Money they already sent is a different
+     * question and keeps counting: see getTransactionSumByStatus(), which deliberately does
+     * not filter on donor status.
+     */
     private function getTotalPledged(?Project $project = null): int
     {
         // RSD amounts (bank transfer type = 1)
-        $qbRsd = $this->em->createQueryBuilder()
-            ->select('COALESCE(SUM(pm.amount), 0)')
-            ->from(DonorPaymentMethod::class, 'pm')
-            ->where('pm.type = :bankType')
-            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER);
+        $qbRsd = $this->pledgeQuery(true);
 
         if ($project) {
             $qbRsd->andWhere('pm.project = :projectId')
@@ -176,11 +178,7 @@ class Statistics extends Html
         $rsdTotal = (int) $qbRsd->getQuery()->getSingleScalarResult();
 
         // EUR amounts (all other types), convert to RSD
-        $qbEur = $this->em->createQueryBuilder()
-            ->select('COALESCE(SUM(pm.amount), 0)')
-            ->from(DonorPaymentMethod::class, 'pm')
-            ->where('pm.type != :bankType')
-            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER);
+        $qbEur = $this->pledgeQuery(false);
 
         if ($project) {
             $qbEur->andWhere('pm.project = :projectId')
@@ -191,15 +189,29 @@ class Statistics extends Html
         return $rsdTotal + Transaction::eurToRsd($eurTotal);
     }
 
+    /**
+     * Sum of pledged amounts, in whichever currency the payment type implies, from donors
+     * who still exist.
+     *
+     * @param bool $bankTransfer true for the RSD (bank transfer) half, false for the EUR rest
+     */
+    private function pledgeQuery(bool $bankTransfer): \Doctrine\ORM\QueryBuilder
+    {
+        return $this->em->createQueryBuilder()
+            ->select('COALESCE(SUM(pm.amount), 0)')
+            ->from(DonorPaymentMethod::class, 'pm')
+            ->innerJoin('pm.donor', 'pd')
+            ->where(sprintf('pm.type %s :bankType', $bankTransfer ? '=' : '!='))
+            ->andWhere('pd.status != :deletedDonor')
+            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER)
+            ->setParameter('deletedDonor', Donor::STATUS_DELETED);
+    }
+
+    /** Same rule as getTotalPledged(): deleted donors have no standing pledge. */
     private function getMonthlyPledged(?Project $project = null): int
     {
         // RSD monthly
-        $qbRsd = $this->em->createQueryBuilder()
-            ->select('COALESCE(SUM(pm.amount), 0)')
-            ->from(DonorPaymentMethod::class, 'pm')
-            ->where('pm.type = :bankType')
-            ->andWhere('pm.monthly = 1')
-            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER);
+        $qbRsd = $this->pledgeQuery(true)->andWhere('pm.monthly = 1');
 
         if ($project) {
             $qbRsd->andWhere('pm.project = :projectId')
@@ -208,12 +220,7 @@ class Statistics extends Html
         $rsdTotal = (int) $qbRsd->getQuery()->getSingleScalarResult();
 
         // EUR monthly
-        $qbEur = $this->em->createQueryBuilder()
-            ->select('COALESCE(SUM(pm.amount), 0)')
-            ->from(DonorPaymentMethod::class, 'pm')
-            ->where('pm.type != :bankType')
-            ->andWhere('pm.monthly = 1')
-            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER);
+        $qbEur = $this->pledgeQuery(false)->andWhere('pm.monthly = 1');
 
         if ($project) {
             $qbEur->andWhere('pm.project = :projectId')

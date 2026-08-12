@@ -424,6 +424,9 @@ class Transaction extends TableView
      * the period, and the per-person yearly cap). The beneficiary is paid through the first
      * of its payment methods whose type still has budget in $typeBudgets (type => available RSD).
      *
+     * No instruction is ever created below MIN_TRANSACTION_DONATION_AMOUNT, whichever of the
+     * three constraints turns out to be the binding one.
+     *
      * @param array<int,int> $typeBudgets available RSD keyed by payment type
      * @param int $minSlice a type must have at least this much budget to be used (the 10k rule for large donors)
      * @param bool $manual true when the donor triggered this themselves (one-time action) rather than the cron
@@ -459,6 +462,14 @@ class Transaction extends TableView
         }
 
         $transactionAmount = min($typeBudgets[$paymentType], $beneficiaryRemaining, $perPersonRemaining);
+
+        // The three constraints are each checked against the floor on their own, but their
+        // minimum can still land under it — most often when the per-person cap leaves a
+        // sliver. Asking someone to make a 200 RSD bank transfer costs them more effort
+        // than it delivers, so skip and let the next candidate have the budget.
+        if ($transactionAmount < self::MIN_TRANSACTION_DONATION_AMOUNT) {
+            return $skip;
+        }
 
         $accountNumber = null;
         $instructions = null;
@@ -608,9 +619,27 @@ class Transaction extends TableView
                 ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK)
                 ->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_BLACK));
         }
-        $filePath = DATA_PATH . sprintf('/lists/%s.xlsx', str_replace(' ', '', $school));
+        $filePath = DATA_PATH . sprintf('/lists/%s.xlsx', self::listFileName($school));
         $writer->save($filePath);
 
         return $filePath;
+    }
+
+    /**
+     * Turn a school name into a filename that cannot escape data/lists.
+     *
+     * Spaces come out so the emailed attachment name survives mail clients; everything
+     * that is not a letter or a digit comes out too, so a name containing a slash or a
+     * ".." cannot steer the write anywhere else. Serbian diacritics are letters under
+     * \p{L} and are kept, which is what the existing files in data/lists already look
+     * like — this narrows the allowed characters, it does not rename anything.
+     */
+    private static function listFileName(string $school): string
+    {
+        $name = preg_replace('/[^\p{L}\p{N}]+/u', '', $school) ?? '';
+
+        // Invalid UTF-8 makes preg_replace return null, and a name of only punctuation
+        // reduces to nothing; either way an empty name would write "/lists/.xlsx".
+        return $name !== '' ? $name : 'lista';
     }
 }

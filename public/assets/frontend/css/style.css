@@ -2216,13 +2216,13 @@ strong {
 }
 
 .actionWrapper {
-  padding-bottom: 8rem;
+  padding-bottom: 3rem;
 }
 .actionWrapper.gray {
   background: var(--colorBackgroundGray);
 }
 .actionWrapper.withSpacing {
-  padding-top: 8rem;
+  padding-top: 3rem;
 }
 @media (max-width: 768px) {
   .actionWrapper.withSpacing {

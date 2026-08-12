@@ -35,6 +35,12 @@ class Period implements FilterInterface
             'active' => $postData['active'],
             'project' => $postData['project'],
             'processing' => $postData['processing'],
+            // Was missing, so the "Max iznos" input on the period form was posted and then
+            // silently dropped on every save. Blank means 0, not null: the column is NOT
+            // NULL, and 0 is already how "no per-period override" is spelled — MigrateLegacy
+            // writes it for every legacy period, and Beneficiary\Validator reads any value
+            // <= 0 as "fall back to the global limit". Writing null here was a 500 on save.
+            'maxAmount' => $int->filter($postData['maxAmount'] ?? 0),
             CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME],
         ];
 //        if (!$this->validator->isValid($data)) {

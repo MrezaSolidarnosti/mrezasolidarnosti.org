@@ -11,9 +11,20 @@ use Psr\Log\LoggerInterface as Logger;
 
 class Mailer extends \Skeletor\Core\Mailer\Service\MailerSendMailer
 {
-    public function __construct(MailerSend $mail, Config $config, Engine $template)
+    /** @var \Closure(): \PHPMailer\PHPMailer\PHPMailer|null */
+    private ?\Closure $smtpFactory;
+
+    /**
+     * $smtpFactory is the seam that makes the environment guard below testable: without
+     * it catchViaSmtp() news up a PHPMailer and opens a socket, so a test of "does this go
+     * to the donor or to Mailpit" would have to actually send mail. It is typed `callable`
+     * rather than `Closure` on purpose — PHP-DI would try to resolve a class type-hint out
+     * of the container, and this service is autowired.
+     */
+    public function __construct(MailerSend $mail, Config $config, Engine $template, ?callable $smtpFactory = null)
     {
         parent::__construct($mail, $config, $template);
+        $this->smtpFactory = $smtpFactory !== null ? \Closure::fromCallable($smtpFactory) : null;
     }
 
     /**
@@ -38,7 +49,9 @@ class Mailer extends \Skeletor\Core\Mailer\Service\MailerSendMailer
     {
         $smtp = $this->config->mailer->smtp;
 
-        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mail = $this->smtpFactory !== null
+            ? ($this->smtpFactory)()
+            : new \PHPMailer\PHPMailer\PHPMailer(true);
         $mail->isSMTP();
         $mail->Host = $smtp->host;
         $mail->Port = (int) $smtp->port;

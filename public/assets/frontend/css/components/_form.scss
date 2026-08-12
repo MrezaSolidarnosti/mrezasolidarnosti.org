@@ -1,11 +1,11 @@
 @use '../setup/typography';
 .actionWrapper {
-  padding-bottom:8rem;
+  padding-bottom:3rem;
   &.gray {
     background: var(--colorBackgroundGray);
   }
   &.withSpacing {
-    padding-top:8rem;
+    padding-top:3rem;
     @media(max-width:768px) {
       padding:1.25rem;
     }

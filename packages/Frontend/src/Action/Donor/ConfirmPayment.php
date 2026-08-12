@@ -41,9 +41,16 @@ class ConfirmPayment extends BaseAction
             );
         }
         if(!CSRF::validate($data)) {
-            $success = false;
-            $statusCode = 401;
-            $responseData['errors'][] = 'Your session has expired, please refresh the page and try again.';
+            // Must return, not fall through: without this the confirmation below still runs
+            // and only the response says 401, which makes the CSRF check decorative.
+            return $this->returnWithData(
+                false,
+                [
+                    'errors' => ['Your session has expired, please refresh the page and try again.'],
+                    'token' => CSRF::getToken(),
+                ],
+                401
+            );
         }
         try {
             $responseData['token'] = CSRF::getToken();

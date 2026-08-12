@@ -122,7 +122,22 @@ class PageRepository extends \Skeletor\Page\Repository\PageRepository
         $translation->seoImage = $source->seoImage;
 
         $translation->languageCode = 'en';
-        $translation->translationGroupId = $pageId;
+
+        // Both pages end up in the same group, and an existing one wins.
+        //
+        // The translation used to take the source's *id* as its group while the source kept
+        // a NULL one, so the two were never in the same group: the language switcher calls
+        // getLocalizedSlugs($page->translationGroupId), which found nothing from the source
+        // and only itself from the translation. A translated pair could not link to each
+        // other in either direction and both fell back to the homepage. (PageActionTest
+        // passed throughout because its fixtures give both pages one group id by hand —
+        // which is the shape this now actually produces.)
+        //
+        // Reusing the source's existing group rather than overwriting it matters once a
+        // third locale appears: stamping $pageId unconditionally would split the group.
+        $groupId = $source->translationGroupId ?? $pageId;
+        $translation->translationGroupId = $groupId;
+        $source->translationGroupId = $groupId;
 
         $this->entityManager->persist($translation);
         $this->entityManager->flush();

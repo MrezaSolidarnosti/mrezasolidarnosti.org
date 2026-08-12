@@ -56,7 +56,10 @@ class Index extends Html
             if ($this->session->getStorage()->offsetGet('loggedInEntityType') === 'user') {
                 $url = $this->getConfig()->offsetGet('adminUrl') . '/user/view/';
             } else {
-                $url = $this->getConfig()->offsetGet('adminUrl') . '/educator/view/';
+                // Delegates. This used to point at /educator/view/, which has been retired
+                // and is not in permissions.php — so a delegate opening the dashboard root
+                // was denied, shown a no-permissions flash, and only then bounced here.
+                $url = $this->getConfig()->offsetGet('adminUrl') . '/beneficiary/view/';
             }
         }
 

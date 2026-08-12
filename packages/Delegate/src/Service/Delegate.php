@@ -7,7 +7,6 @@ use Psr\Log\LoggerInterface as Logger;
 use Skeletor\User\Service\Session;
 use Solidarity\Beneficiary\Repository\BeneficiaryRepository;
 use Solidarity\Delegate\Filter\Delegate as DelegateFilter;
-use Solidarity\Mailer\Service\Mailer;
 use Solidarity\School\Service\School;
 use Solidarity\School\Service\SchoolType;
 use Solidarity\Transaction\Service\Project;
@@ -22,7 +21,7 @@ class Delegate extends TableView
      */
     public function __construct(
         DelegateRepository $repo, Session $user, Logger $logger, DelegateFilter $filter, private \DateTime $dt,
-        private Mailer $mailer, private SchoolType $schoolType, private Project $project,
+        private SchoolType $schoolType, private Project $project,
         private BeneficiaryRepository $beneficiaryRepo, private School $school
     ) {
         parent::__construct($repo, $user, $logger, $filter);
@@ -50,12 +49,9 @@ class Delegate extends TableView
 
     public function update(array $data)
     {
-        $sendMail = $data['sendRoundStartMail'] ?? 0;
-        unset($data['sendRoundStartMail']);
-        if ($sendMail) {
-            $data['formLinkSent'] = 1;
-        }
-
+        // The round-start mail is gone: no template posts `sendRoundStartMail`, no Mailer
+        // method sends it, and the branch that used to stamp `formLinkSent = 1` was claiming
+        // a mail had gone out that nothing sent. Removed with the rest of the payout round.
         $newSchoolIds = array_filter(array_map('intval', $data['schools'] ?? []));
 
         // Diff old vs new for beneficiary reassignment
@@ -73,10 +69,16 @@ class Delegate extends TableView
 
         $entity = parent::update($data);
 
-        if (!empty($addedSchoolIds)) {
-            foreach ($addedSchoolIds as $schoolId) {
-                $this->beneficiaryRepo->assignOrphanedBeneficiariesToDelegate($schoolId, (int) $data['id']);
-            }
+        // The release above is scoped to the delegate, not to the school it was triggered
+        // by, so it also drops the beneficiaries of the schools they kept. Those have to be
+        // reclaimed here alongside the newly added ones, or removing one school of two
+        // silently orphans the other. Without a removal there is nothing to restore, and
+        // reclaiming the whole list would let an unrelated edit sweep up orphans that were
+        // deliberately left unassigned.
+        $schoolIdsToReclaim = empty($removedSchoolIds) ? $addedSchoolIds : $newSchoolIds;
+
+        foreach ($schoolIdsToReclaim as $schoolId) {
+            $this->beneficiaryRepo->assignOrphanedBeneficiariesToDelegate($schoolId, (int) $data['id']);
         }
 
         return $entity;
