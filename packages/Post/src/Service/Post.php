@@ -66,4 +66,9 @@ class Post extends TableView
     {
         return $this->repo->countPublicPosts();
     }
+
+    public function getPublicPostBySlug(string $slug): ?\Solidarity\Post\Entity\Post
+    {
+        return $this->repo->findPublicBySlug($slug);
+    }
 }

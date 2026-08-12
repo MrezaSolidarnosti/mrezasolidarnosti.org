@@ -69,7 +69,7 @@ export const config = Object.freeze({
             'core/embed',
             'core/spacer',
             'core/columns',
-            'core/file',
+            // 'core/file',
             'core/table',
             'core/chart',
             'core/footnotes',

@@ -39,6 +39,7 @@ export default class Lightbox {
 
     #open = false;
     #index = 0;
+    #focusBeforeOpen = null;    // what had focus when we opened, to hand it back on close
 
     // Zoom / pan state, reset on every navigation.
     #scale = 1;
@@ -188,6 +189,10 @@ export default class Lightbox {
         if (!this.#slides.length) {
             return this;
         }
+        // Remember the tile (or whatever else) that opened us, so closing can hand focus back
+        // instead of dropping it at the top of the document.
+        const active = document.activeElement;
+        this.#focusBeforeOpen = (active && active !== document.body && !this.#root.contains(active)) ? active : null;
         this.#open = true;
         this.#root.classList.add(gallerySelectors.classes.lightboxOpen);
         this.#root.setAttribute('aria-hidden', 'false');
@@ -205,6 +210,12 @@ export default class Lightbox {
             document.exitFullscreen().catch(() => {});
         }
         this.#open = false;
+        // Focus has to leave before the subtree is hidden: aria-hidden takes the lightbox out of
+        // the accessibility tree without taking it out of the tab order, so a still-focused
+        // button (the close action the user just clicked) would be focused but unannouncable —
+        // which is exactly what the browser warns about. Hand it back to the opener when that is
+        // still around, otherwise just drop it.
+        this.#restoreFocus();
         this.#root.classList.remove(gallerySelectors.classes.lightboxOpen);
         this.#root.setAttribute('aria-hidden', 'true');
         document.body.classList.remove(gallerySelectors.classes.scrollLocked);
@@ -213,6 +224,22 @@ export default class Lightbox {
         this.#clearHash();
         this.#emit(events.lightboxClosed, {index: this.#index});
         return this;
+    }
+
+    // Focus goes back to the element that opened the lightbox when it is still in the document
+    // (a tile can be gone if the gallery changed while the lightbox was open); failing that the
+    // focused control is simply blurred, so nothing inside the hidden subtree keeps focus.
+    #restoreFocus() {
+        const focused = document.activeElement;
+        const opener = this.#focusBeforeOpen;
+        this.#focusBeforeOpen = null;
+        if (opener && opener.isConnected) {
+            opener.focus({preventScroll: true});
+            return;
+        }
+        if (focused && this.#root.contains(focused)) {
+            focused.blur();
+        }
     }
 
     show(index, {silent = false} = {}) {

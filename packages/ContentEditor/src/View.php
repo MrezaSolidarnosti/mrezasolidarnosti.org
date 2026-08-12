@@ -4,9 +4,10 @@ namespace Solidarity\ContentEditor;
 
 use League\Plates\Engine;
 use Solidarity\ContentEditor\Contracts\BlockViewFilterInterface;
+use Solidarity\ContentEditor\Contracts\BlockViewInterface;
 use Solidarity\ContentEditor\Exceptions\TemplateNotFoundException;
 
-class View
+class View implements BlockViewInterface
 {
     const TEMPLATE_DIR = __DIR__ . '/templates/';
 

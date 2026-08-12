@@ -40,6 +40,17 @@ class PostRepository extends TableViewRepository
         return (int) $this->publicPostsQuery('COUNT(p.id)')->getQuery()->getSingleScalarResult();
     }
 
+    /** A single publicly visible post by its slug, or null when it isn't public (yet). */
+    public function findPublicBySlug(string $slug): ?Post
+    {
+        return $this->publicPostsQuery('p')
+            ->andWhere('p.slug = :slug')
+            ->setParameter('slug', $slug)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /** The public visibility criteria, shared by the listing and its count so they can't drift. */
     private function publicPostsQuery(string $select): QueryBuilder
     {

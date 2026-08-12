@@ -47,7 +47,6 @@ use Solidarity\ContentEditor\BlockFilters\Chart;
 use Solidarity\ContentEditor\BlockFilters\Columns;
 use Solidarity\ContentEditor\BlockFilters\Divider;
 use Solidarity\ContentEditor\BlockFilters\Embed;
-use Solidarity\ContentEditor\BlockFilters\File;
 use Solidarity\ContentEditor\BlockFilters\Footnotes;
 use Solidarity\ContentEditor\BlockFilters\Gallery;
 use Solidarity\ContentEditor\BlockFilters\Heading;
@@ -130,7 +129,6 @@ $container->set(BlockFilterFactoryInterface::class, function() use ($container) 
     $blockFilterFactory->registerBlockFilter('core/embed', new Embed());
     $blockFilterFactory->registerBlockFilter('core/spacer', new Spacer());
     $blockFilterFactory->registerBlockFilter('core/columns', new Columns());
-    $blockFilterFactory->registerBlockFilter('core/file', new File());
     $blockFilterFactory->registerBlockFilter('core/table', new Table());
     $blockFilterFactory->registerBlockFilter('core/chart', new Chart());
     $blockFilterFactory->registerBlockFilter('core/footnotes', new Footnotes());
@@ -142,6 +140,27 @@ $container->set(BlockFilterFactoryInterface::class, function() use ($container) 
 
 $container->set(ContentEditorFilterInterface::class, function() use ($container) {
     return $container->get(\Solidarity\ContentEditor\Filter::class);
+});
+
+// Renders core/* editor blocks (posts) from themes/frontend/contentEditor,
+// e.g. the core/paragraph block from contentEditor/core/paragraph.php.
+$container->set(\Solidarity\ContentEditor\Contracts\BlockViewInterface::class, function() use ($container) {
+    $view = new \Solidarity\ContentEditor\View(
+        $container->get(Engine::class),
+        APP_PATH . '/themes/frontend/contentEditor'
+    );
+
+    $view->registerViewFilter('core/image', new \Solidarity\ContentEditor\BlockViewFilters\Image(
+        $container->get(Image::class)
+    ));
+
+    $view->registerViewFilter('core/gallery', new \Solidarity\ContentEditor\BlockViewFilters\Gallery(
+        $container->get(Image::class)
+    ));
+
+    $view->registerViewFilter('core/embed', new \Solidarity\ContentEditor\BlockViewFilters\Embed());
+
+    return $view;
 });
 // Content Editor
 
@@ -232,15 +251,6 @@ $container->set(\Skeletor\ContentEditor\Contracts\BlockViewInterface::class, fun
         $container->get(\Solidarity\Transaction\Service\Transaction::class)
     ));
 
-    // On the frontend, localize internal URLs in block data (buttonLink, linkUrl, ...)
-    // for the active locale before rendering — same treatment as the menus/footer.
-    if (\Solidarity\Core\Environment::isFrontend()) {
-        return new \Solidarity\Frontend\Service\LocalizingBlockView(
-            $view,
-            $container->get(\Solidarity\Frontend\Service\Locale::class)
-        );
-    }
-
     return $view;
 });
 
@@ -274,6 +284,39 @@ $container->set(Engine::class, function() use ($container) {
     });
     $plates->registerFunction('formToken', function () { return \Volnix\CSRF\CSRF::getHiddenInputString(); });
     $plates->registerFunction('formTokenArray', function () { return  \Volnix\CSRF\CSRF::getTokenAsArray(); });
+    $plates->registerFunction('blockAttributes', function (array $block, string ...$classNames) {
+        $additionalData = $block['additionalData'] ?? [];
+        $attributes = [];
+
+        $htmlId = trim((string) ($additionalData['htmlId'] ?? ''));
+        if ($htmlId !== '') {
+            $attributes['id'] = $htmlId;
+        }
+
+        $classes = array_filter(array_merge(
+            $classNames,
+            preg_split('/\s+/', trim((string) ($additionalData['classNames'] ?? '')))
+        ));
+        if (!empty($classes)) {
+            $attributes['class'] = implode(' ', $classes);
+        }
+
+        $style = trim((string) ($additionalData['inlineCss'] ?? ''), "; \t\n\r");
+        $align = $block['align'] ?? null;
+        if (in_array($align, ['left', 'center', 'right'], true)) {
+            $style = ($style !== '' ? $style . ';' : '') . 'text-align:' . $align;
+        }
+        if ($style !== '') {
+            $attributes['style'] = $style;
+        }
+
+        $html = '';
+        foreach ($attributes as $name => $value) {
+            $html .= sprintf(' %s="%s"', $name, htmlspecialchars($value, ENT_QUOTES));
+        }
+
+        return $html;
+    });
     // i18n: the default locale (sr) is the source language strings are authored in,
     // so t() is a pass-through there. For any other frontend locale, drive t() through
     // the Translator (SR source -> translated string, falling back to the original).
