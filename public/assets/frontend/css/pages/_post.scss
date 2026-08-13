@@ -47,9 +47,6 @@
     }
     .postContent {
       margin:3rem 0;
-      // Blocks size themselves against whatever holds them - the post body, or a column of a
-      // columns block - so a table or tabs inside a narrow column switches to its compact layout
-      // on a desktop too. Every @container query below resolves to the nearest of these.
       container-type: inline-size;
       .columnsBlock {
         margin:2rem 0;
