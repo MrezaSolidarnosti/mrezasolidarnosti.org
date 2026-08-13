@@ -18,7 +18,7 @@
 <?=$this->formToken()?>
 <script>
     const initialContent = <?=json_encode($data['initialContent'])?>;
-    const action = '<?=$data['formAction']?>';
+    let action = '<?=$data['formAction']?>';
 </script>
 <div id="contentEditor">
     <div id="topBar">

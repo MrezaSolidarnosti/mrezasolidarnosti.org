@@ -52,11 +52,11 @@ class Post implements ValidatorInterface
                 }
             }
         }
-        if(!isset($data['seoTitle'])) {
+        if(!isset($data['seoTitle']) || trim($data['seoTitle']) === '') {
             $this->messages['seoTitle'][] = 'SEO Title is required.';
             $valid = false;
         }
-        if(!isset($data['seoDescription'])) {
+        if(!isset($data['seoDescription']) || trim($data['seoDescription']) === '') {
             $this->messages['seoDescription'][] = 'SEO Description is required.';
             $valid = false;
         }
