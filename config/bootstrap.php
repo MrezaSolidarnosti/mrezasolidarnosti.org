@@ -285,6 +285,20 @@ $container->set(Engine::class, function() use ($container) {
     });
     $plates->registerFunction('formToken', function () { return \Volnix\CSRF\CSRF::getHiddenInputString(); });
     $plates->registerFunction('formTokenArray', function () { return  \Volnix\CSRF\CSRF::getTokenAsArray(); });
+    // Container blocks (columns) save their children as nested block arrays, so a block template
+    // needs to render blocks itself. Resolved on call, not here, so the View can keep depending
+    // on this engine. View filters apply to the nested blocks exactly as they do to top level
+    // ones, and getView restores the template directory it found, so nesting is safe.
+    $plates->registerFunction('contentEditorBlocks', function (array $blocks) use ($container) {
+        if (empty($blocks)) {
+            return '';
+        }
+        try {
+            return $container->get(\Solidarity\ContentEditor\Contracts\BlockViewInterface::class)->getView($blocks);
+        } catch (\Solidarity\ContentEditor\Exceptions\TemplateNotFoundException $e) {
+            return '';
+        }
+    });
     $plates->registerFunction('blockAttributes', function (array $block, string ...$classNames) {
         $additionalData = $block['additionalData'] ?? [];
         $attributes = [];
