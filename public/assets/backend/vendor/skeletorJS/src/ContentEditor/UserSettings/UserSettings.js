@@ -3,41 +3,8 @@ import Translator from "../../Translator/Translator.js";
 import Overlay from "../Overlay/Overlay.js";
 import Dismissible from "../Dismissible/Dismissible.js";
 import LocalStorage from "../../LocalStorage/LocalStorage.js";
+import {events as blockSideToggleEvents} from "../Blocks/Components/BlockSideToggle/events.js";
 
-/**
- * Per-person editor preferences — how the canvas looks to *you*, not what the post contains.
- *
- * Nothing here is content: none of it reaches getDataForSave(), none of it is per-post. It is
- * stored in localStorage under a key the project chooses, so several editors can share one set
- * of preferences or keep their own:
- *
- *   config.contentEditor.userSettings = {key: 'myApp.contentEditor.settings'}
- *
- * Same key on the posts editor and the pages editor and a writer sets their font size once.
- * Different keys and each page remembers separately.
- *
- * A setting is a registry entry, so a project adds its own the way it adds anything else:
- *
- *   UserSettings.register({
- *       key: 'canvasTheme',                       // also the localStorage property
- *       label: 'Canvas theme',
- *       description: 'Optional line under the label.',
- *       default: 'dark',
- *       options: [
- *           {value: 'dark',  label: 'Dark'},
- *           {value: 'light', label: 'Light'},
- *       ],
- *       apply: (value, {editor}) => {
- *           editor.contentContainer.dataset.theme = value;
- *       },
- *   });
- *   UserSettings.unRegister('contentWidth');      // or drop one of the built-ins
- *
- * `apply` is the whole contract. It runs once on init with the stored value (or the default)
- * and again on every change, so a setting never needs to know whether it is being restored or
- * chosen. Settings appear in registration order; the two built-ins register at the bottom of
- * this file, so project code always lands after them.
- */
 export default class UserSettings {
 
     // Shared across editor instances, like every other registry in the library.
@@ -52,8 +19,6 @@ export default class UserSettings {
         if (!Array.isArray(definition.options) || !definition.options.length) {
             throw new Error(`User setting "${definition.key}" needs at least one option.`);
         }
-        // Keyed, so registering the same key twice replaces rather than duplicates — a project
-        // can redefine a built-in (different labels, a third size) instead of removing it.
         UserSettings.SETTINGS.set(definition.key, {...definition});
     }
 
@@ -83,8 +48,6 @@ export default class UserSettings {
             return;
         }
         this.#setElements();
-        // The button is part of the app's HTML shell. No button, no settings — but the editor
-        // itself carries on, exactly like a module whose DOM section is missing.
         if (!this.button || !this.modal || !this.closeButton || !this.list) {
             return;
         }
@@ -106,22 +69,17 @@ export default class UserSettings {
         this.list = document.getElementById(contentEditorSelectors.ids.userSettingsList);
     }
 
-    // Deliberately not read-only aware: these are view preferences, not edits. Someone reviewing
-    // a locked post has as much reason to want larger text as the person who wrote it.
     #addListeners() {
         this.button.addEventListener('click', this.toggle);
         this.closeButton.addEventListener('click', this.close);
     }
 
 
-    /* ------------------------------- Storage ------------------------------- */
 
     #storageKey() {
         return this.editor?.config?.userSettings?.key || UserSettings.DEFAULT_STORAGE_KEY;
     }
 
-    // Everything lives under one key as a single object, so a project switching keys moves the
-    // whole set at once and there is no orphaned per-setting entry to clean up.
     #read() {
         const stored = LocalStorage.get(this.#storageKey(), true);
         return stored && typeof stored === 'object' ? stored : {};
@@ -131,13 +89,6 @@ export default class UserSettings {
         LocalStorage.set(this.#storageKey(), this.#values, true);
     }
 
-    /**
-     * The stored value if it is still one of the setting's options, otherwise the default.
-     *
-     * Re-validating on every read matters because the registry can change under stored data:
-     * a project that renames 'large' to 'xl' would otherwise leave people on a value no button
-     * represents, with nothing selected and no way back.
-     */
     getValue(key) {
         const setting = UserSettings.SETTINGS.get(key);
         if (!setting) {
@@ -157,17 +108,15 @@ export default class UserSettings {
         this.#write();
         this.#apply(setting, value);
         this.#syncActive(key, value);
+        this.eventEmitter?.emit(blockSideToggleEvents.recalculateTogglePosition);
     }
 
 
-    /* -------------------------------- Apply -------------------------------- */
 
     #apply(setting, value) {
         if (typeof setting.apply !== 'function') {
             return;
         }
-        // One bad setting shouldn't stop the rest from applying — the same isolation content
-        // transforms get, for the same reason: these can come from project code.
         try {
             setting.apply(value, {editor: this.editor, settings: this});
         } catch (error) {
@@ -179,8 +128,6 @@ export default class UserSettings {
         UserSettings.SETTINGS.forEach((setting) => this.#apply(setting, this.getValue(setting.key)));
     }
 
-
-    /* -------------------------------- Render ------------------------------- */
 
     #render() {
         this.#clearOptionListeners();
@@ -222,8 +169,6 @@ export default class UserSettings {
         return row;
     }
 
-    // Guarded on `list` as well as on the row: setValue is public, so a project can set a
-    // preference from code in a shell that has no settings markup at all.
     #syncActive(key, value) {
         const row = this.list?.querySelector(`[${contentEditorSelectors.attributes.userSettingKey}="${key}"]`);
         if (!row) {
@@ -245,8 +190,6 @@ export default class UserSettings {
         this.#optionListeners = [];
     }
 
-
-    /* -------------------------------- Popup -------------------------------- */
 
     toggle = () => {
         if (this.isOpen()) {
@@ -288,10 +231,6 @@ export default class UserSettings {
     }
 }
 
-
-/* ------------------------------ Built-in settings ----------------------------- */
-// Registered here rather than inside the class so project code — which always runs later — can
-// replace or unRegister them. Both write to #content, the element config.width already sizes.
 
 const CONTENT_FONT_SIZES = {medium: '1.2rem', large: '1.4rem'};
 const CONTENT_WIDTHS = {medium: '70%', large: '80%'};

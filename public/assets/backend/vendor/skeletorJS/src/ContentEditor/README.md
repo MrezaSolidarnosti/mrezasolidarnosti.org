@@ -66,78 +66,78 @@ the module sidebar sections are only needed for the modules you enable (see
 ```html
 <div id="contentEditor">
 
-  <!-- Top bar -->
-  <div id="topBar">
-    <div id="topBarLeft">
-      <div id="blockInserterButton" title="Add block"><!-- + icon --></div>
-      <div id="overviewButton" title="Overview"><!-- outline icon --></div>
-      <div id="undoRedoContainer">
-        <div id="undoButton" title="Undo"><!-- icon --></div>
-        <div id="redoButton" title="Redo"><!-- icon --></div>
-      </div>
+    <!-- Top bar -->
+    <div id="topBar">
+        <div id="topBarLeft">
+            <div id="blockInserterButton" title="Add block"><!-- + icon --></div>
+            <div id="overviewButton" title="Overview"><!-- outline icon --></div>
+            <div id="undoRedoContainer">
+                <div id="undoButton" title="Undo"><!-- icon --></div>
+                <div id="redoButton" title="Redo"><!-- icon --></div>
+            </div>
+        </div>
+        <div id="topBarCenter"></div>
+        <div id="topBarRight">
+            <!-- one entry per module that has a top-bar control, e.g. SEO: -->
+            <div id="seo" title="SEO" data-module="seo"><span>SEO</span><!-- icon --></div>
+            <div id="save" title="Save"><span>Save</span><!-- icon --></div>
+            <div id="userSettings" title="Editor settings"><!-- gear icon, optional --></div>
+            <div id="toggleSidebar" title="Toggle Sidebar"><!-- icon --></div>
+        </div>
     </div>
-    <div id="topBarCenter"></div>
-    <div id="topBarRight">
-      <!-- one entry per module that has a top-bar control, e.g. SEO: -->
-      <div id="seo" title="SEO" data-module="seo"><span>SEO</span><!-- icon --></div>
-      <div id="save" title="Save"><span>Save</span><!-- icon --></div>
-      <div id="userSettings" title="Editor settings"><!-- gear icon, optional --></div>
-      <div id="toggleSidebar" title="Toggle Sidebar"><!-- icon --></div>
+
+    <!-- Messages (validation errors, notices) -->
+    <div id="messagesContainer"></div>
+
+    <!-- The canvas -->
+    <div id="contentContainer">
+        <h1 id="title" contenteditable="true" data-placeholder="Add title" data-module="title"></h1>
+        <div id="content"><!-- blocks are rendered here --></div>
     </div>
-  </div>
 
-  <!-- Messages (validation errors, notices) -->
-  <div id="messagesContainer"></div>
-
-  <!-- The canvas -->
-  <div id="contentContainer">
-    <h1 id="title" contenteditable="true" data-placeholder="Add title" data-module="title"></h1>
-    <div id="content"><!-- blocks are rendered here --></div>
-  </div>
-
-  <!-- Sidebar: "Content" tab (entity/modules) + "Block" tab (active block's settings) -->
-  <div id="sidebar" class="active">
-    <div id="sidebarNavigation">
-      <span data-target="sidebarEntityContent">Content</span>
-      <span data-target="sidebarBlockContent">Block</span>
-      <span id="closeSidebar"><!-- close icon --></span>
+    <!-- Sidebar: "Content" tab (entity/modules) + "Block" tab (active block's settings) -->
+    <div id="sidebar" class="active">
+        <div id="sidebarNavigation">
+            <span data-target="sidebarEntityContent">Content</span>
+            <span data-target="sidebarBlockContent">Block</span>
+            <span id="closeSidebar"><!-- close icon --></span>
+        </div>
+        <div id="sidebarEntityContent" class="sidebarContent">
+            <!-- one [data-module="..."] section per enabled sidebar module (slug, status, …) -->
+        </div>
+        <div id="sidebarBlockContent" class="sidebarContent">
+            <!-- filled at runtime with the focused block's sidebar -->
+        </div>
     </div>
-    <div id="sidebarEntityContent" class="sidebarContent">
-      <!-- one [data-module="..."] section per enabled sidebar module (slug, status, …) -->
-    </div>
-    <div id="sidebarBlockContent" class="sidebarContent">
-      <!-- filled at runtime with the focused block's sidebar -->
-    </div>
-  </div>
 
-  <div id="bottomBar">
-    <div id="shortcutsButton" title="Shortcuts"><!-- icon --></div>
-  </div>
-
-  <!-- Floating block hover toolbar -->
-  <div id="blockSideToggle">
-    <div id="blockSideToggleDragHandle" class="blockSideAction" title="Drag"><!-- icon --></div>
-    <div id="blockSideToggleMoveUp"   class="blockSideAction" title="Move up"><!-- icon --></div>
-    <div id="blockSideToggleMoveDown" class="blockSideAction" title="Move down"><!-- icon --></div>
-    <div id="blockSideToggleMore"     class="blockSideAction" title="More"><!-- icon --></div>
-    <div id="blockSideToggleMoreMenu">
-      <span id="blockSideToggleAddBefore">Insert Before</span>
-      <span id="blockSideToggleAddAfter">Insert After</span>
-      <span id="blockSideToggleDuplicate">Duplicate</span>
-      <span id="blockSideToggleDelete">Delete</span>
+    <div id="bottomBar">
+        <div id="shortcutsButton" title="Shortcuts"><!-- icon --></div>
     </div>
-  </div>
 
-  <!-- Panels -->
-  <div id="shortcutsContainer"><div id="shortcutsHeader"><h2>Keyboard Shortcuts</h2>
-    <div id="closeShortcuts" title="Close"><!-- icon --></div></div></div>
-  <div id="overviewContainer"></div>
-  <div id="blockInserter">
-    <div id="blockInserterHeader"><span>Blocks</span>
-      <div id="blockInserterClose" title="Close"><!-- icon --></div></div>
-    <input type="text" id="blockInserterSearch" class="input" placeholder="Search">
-    <div id="blockInserterList"></div>
-  </div>
+    <!-- Floating block hover toolbar -->
+    <div id="blockSideToggle">
+        <div id="blockSideToggleDragHandle" class="blockSideAction" title="Drag"><!-- icon --></div>
+        <div id="blockSideToggleMoveUp"   class="blockSideAction" title="Move up"><!-- icon --></div>
+        <div id="blockSideToggleMoveDown" class="blockSideAction" title="Move down"><!-- icon --></div>
+        <div id="blockSideToggleMore"     class="blockSideAction" title="More"><!-- icon --></div>
+        <div id="blockSideToggleMoreMenu">
+            <span id="blockSideToggleAddBefore">Insert Before</span>
+            <span id="blockSideToggleAddAfter">Insert After</span>
+            <span id="blockSideToggleDuplicate">Duplicate</span>
+            <span id="blockSideToggleDelete">Delete</span>
+        </div>
+    </div>
+
+    <!-- Panels -->
+    <div id="shortcutsContainer"><div id="shortcutsHeader"><h2>Keyboard Shortcuts</h2>
+        <div id="closeShortcuts" title="Close"><!-- icon --></div></div></div>
+    <div id="overviewContainer"></div>
+    <div id="blockInserter">
+        <div id="blockInserterHeader"><span>Blocks</span>
+            <div id="blockInserterClose" title="Close"><!-- icon --></div></div>
+        <input type="text" id="blockInserterSearch" class="input" placeholder="Search">
+        <div id="blockInserterList"></div>
+    </div>
 
 </div>
 ```
@@ -159,30 +159,44 @@ Rules of thumb:
 
 ```js
 {
-  appBlocksPath: '/js/app-blocks/', // base path for app/* block modules (dynamic import)
-  width: '80%',                       // editor width (default 60%)
-  modules: ['title', 'slug', 'seo', 'categories', 'authors', 'tags', 'featuredImage', 'status'],
-  blocks:  ['core/paragraph', 'core/heading', /* … */ 'app/readmore'],
-  unsavedGuard: true,               // warn before leaving with unsaved changes (default true)
-  commandTrigger: '//',             // what opens the command menu (default '//')
-  readOnly: false,                  // start the whole editor read-only (default false)
-  blockDefaults: {                  // project starting values, by block type (optional)
-    'core/image': {align: 'center'},
-    'core/divider': {height: 4, color: '#b30000'},
-  },
-  userSettings: {                   // per-person preferences, kept in localStorage
-    key: 'myApp.contentEditor.settings',
-  },
-  commandPalette: {                 // Ctrl/Cmd+K palette — off unless enabled is explicitly true
-    enabled: true,                  // required to turn it on (default false); flips at runtime
-    search: async (q) => [ /*…*/ ], // optional backend search endpoint (see below)
-  },
+    appBlocksPath: '/js/app-blocks/', // base path for app/* block modules (dynamic import)
+        imagePath: '/uploads/',           // prefix for stored image filenames
+        width: '80%',                       // editor width (default 60%)
+        modules: ['title', 'slug', 'seo', 'categories', 'authors', 'tags', 'featuredImage', 'status'],
+        blocks:  ['core/paragraph', 'core/heading', /* … */ 'app/readmore'],
+        unsavedGuard: true,               // warn before leaving with unsaved changes (default true)
+        commandTrigger: '//',             // what opens the command menu (default '//')
+        readOnly: false,                  // start the whole editor read-only (default false)
+        blockDefaults: {                  // project starting values, by block type (optional)
+        'core/image': {align: 'center'},
+        'core/divider': {height: 4, color: '#b30000'},
+    },
+    userSettings: {                   // per-person preferences, kept in localStorage
+        key: 'myApp.contentEditor.settings',
+    },
+    commandPalette: {                 // Ctrl/Cmd+K palette — off unless enabled is explicitly true
+        enabled: true,                  // required to turn it on (default false); flips at runtime
+            search: async (q) => [ /*…*/ ], // optional backend search endpoint (see below)
+    },
 }
 ```
 
 - **`commandTrigger`** — the sequence that opens the command menu, `//` by default. Any
   whitespace-free string works (`::`, `>>`, …); pick something your authors don't type by
   accident. See [`CommandMenu.register`](#commandmenuregisterdefinition).
+- **`imagePath`** — prefixed onto image filenames that came from **saved content**, so the
+  editor can display them. Used by the Image and Gallery blocks and by the Featured Image and
+  SEO modules. Defaults to `''`.
+
+  Two things follow from this:
+
+    - **Only the filename is saved.** `getData()` stores what the media library gave it and never
+      the prefix, so moving your uploads is a config change and not a content migration. Don't
+      prefix `this.src` in a block — only the `src` you put in the DOM.
+    - **Images picked live are not prefixed.** A fresh pick arrives as `mediaData[0].img`, which
+      is markup the media library already built with the full path in it. Insert that as-is;
+      prefixing it doubles the path. `imagePath` is for the *restore* path only.
+
 - **`readOnly`** — start the entire editor read-only (blocks, save, every module). Off by
   default. See [Read-only](#read-only).
 - **`commandPalette`** — the Ctrl/Cmd+K global palette. **Off by default**: it turns on only with
@@ -276,6 +290,10 @@ than removing and rebuilding it.
   applying — the same isolation content transforms get.
 - **Not read-only aware, deliberately.** Someone reviewing a locked post has as much reason to
   want larger text as the person who wrote it.
+- **The side toggle re-measures itself** after every change. A setting that moves the canvas
+  — width, font size, anything — would otherwise leave the block toolbar at the old
+  coordinates, since it is positioned in fixed units off the active block. This fires for
+  your settings too, so you don't have to think about it.
 - **`setValue(key, value)` is public**, so a project can set a preference from code. Unknown
   keys and values are ignored rather than stored.
 
@@ -316,6 +334,24 @@ absent — the same way a module with no DOM section is.
 A saved block is `{ type, id, ...block.getData(), additionalData }` (+ `columns` for
 containers).
 
+### Save button state
+
+The save button has a busy state, so an async save can show progress instead of looking dead:
+
+```js
+editor.saveHandler.saving();      // spinner in the button, `saving` class on it
+await fetch('/api/posts/1', {method: 'PUT', body: JSON.stringify(editor.getDataForSave())});
+editor.saveHandler.notSaving();   // back to normal
+```
+
+`saving()` swaps the button's icon and label for a spinner and adds the `saving` class;
+`notSaving()` reverses both. Call them in pairs — including from a `catch`, or a failed request
+leaves the button spinning forever.
+
+Neither is called for you. The editor emits `beforeSave` and `afterSave` around
+`getDataForSave()`, and the request itself is the project's, so the state is the project's too.
+
+
 **Unknown blocks are preserved, not dropped.** If a loaded block's `type` isn't in
 `config.blocks` — a stripped-down config, an app block that failed to import, content from a
 newer schema — it renders as an inert placeholder and **re-emits its original entry verbatim
@@ -341,23 +377,23 @@ blocks rendered in order). Examples:
 ```js
 // text block with inline formatting + Advanced (per-block) settings
 { type: 'core/paragraph',
-  html: 'Bold <strong>text</strong> and a <a href="https://x.com">link</a>.',
-  additionalData: { classNames: 'lead', htmlId: 'intro', inlineCss: 'color:#b30000;' } }
+    html: 'Bold <strong>text</strong> and a <a href="https://x.com">link</a>.',
+    additionalData: { classNames: 'lead', htmlId: 'intro', inlineCss: 'color:#b30000;' } }
 
 // container block
 { type: 'core/columns', layout: '33-66',
-  columns: [ [ /* left blocks */ ], [ /* right blocks */ ] ] }
+    columns: [ [ /* left blocks */ ], [ /* right blocks */ ] ] }
 
 // chart block
 { type: 'core/chart', chartType: 'groupedbar',
-  labels: ['Q1','Q2'], series: [ { name:'Revenue', values:[120,200] } ] }
+    labels: ['Q1','Q2'], series: [ { name:'Revenue', values:[120,200] } ] }
 
 // media blocks — mediaId is the media library id, distinct from the block's own id
 { type: 'core/image', mediaId: 1, src: 'https://placehold.co/600x300' }
 { type: 'core/file', mediaId: 1, src: 'test.mp3', mimeType: 'audio/mpeg' }
 { type: 'core/gallery',
-  images: [ { mediaId: 11, src: 'https://placehold.co/300x300?text=1' },
-            { mediaId: 12, src: 'https://placehold.co/300x300?text=2' } ] }
+    images: [ { mediaId: 11, src: 'https://placehold.co/300x300?text=1' },
+    { mediaId: 12, src: 'https://placehold.co/300x300?text=2' } ] }
 ```
 
 `beforeSave` / `afterSave` events fire around the save, and `SaveValidation` runs between
@@ -1235,14 +1271,14 @@ listeners for that event** — always pass the callback to remove just yours.
 
 ```js
 new Shortcut({
-  container,                    // fires only when it contains document.activeElement (or is .active)
-  modifier: Shortcut.MODIFIERS.CTRL,  // ALT | SHIFT | CTRL (one modifier only)
-  key: 'S',
-  event: 'keyup',              // or 'keydown'
-  preventDefault: false,
-  description: 'Save',
-  callback: () => {},
-  constraints: [() => true],   // all must return true for the shortcut to fire
+    container,                    // fires only when it contains document.activeElement (or is .active)
+    modifier: Shortcut.MODIFIERS.CTRL,  // ALT | SHIFT | CTRL (one modifier only)
+    key: 'S',
+    event: 'keyup',              // or 'keydown'
+    preventDefault: false,
+    description: 'Save',
+    callback: () => {},
+    constraints: [() => true],   // all must return true for the shortcut to fire
 });
 editor.shortcutsHandler.registerShortcut(shortcut);
 ```
@@ -1256,8 +1292,8 @@ with a single `register()` call instead of its own key handling.
 ```js
 // in the panel's init()
 this.dismissible = Dismissible.register({
-  isOpen: () => this.container.classList.contains(contentEditorSelectors.classes.active),
-  close:  () => this.#close(),          // your own close logic — nothing to rename
+    isOpen: () => this.container.classList.contains(contentEditorSelectors.classes.active),
+    close:  () => this.#close(),          // your own close logic — nothing to rename
 });
 
 // in destroy()
@@ -2130,11 +2166,11 @@ want to match its look, or use your own values:
 ```css
 .buttonBlock { outline: none; }
 .buttonBlockLink {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  background: var(--colorPrimary-500);
-  color: var(--colorSurface-100);
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    background: var(--colorPrimary-500);
+    color: var(--colorSurface-100);
 }
 ```
 
@@ -2188,10 +2224,10 @@ ContentEditor.registerModule('allowComments', { class: AllowComments });
 
 ```html
 <div class="sidebarContentSection" data-module="allowComments">
-  <div class="sidebarContentSectionHandle"><span>Allow Comments</span><!-- chevron --></div>
-  <div class="sidebarContentSectionContent">
-    <label><input type="checkbox" id="allowComments" class="input"> <span>Allow comments</span></label>
-  </div>
+    <div class="sidebarContentSectionHandle"><span>Allow Comments</span><!-- chevron --></div>
+    <div class="sidebarContentSectionContent">
+        <label><input type="checkbox" id="allowComments" class="input"> <span>Allow comments</span></label>
+    </div>
 </div>
 ```
 
@@ -2217,12 +2253,12 @@ containing `<div id="revisions"></div>`, and pass them with the content:
 
 ```js
 initialContent = {
-  blocks: [ /* ... */ ],
-  revisions: [
-    { id: 6, date: '2026-07-17 08:55:00', author: 'Test Author',
-      content: { title: 'Release notes', blocks: [ /* ... */ ] } },
-    // ...
-  ],
+    blocks: [ /* ... */ ],
+    revisions: [
+        { id: 6, date: '2026-07-17 08:55:00', author: 'Test Author',
+            content: { title: 'Release notes', blocks: [ /* ... */ ] } },
+        // ...
+    ],
 }
 ```
 
@@ -2280,7 +2316,7 @@ Revisions.registerPreview('core/chart', (block) => {
     const labels = Revisions.escape((block.labels || []).join(', '));
     const series = (block.series || [])
         .map((s) => `${Revisions.escape(s.name || '(unnamed)')} `
-                  + `[${Revisions.escape((s.values || []).join(', '))}]`)
+            + `[${Revisions.escape((s.values || []).join(', '))}]`)
         .join('<br>');
     return `<em>${Revisions.escape(block.chartType)}</em> · ${labels}`
         + (series ? `<br>${series}` : '');
