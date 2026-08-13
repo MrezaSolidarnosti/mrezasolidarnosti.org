@@ -50,6 +50,9 @@ contentEditor.save = async (data) => {
     }
     if(resData.status) {
         messages.push(resData.message);
+        if(resData.data.id) {
+            action = `/post/update/${resData.data.id}/`;
+        }
     }
     if(resData.token) {
         const csrf = document.querySelector('input[name^="_csrf"]');
