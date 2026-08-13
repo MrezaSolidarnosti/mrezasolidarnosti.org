@@ -47,6 +47,27 @@
     }
     .postContent {
       margin:3rem 0;
+      container-type: inline-size;
+      .columnsBlock {
+        margin:2rem 0;
+        display:grid;
+        gap:1.5rem;
+        grid-template-columns: var(--columnsTemplate, 1fr);
+        > .column {
+          container-type: inline-size;
+          min-width:0;
+          > *:first-child {
+            margin-top:0;
+          }
+          > *:last-child {
+            margin-bottom:0;
+          }
+        }
+        @container (max-width: 640px) {
+          grid-template-columns:1fr;
+        }
+      }
+      .columnsBlock p,
       &> p {
         @include typography.type(text);
         color: var(--colorDarkBlue);
@@ -121,7 +142,7 @@
             content:'— ';
           }
         }
-        @media(max-width:600px) {
+        @container (max-width: 600px) {
           padding-left:1rem;
           .quoteText {
             @include typography.type(text);
@@ -252,7 +273,7 @@
             list-style:decimal;
           }
         }
-        @media(max-width:600px) {
+        @container (max-width: 600px) {
           .tab {
             padding:0.625rem 1rem;
           }
@@ -327,7 +348,7 @@
             list-style:decimal;
           }
         }
-        @media(max-width:600px) {
+        @container (max-width: 600px) {
           --timelineIndent:1.75rem;
           .timelineItemContent {
             padding:1rem;
@@ -424,7 +445,7 @@
         // Below the breakpoint the table stops being a grid and each row becomes a card, with
         // every cell labelled by its header - a table this wide cannot scroll gracefully on a
         // phone, and the header row is off screen the moment it does.
-        @media(max-width:600px) {
+        @container (max-width: 600px) {
           .tableScroll {
             background:none;
             border-radius:0;
