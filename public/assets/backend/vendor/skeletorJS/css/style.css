@@ -5510,6 +5510,7 @@ dialog .closeModal svg {
     border-radius: 4px;
     cursor: pointer;
     transition: 0.3s ease background;
+    background: var(--colorBeige);
 }
 #contentEditor #contentContainer #content .tableBlock .tableColumnOptions > div:hover {
     background: var(--colorSurface-300);
@@ -5555,6 +5556,7 @@ dialog .closeModal svg {
     border-radius: 4px;
     cursor: pointer;
     transition: 0.3s ease background;
+    background: var(--colorBeige);
 }
 #contentEditor #contentContainer #content .tableBlock .tableRowOptions > div:hover {
     background: var(--colorSurface-300);
