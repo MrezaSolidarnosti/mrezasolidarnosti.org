@@ -59,7 +59,7 @@ class PostController extends AjaxCrudController
             'message' => $message,
             'generalErrors' => $generalErrors,
             'status' => $status,
-            'data' =>  $entityData,
+            'data' =>  ['id' => $entity->id, 'slug' => $entity->slug],
             'token' =>  \Volnix\CSRF\CSRF::getHiddenInputString()
         ]));
         $this->getResponse()->getBody()->rewind();
@@ -93,13 +93,12 @@ class PostController extends AjaxCrudController
 //            $this->logger->error('Update failed: ' . $e->getMessage(), ['exception' => $e]);
             $generalErrors[] = ['message' => $this->translate('An unexpected error occurred. Please try again.')];
         }
-
         $this->getResponse()->getBody()->write(json_encode([
             'errors' => $errors,
             'message' => $message,
             'generalErrors' => $generalErrors,
             'status' => $status,
-            'data' => $this->service->getEntityData($data['id']),
+            'data' => ['id' => $entity->id, 'slug' => $entity->slug],
             'token' => \Volnix\CSRF\CSRF::getHiddenInputString()
         ]));
         $this->getResponse()->getBody()->rewind();

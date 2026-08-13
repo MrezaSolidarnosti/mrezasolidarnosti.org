@@ -4,12 +4,36 @@ import MediaLibrary from "../../vendor/skeletorJS/src/MediaLibrary/MediaLibrary.
 import SaveResponse from "../../vendor/skeletorJS/src/ContentEditor/SaveResponse.js";
 import {events} from "../../vendor/skeletorJS/src/ContentEditor/events.js";
 import Excerpt from "./Modules/Excerpt.js";
+import CommandPalette from "../../vendor/skeletorJS/src/ContentEditor/CommandPalette/CommandPalette.js";
+import Translator from "https://skeletor.greenfriends.systems/skeletorjs/src/Translator/Translator.js";
+import {configLocal} from "../config/config-local.js";
+import Message from "../../vendor/skeletorJS/src/Message/Message.js";
 
 window.mediaLibrary = new MediaLibrary();
 window.mediaLibrary.init();
 
 ContentEditor.registerModule('excerpt', {
     class: Excerpt
+});
+
+
+let viewOnSiteRegistered = false;
+let slug = initialContent.slug ?? '';
+let copyUrlRegistered = false;
+
+CommandPalette.registerCommand({
+    category: 'Navigation',
+    key: 'post-list',
+    label: Translator.translate('Open post list'),
+    keywords: ['posts', 'list'],
+    url: '/post/view',
+});
+CommandPalette.registerCommand({
+    category: 'Navigation',
+    key: 'homepage-frontend',
+    label: Translator.translate('View homepage on the site'),
+    keywords: ['home', 'frontend', 'live'],
+    url: configLocal.frontendUrl,
 });
 
 const contentEditor = new ContentEditor({
@@ -52,6 +76,12 @@ contentEditor.save = async (data) => {
         messages.push(resData.message);
         if(resData.data.id) {
             action = `/post/update/${resData.data.id}/`;
+            registerViewPostOnSite();
+            registerCopyPostUrl();
+        }
+        if(resData.data.slug) {
+            contentEditor.getModule('slug')?.setValue(resData.data.slug);
+            slug = resData.data.slug;
         }
     }
     if(resData.token) {
@@ -65,3 +95,43 @@ contentEditor.save = async (data) => {
 };
 
 await contentEditor.init();
+
+if(action.includes('update')) {
+   registerViewPostOnSite();
+   registerCopyPostUrl();
+}
+
+
+function registerViewPostOnSite() {
+    if(viewOnSiteRegistered) return;
+    CommandPalette.registerCommand({
+        category: 'This post',
+        key: 'view-on-site',
+        label: Translator.translate('View on site'),
+        keywords: ['preview', 'frontend', 'permalink'],
+        url: () => {
+            return `${configLocal.frontendUrl}/blog/${slug}`
+        },
+    });
+    viewOnSiteRegistered = true;
+}
+
+function registerCopyPostUrl() {
+    if(copyUrlRegistered) return;
+    CommandPalette.registerCommand({
+        category: 'This post',
+        key: 'copy-permalink',
+        label: Translator.translate('Copy permalink'),
+        keywords: ['link', 'url', 'share'],
+        onSelect: () => {
+            navigator.clipboard?.writeText(`${configLocal.frontendUrl}/blog/${slug}`);
+            Message.spawn({
+                message: 'Permalink copied to clipboard',
+                type: Message.TYPES.SUCCESS,
+                view: {type: Message.VIEW_TYPES.NOTIFICATION, container: contentEditor.messagesContainer},
+                ephemeralTimeout: 2500,
+            });
+        },
+    });
+    copyUrlRegistered = true;
+}
