@@ -1,7 +1,7 @@
 <?php
 namespace Solidarity\Frontend\Service;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Solidarity\Page\Repository\PageRepository;
 
 /**

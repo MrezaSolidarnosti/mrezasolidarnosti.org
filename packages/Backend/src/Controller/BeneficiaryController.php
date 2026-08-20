@@ -7,7 +7,7 @@ use Solidarity\Period\Service\Period;
 use Solidarity\Beneficiary\Service\Beneficiary;
 use Skeletor\Core\Controller\AjaxCrudController;
 use GuzzleHttp\Psr7\Response;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\School\Service\School;
@@ -45,9 +45,23 @@ class BeneficiaryController extends AjaxCrudController
         $id = $this->getRequest()->getAttribute('id');
         // GDPR erasure: strip the account details off their transactions and delete the record.
         $beneficiary = $this->service->getById($id);
-        if ($beneficiary) {
-            $this->redaction->redactBeneficiary($beneficiary);
+
+        // Nothing found is a failure, not a quiet success — and no success flash either. The
+        // flash outlives the response and is what the admin reads on the next page, so one on a
+        // stale row is a written record of an erasure that never happened.
+        if (!$beneficiary) {
+            $this->getResponse()->getBody()->write(json_encode([
+                'errors' => [],
+                'message' => '',
+                'generalErrors' => [['message' => 'Oštećeni nije pronađen.']],
+                'status' => false,
+            ]));
+            $this->getResponse()->getBody()->rewind();
+
+            return $this->getResponse()->withHeader('Content-Type', 'application/json');
         }
+
+        $this->redaction->redactBeneficiary($beneficiary);
         $this->getFlash()->success('Podaci oštećenog su trajno uklonjeni.');
 
         $this->getResponse()->getBody()->write(json_encode([
@@ -69,59 +83,98 @@ class BeneficiaryController extends AjaxCrudController
             $model = $this->service->getById($id);
         }
         $this->formData['schools'] = $this->school->getFilterData();
-        $periods = $this->period->getEntities(['active' => true]);
-        $assignedProjects = [];
-        if ($this->getSession()->getStorage()->offsetGet('loggedInEntityType') === 'delegate') {
-            $delegate = $this->delegate->getById($this->getSession()->getStorage()->offsetGet('loggedIn'));
-            foreach ($delegate->projects as $project) {
-                $assignedProjects[] = $project;
-            }
-        } else {
-            $assignedProjects = $this->project->getEntities();
-        }
-        $assignedPeriods = [];
-        foreach ($periods as $period) {
-            foreach ($assignedProjects as $project) {
-                if ($project->id === $period->project->id) {
-                    $assignedPeriods[] = $period;
-                }
-            }
-        }
-        // Include the beneficiary's own registered periods even when inactive. Otherwise an
-        // inactive period has no <option>, the dropdown shows the empty "Izaberite Period"
-        // placeholder, and saving drops the registration (the placeholder submits no valid
-        // period). Keeps the period selectable and preserved on save.
-        if ($model && $model->registeredPeriods) {
-            $periodIds = array_map(static fn($p) => $p->id, $assignedPeriods);
-            foreach ($model->registeredPeriods as $rp) {
-                if (!in_array($rp->period->id, $periodIds, true)) {
-                    $assignedPeriods[] = $rp->period;
-                    $periodIds[] = $rp->period->id;
-                }
-            }
-        }
+
+        $assignedProjects = $this->editableProjects();
         $this->formData['assignedProjects'] = $assignedProjects;
-        $this->formData['assignedPeriods'] = $assignedPeriods;
+        $this->formData['assignedPeriods'] = $this->editablePeriods($assignedProjects, $model);
 
         $paymentMethods = [];
         if($model) {
             $paymentMethods = $model->paymentMethods;
         }
         $this->formData['paymentMethods'] = $paymentMethods;
-
-        // Calculate confirmed amounts per registered period
-        $confirmedAmounts = [];
-        if ($model && $model->registeredPeriods) {
-            foreach ($model->registeredPeriods as $rp) {
-                $key = $rp->project->getId() . '_' . $rp->period->getId();
-                $confirmedAmounts[$key] = $this->transaction->getSumAmountForBeneficiary(
-                    $model, $rp->project, $rp->period
-                );
-            }
-        }
-        $this->formData['confirmedAmounts'] = $confirmedAmounts;
+        $this->formData['confirmedAmounts'] = $this->confirmedAmountsFor($model);
 
         return parent::form();
+    }
+
+    /**
+     * The projects this user may register a beneficiary against: a delegate is limited to their
+     * own, everyone else sees all of them.
+     *
+     * @return array<int, \Solidarity\Transaction\Entity\Project>
+     */
+    private function editableProjects(): array
+    {
+        if ($this->getSession()->getStorage()->offsetGet('loggedInEntityType') !== 'delegate') {
+            return $this->project->getEntities();
+        }
+
+        $delegate = $this->delegate->getById($this->getSession()->getStorage()->offsetGet('loggedIn'));
+        $projects = [];
+        foreach ($delegate->projects as $project) {
+            $projects[] = $project;
+        }
+
+        return $projects;
+    }
+
+    /**
+     * Active periods of those projects, plus any the beneficiary is already registered for.
+     *
+     * The list is built from *active* periods, so a registration on a closed round had no
+     * <option>: the dropdown fell back to its placeholder and saving dropped the row. It is
+     * merged back in for the person who holds it even though it is closed to everyone else —
+     * and checked before appending, or the round appears twice and the duplicate-prevention in
+     * RegisteredProjects.js starts disabling the wrong one.
+     *
+     * @param array<int, \Solidarity\Transaction\Entity\Project> $projects
+     * @return array<int, \Solidarity\Period\Entity\Period>
+     */
+    private function editablePeriods(array $projects, ?\Solidarity\Beneficiary\Entity\Beneficiary $beneficiary = null): array
+    {
+        $periods = [];
+        foreach ($this->period->getEntities(['active' => true]) as $period) {
+            foreach ($projects as $project) {
+                if ($project->id === $period->project->id) {
+                    $periods[] = $period;
+                }
+            }
+        }
+
+        if ($beneficiary && $beneficiary->registeredPeriods) {
+            $periodIds = array_map(static fn($p) => $p->id, $periods);
+            foreach ($beneficiary->registeredPeriods as $rp) {
+                if (!in_array($rp->period->id, $periodIds, true)) {
+                    $periods[] = $rp->period;
+                    $periodIds[] = $rp->period->id;
+                }
+            }
+        }
+
+        return $periods;
+    }
+
+    /**
+     * Confirmed amount per registered period, keyed "projectId_periodId".
+     *
+     * @return array<string, int>
+     */
+    private function confirmedAmountsFor(?\Solidarity\Beneficiary\Entity\Beneficiary $beneficiary = null): array
+    {
+        $amounts = [];
+        if (!$beneficiary || !$beneficiary->registeredPeriods) {
+            return $amounts;
+        }
+
+        foreach ($beneficiary->registeredPeriods as $rp) {
+            $key = $rp->project->getId() . '_' . $rp->period->getId();
+            $amounts[$key] = $this->transaction->getSumAmountForBeneficiary(
+                $beneficiary, $rp->project, $rp->period
+            );
+        }
+
+        return $amounts;
     }
 
     public function import()

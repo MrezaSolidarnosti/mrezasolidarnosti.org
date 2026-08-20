@@ -7,7 +7,7 @@ use GuzzleHttp\Psr7\Response;
 use Psr\Log\LoggerInterface;
 use Solidarity\User\Service\User as UserService;
 use Laminas\Session\SessionManager as Session;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Tamtamchik\SimpleFlash\Flash;
 use Skeletor\Core\Validator\ValidatorException;
 use League\Plates\Engine;

@@ -4,7 +4,7 @@ namespace Solidarity\Backend\Action;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface as Logger;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Skeletor\Core\Action\Web\Html;
 use Solidarity\Beneficiary\Entity\Beneficiary;
@@ -166,8 +166,11 @@ class Statistics extends Html
         $qbRsd = $this->em->createQueryBuilder()
             ->select('COALESCE(SUM(pm.amount), 0)')
             ->from(DonorPaymentMethod::class, 'pm')
+            ->innerJoin('pm.donor', 'd')
             ->where('pm.type = :bankType')
-            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER);
+            ->andWhere('d.status != :deletedDonor')
+            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER)
+            ->setParameter('deletedDonor', Donor::STATUS_DELETED);
 
         if ($project) {
             $qbRsd->andWhere('pm.project = :projectId')
@@ -179,8 +182,11 @@ class Statistics extends Html
         $qbEur = $this->em->createQueryBuilder()
             ->select('COALESCE(SUM(pm.amount), 0)')
             ->from(DonorPaymentMethod::class, 'pm')
+            ->innerJoin('pm.donor', 'd')
             ->where('pm.type != :bankType')
-            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER);
+            ->andWhere('d.status != :deletedDonor')
+            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER)
+            ->setParameter('deletedDonor', Donor::STATUS_DELETED);
 
         if ($project) {
             $qbEur->andWhere('pm.project = :projectId')
@@ -197,9 +203,12 @@ class Statistics extends Html
         $qbRsd = $this->em->createQueryBuilder()
             ->select('COALESCE(SUM(pm.amount), 0)')
             ->from(DonorPaymentMethod::class, 'pm')
+            ->innerJoin('pm.donor', 'd')
             ->where('pm.type = :bankType')
             ->andWhere('pm.monthly = 1')
-            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER);
+            ->andWhere('d.status != :deletedDonor')
+            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER)
+            ->setParameter('deletedDonor', Donor::STATUS_DELETED);
 
         if ($project) {
             $qbRsd->andWhere('pm.project = :projectId')
@@ -211,9 +220,12 @@ class Statistics extends Html
         $qbEur = $this->em->createQueryBuilder()
             ->select('COALESCE(SUM(pm.amount), 0)')
             ->from(DonorPaymentMethod::class, 'pm')
+            ->innerJoin('pm.donor', 'd')
             ->where('pm.type != :bankType')
             ->andWhere('pm.monthly = 1')
-            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER);
+            ->andWhere('d.status != :deletedDonor')
+            ->setParameter('bankType', DonorPaymentMethod::TYPE_BANK_TRANSFER)
+            ->setParameter('deletedDonor', Donor::STATUS_DELETED);
 
         if ($project) {
             $qbEur->andWhere('pm.project = :projectId')

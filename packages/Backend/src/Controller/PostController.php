@@ -3,7 +3,7 @@
 namespace Solidarity\Backend\Controller;
 
 use GuzzleHttp\Psr7\Response;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Skeletor\Core\Controller\AjaxCrudController;
@@ -60,7 +60,7 @@ class PostController extends AjaxCrudController
             'generalErrors' => $generalErrors,
             'status' => $status,
             'data' =>  $entityData,
-            'token' =>  \Volnix\CSRF\CSRF::getHiddenInputString()
+            'token' =>  $this->csrf()->getHiddenInputString()
         ]));
         $this->getResponse()->getBody()->rewind();
 
@@ -100,7 +100,7 @@ class PostController extends AjaxCrudController
             'generalErrors' => $generalErrors,
             'status' => $status,
             'data' => $this->service->getEntityData($data['id']),
-            'token' => \Volnix\CSRF\CSRF::getHiddenInputString()
+            'token' => $this->csrf()->getHiddenInputString()
         ]));
         $this->getResponse()->getBody()->rewind();
 

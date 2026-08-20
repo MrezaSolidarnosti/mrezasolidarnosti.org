@@ -15,9 +15,9 @@ class Post extends TableView
         Session $session,
         Logger $logger,
         \Solidarity\Post\Filter\Post $filter,
-        ?TenantRepository $tenant = null,
-    ) {
-        parent::__construct($repository, $session, $logger, $filter, $tenant);
+        \Skeletor\Core\Activity\Service\Activity $activity,
+        ?TenantRepository $tenant = null) {
+        parent::__construct($repository, $session, $logger, $filter, $tenant, activity: $activity);
     }
 
     public function prepareEntities($entities): array

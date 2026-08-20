@@ -1,7 +1,7 @@
 <?php
 namespace Solidarity\Frontend\Action;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Skeletor\ThemeSettings\Navigation\Service\Navigation;

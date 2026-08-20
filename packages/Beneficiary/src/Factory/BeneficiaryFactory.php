@@ -42,25 +42,43 @@ class BeneficiaryFactory extends AbstractFactory
 
     private static function syncRegisteredPeriods(int $beneficiaryId, array $rows, EntityManagerInterface $em): void
     {
-        $existing = $em->getRepository(RegisteredPeriods::class)
-            ->findBy(['beneficiary' => $beneficiaryId]);
-        foreach ($existing as $rp) {
-            $em->remove($rp);
+        // Matched by id and updated in place, rather than wiped and reinserted. A delegate whose
+        // assigned list no longer contains a registration's project posts -1 for that select, and
+        // deleting the row on the strength of an unresolvable select is what used to destroy the
+        // registration during an unrelated edit. Only the identity (project/period) falls back to
+        // what is stored — the amount input always renders from the model, so a change to it is a
+        // real instruction and is applied either way.
+        $existing = [];
+        foreach ($em->getRepository(RegisteredPeriods::class)->findBy(['beneficiary' => $beneficiaryId]) as $rp) {
+            $existing[$rp->getId()] = $rp;
         }
-        $em->flush();
 
         $beneficiary = $em->getRepository(Beneficiary::class)->find($beneficiaryId);
+        $periodRepo = $em->getRepository(\Solidarity\Period\Entity\Period::class);
+        $projectRepo = $em->getRepository(\Solidarity\Transaction\Entity\Project::class);
 
+        $submitted = [];
         foreach ($rows as $row) {
-            $period = $em->getRepository(\Solidarity\Period\Entity\Period::class)
-                ->find($row['period']);
-            if (!$period) {
+            $rowId = (isset($row['id']) && $row['id'] !== '') ? (int) $row['id'] : null;
+            $stored = ($rowId !== null && isset($existing[$rowId])) ? $existing[$rowId] : null;
+
+            $period = !empty($row['period']) ? $periodRepo->find($row['period']) : null;
+            $project = !empty($row['project']) ? $projectRepo->find($row['project']) : null;
+
+            if ($stored !== null) {
+                $stored->period = $period ?? $stored->period;
+                $stored->project = $project ?? $stored->project;
+                $stored->amount = (int) ($row['amount'] ?? 0);
+                $submitted[$stored->getId()] = true;
                 continue;
             }
 
-            $project = !empty($row['project'])
-                ? $em->getRepository(\Solidarity\Transaction\Entity\Project::class)->find($row['project'])
-                : $period->project;
+            // A new row still needs a period it can be attached to; the project falls back to the
+            // period's own, which is what the form offers when the select is left alone.
+            if (!$period) {
+                continue;
+            }
+            $project = $project ?? $period->project;
             if (!$project) {
                 continue;
             }
@@ -69,9 +87,17 @@ class BeneficiaryFactory extends AbstractFactory
             $rp->beneficiary = $beneficiary;
             $rp->period = $period;
             $rp->project = $project;
-            $rp->amount = $row['amount'];
+            $rp->amount = (int) ($row['amount'] ?? 0);
             $em->persist($rp);
         }
+
+        // Pressing Delete takes the row out of the DOM, so it simply is not submitted.
+        foreach ($existing as $id => $rp) {
+            if (!isset($submitted[$id])) {
+                $em->remove($rp);
+            }
+        }
+
         $em->flush();
     }
 
@@ -90,22 +116,12 @@ class BeneficiaryFactory extends AbstractFactory
 
         $beneficiary = $em->getRepository(Beneficiary::class)->find($beneficiaryId);
 
-        // Resolve default project from beneficiary's first registered period
-        $defaultProject = null;
-        $registeredPeriods = $em->getRepository(RegisteredPeriods::class)
-            ->findBy(['beneficiary' => $beneficiaryId]);
-        if (!empty($registeredPeriods)) {
-            $defaultProject = $registeredPeriods[0]->project;
-        }
-
+        // No project gate. It resolved a project from the beneficiary's first registered period
+        // and skipped every row when there wasn't one — so a beneficiary with no periods had
+        // their account number deleted above and never written back. The project it resolved was
+        // assigned to nothing either way: PaymentMethod::$project is commented out of the entity.
         foreach ($rows as $row) {
             if (empty($row['type'])) {
-                continue;
-            }
-            $project = !empty($row['project'])
-                ? $em->getRepository(\Solidarity\Transaction\Entity\Project::class)->find($row['project'])
-                : $defaultProject;
-            if (!$project) {
                 continue;
             }
 

@@ -15,9 +15,9 @@ class Project extends TableView
      * @param Logger $logger
      */
     public function __construct(
-        ProjectRepository $repo, Session $user, Logger $logger, TransactionFilter $filter
-    ) {
-        parent::__construct($repo, $user, $logger, $filter);
+        ProjectRepository $repo, Session $user, Logger $logger, TransactionFilter $filter,
+        \Skeletor\Core\Activity\Service\Activity $activity) {
+        parent::__construct($repo, $user, $logger, $filter, activity: $activity);
     }
 
     public function getFilterData($params = [], $limit = null, $order = null, $property = 'name')

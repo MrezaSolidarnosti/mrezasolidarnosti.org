@@ -3,7 +3,7 @@
 namespace Solidarity\Donor\Validator;
 
 use Skeletor\Core\Validator\ValidatorInterface;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 /**
  * Class Client.
@@ -15,7 +15,7 @@ class Donor implements ValidatorInterface
 {
 
     /**
-     * @var CSRF
+     * @var Csrf
      */
     private $csrf;
 
@@ -24,9 +24,9 @@ class Donor implements ValidatorInterface
     /**
      * User constructor.
      *
-     * @param CSRF $csrf
+     * @param Csrf $csrf
      */
-    public function __construct(CSRF $csrf)
+    public function __construct(Csrf $csrf)
     {
         $this->csrf = $csrf;
     }

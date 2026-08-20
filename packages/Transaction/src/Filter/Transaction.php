@@ -3,11 +3,9 @@
 namespace Solidarity\Transaction\Filter;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Laminas\Filter\ToInt;
 use Skeletor\Core\Filter\FilterInterface;
 use Skeletor\User\Service\Session;
-use Volnix\CSRF\CSRF;
-use Laminas\I18n\Filter\Alnum;
+use Skeletor\Core\Security\Csrf;
 use Skeletor\Core\Validator\ValidatorException;
 class Transaction implements FilterInterface
 {
@@ -23,10 +21,9 @@ class Transaction implements FilterInterface
 
     public function filter($postData): array
     {
-        $int = new ToInt();
 
         $data = [
-            'id' => (isset($postData['id'])) ? $int->filter($postData['id']) : null,
+            'id' => (isset($postData['id'])) ? (int) ($postData['id']) : null,
             'beneficiary' => $postData['beneficiary'] ?? null,
             'project' => $postData['project'] ?? null,
             'period' => $postData['period'] ?? null,
@@ -45,12 +42,12 @@ class Transaction implements FilterInterface
             // donor's *chosen* types (on-demand) or pledged methods (cron); the validator's
             // persisted-payment-method check doesn't apply to them.
             'skipDonorPaymentCheck' => $postData['skipDonorPaymentCheck'] ?? false,
-            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME] ?? null,
+            Csrf::TOKEN_NAME => $postData[Csrf::TOKEN_NAME] ?? null,
         ];
         if (!$this->validator->isValid($data)) {
             throw new ValidatorException();
         }
-        unset($data[CSRF::TOKEN_NAME]);
+        unset($data[Csrf::TOKEN_NAME]);
 
         return $data;
     }

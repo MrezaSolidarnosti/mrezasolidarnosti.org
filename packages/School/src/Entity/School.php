@@ -4,6 +4,7 @@ namespace Solidarity\School\Entity;
 
 use Solidarity\Beneficiary\Entity\Beneficiary;
 use Solidarity\Delegate\Entity\Delegate;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -15,12 +16,23 @@ class School
 {
     use Timestampable;
 
+    public function __construct()
+    {
+        // Doctrine hydrates this itself, but factories and fixtures do `new School()`,
+        // and an uninitialised Collection is a fatal the first time anything iterates it.
+        $this->beneficiaries = new ArrayCollection();
+    }
+
     #[ORM\Column(type: Types::STRING, length: 128)]
     public string $name;
 
+    // Required by the mapping rather than by every reader remembering to guard: the edit form
+    // dereferences $model->type->id and the table row builder reads $school->type->name, both
+    // unguarded, so one typeless row used to break the whole /school/view/ listing. The column
+    // is already NOT NULL — see migration 20260811120000_make_school_type_required.
     #[ORM\ManyToOne(targetEntity: SchoolType::class, inversedBy: 'schools')]
-    #[ORM\JoinColumn(name: 'type_id', referencedColumnName: 'id', unique: false, nullable: true)]
-    public ?SchoolType $type;
+    #[ORM\JoinColumn(name: 'type_id', referencedColumnName: 'id', unique: false, nullable: false)]
+    public SchoolType $type;
 
     #[ORM\ManyToOne(targetEntity: City::class, inversedBy: 'schools')]
     #[ORM\JoinColumn(name: 'city_id', referencedColumnName: 'id', unique: false)]

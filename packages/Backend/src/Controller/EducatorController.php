@@ -6,7 +6,7 @@ use Solidarity\Period\Service\Period;
 use Solidarity\Educator\Service\Educator;
 use Skeletor\Core\Controller\AjaxCrudController;
 use GuzzleHttp\Psr7\Response;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\School\Service\School;

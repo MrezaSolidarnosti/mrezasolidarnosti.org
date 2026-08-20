@@ -32,11 +32,6 @@ return [
         'donor.delete_bulk' => [User::ROLE_ADMIN],
 
         // Educator permissions
-        'educator.view_list' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
-        'educator.view' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
-        'educator.create' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
-        'educator.edit' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
-        'educator.delete' => [User::ROLE_ADMIN],
 
         // beneficiary permissions
         'beneficiary.view_list' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
@@ -107,8 +102,6 @@ return [
 
 
         // Import permissions
-        'import.educator' => [User::ROLE_ADMIN],
-        'import.transaction' => [User::ROLE_ADMIN],
 
         // System permissions
         'cache.manage' => [User::ROLE_ADMIN],
@@ -247,8 +240,6 @@ return [
         '/social/*' => 'social.all',
 
         // Import routes
-        '/educatorImport/*' => 'import.educator',
-        '/transactionImport/*' => 'import.transaction',
 
         // System routes
         '/cache/*' => 'cache.manage',

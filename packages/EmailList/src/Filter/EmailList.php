@@ -2,10 +2,9 @@
 
 namespace Solidarity\EmailList\Filter;
 
-use Laminas\Filter\ToInt;
 use Skeletor\Core\Filter\FilterInterface;
 use Skeletor\Core\Validator\ValidatorException;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class EmailList implements FilterInterface
 {
@@ -20,7 +19,6 @@ class EmailList implements FilterInterface
 
     public function filter($postData): array
     {
-        $int = new ToInt();
 
         $data = [
             'email' => trim($postData['email'] ?? ''),
@@ -28,13 +26,13 @@ class EmailList implements FilterInterface
         ];
 
         if (isset($postData['id'])) {
-            $data['id'] = $int->filter($postData['id']);
+            $data['id'] = (int) ($postData['id']);
         }
 
         if (!$this->validator->isValid($data)) {
             throw new ValidatorException();
         }
-        unset($data[CSRF::TOKEN_NAME]);
+        unset($data[Csrf::TOKEN_NAME]);
 
         return $data;
     }

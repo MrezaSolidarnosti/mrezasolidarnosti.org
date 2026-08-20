@@ -1,6 +1,7 @@
 <?php
 namespace Solidarity\Transaction\Service;
 
+use Skeletor\Core\Filter\Str;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Solidarity\Beneficiary\Entity\Beneficiary;
 use Solidarity\Beneficiary\Entity\PaymentMethod;
@@ -30,8 +31,8 @@ class Transaction extends TableView
     public function __construct(
         TransactionRepository $repo, Session $user, Logger $logger, TransactionFilter $filter, private ProjectService $project,
         private BeneficiaryRepository $beneficiaryRepo, private PeriodRepository $periodRepo,
-    ) {
-        parent::__construct($repo, $user, $logger, $filter);
+        \Skeletor\Core\Activity\Service\Activity $activity) {
+        parent::__construct($repo, $user, $logger, $filter, activity: $activity);
     }
 
     /**
@@ -460,6 +461,14 @@ class Transaction extends TableView
 
         $transactionAmount = min($typeBudgets[$paymentType], $beneficiaryRemaining, $perPersonRemaining);
 
+        // Each constraint above clears its own floor, but the slice they leave between them can
+        // still be trivial — 200 RSD of per-person headroom against a 50,000 budget and a 210,200
+        // need. Nobody should be asked to make a 200 RSD bank transfer, so the final amount is
+        // floored too, not just its inputs.
+        if ($transactionAmount < $minSlice) {
+            return $skip;
+        }
+
         $accountNumber = null;
         $instructions = null;
         $amountEur = 0;
@@ -608,7 +617,17 @@ class Transaction extends TableView
                 ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK)
                 ->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_BLACK));
         }
-        $filePath = DATA_PATH . sprintf('/lists/%s.xlsx', str_replace(' ', '', $school));
+        // The school name reaches a filesystem path, and nothing between here and the write
+        // would stop a slash. Str::alnum keeps Unicode letters, so Serbian diacritics survive in
+        // the filename — the files already in data/lists are named that way — while separators,
+        // dots and spaces are dropped. An empty result would write a hidden ".xlsx" that the
+        // next such school would overwrite, so fall back to a real name.
+        $name = Str::alnum((string) $school);
+        if ($name === '') {
+            $name = 'lista';
+        }
+
+        $filePath = DATA_PATH . sprintf('/lists/%s.xlsx', $name);
         $writer->save($filePath);
 
         return $filePath;

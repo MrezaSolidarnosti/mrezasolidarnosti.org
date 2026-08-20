@@ -2,7 +2,7 @@
 
 namespace Solidarity\Frontend\Action\Blog;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\ThemeSettings\Navigation\Service\Navigation;

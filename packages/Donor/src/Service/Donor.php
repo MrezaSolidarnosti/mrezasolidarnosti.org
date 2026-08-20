@@ -34,9 +34,9 @@ class Donor extends TableView
         private DonorDonationData $donorDonationDataValidator,
         private \Solidarity\Donor\Filter\DonorDonationData $donorDonationDataFilter,
         private TransactionService $transaction, private QrCode $qrCode,
-        private Translator $translator
-    ) {
-        parent::__construct($repo, $user, $logger, $filter);
+        private Translator $translator,
+        \Skeletor\Core\Activity\Service\Activity $activity) {
+        parent::__construct($repo, $user, $logger, $filter, activity: $activity);
     }
 
     public function getDonorsByProject($project)

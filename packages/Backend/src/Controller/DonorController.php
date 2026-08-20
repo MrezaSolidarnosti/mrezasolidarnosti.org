@@ -5,7 +5,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Solidarity\Donor\Service\Donor;
 use Skeletor\Core\Controller\AjaxCrudController;
 use GuzzleHttp\Psr7\Response;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\Transaction\Service\Project;
@@ -42,9 +42,23 @@ class DonorController extends AjaxCrudController
         $id = $this->getRequest()->getAttribute('id');
         // GDPR erasure: remove personal data, keep the (anonymised) transactions.
         $donor = $this->service->getById($id);
-        if ($donor) {
-            $this->redaction->redactDonor($donor);
+
+        // Erasure is the one action an admin may later be asked to account for, so a stale row
+        // must not produce a second "permanently removed" confirmation. Nothing found is a
+        // failure, not a quiet success.
+        if (!$donor) {
+            $this->getResponse()->getBody()->write(json_encode([
+                'errors' => [],
+                'message' => '',
+                'generalErrors' => [['message' => 'Donator nije pronađen.']],
+                'status' => false,
+            ]));
+            $this->getResponse()->getBody()->rewind();
+
+            return $this->getResponse()->withHeader('Content-Type', 'application/json');
         }
+
+        $this->redaction->redactDonor($donor);
 
         $this->getResponse()->getBody()->write(json_encode([
             'errors' => [],

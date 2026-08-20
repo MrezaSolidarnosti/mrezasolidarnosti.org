@@ -1,7 +1,7 @@
 <?php
 namespace Solidarity\Frontend\Action;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Action\Web\Html;

@@ -15,9 +15,10 @@ class Page extends TableView
         Session $userSession,
         Logger $logger,
         \Solidarity\Page\Filter\Page $filter,
+        \Skeletor\Core\Activity\Service\Activity $activity,
         ?TenantRepo $tenant = null
     ) {
-        parent::__construct($repository, $userSession, $logger, $filter, $tenant);
+        parent::__construct($repository, $userSession, $logger, $filter, $tenant, activity: $activity);
     }
 
     public function prepareEntities($entities)

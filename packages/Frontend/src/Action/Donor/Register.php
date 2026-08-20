@@ -1,14 +1,14 @@
 <?php
 namespace Solidarity\Frontend\Action\Donor;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Validator\ValidatorException;
 use Skeletor\ThemeSettings\Navigation\Service\Navigation;
 use Skeletor\ThemeSettings\SocialLinks\Service\SocialLinks;
 use Solidarity\Frontend\Action\BaseAction;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class Register extends BaseAction
 {
@@ -18,7 +18,7 @@ class Register extends BaseAction
         protected SocialLinks $socialLinks,
         \Solidarity\Frontend\Service\Session $session,
         private \Solidarity\Frontend\Service\Locale $locale,
-    ) {
+        private \Skeletor\Core\Security\Csrf $csrf) {
         parent::__construct($logger, $config, $template, $this->navigationService, $this->socialLinks, $session);
 
     }
@@ -43,7 +43,7 @@ class Register extends BaseAction
                 $responseData['redirect'] = $this->locale->localizeUrl('/potvrdi-email');
             } catch(ValidatorException $e) {
                 $success = false;
-                $responseData['token'] = CSRF::getToken();
+                $responseData['token'] = $this->csrf->getToken();
                 foreach($this->donor->getFilterErrors() as $error){
                     $responseData['errors'][] = $error;
                 }
@@ -51,7 +51,7 @@ class Register extends BaseAction
             }
             catch (\Exception $e) {
                 $success = false;
-                $responseData['token'] = CSRF::getToken();
+                $responseData['token'] = $this->csrf->getToken();
                 $statusCode = 400;
                 if ($e->getMessage() === "Donor already exists") {
                     $responseData['errors'][] = 'A donor with this email address already exists.';

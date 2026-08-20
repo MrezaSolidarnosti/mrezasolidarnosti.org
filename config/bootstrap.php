@@ -1,4 +1,5 @@
 <?php
+use Skeletor\Core\Security\Csrf;
 use Doctrine\ORM\EntityManagerInterface;
 use Laminas\Session\SessionManager;
 use Laminas\Session\ManagerInterface;
@@ -7,7 +8,7 @@ use Monolog\ErrorHandler;
 use Monolog\Handler\BrowserConsoleHandler;
 use Monolog\Handler\StreamHandler;
 use Psr\Log\LoggerInterface as Logger;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Skeletor\Core\Mailer\Service\MailerInterface;
 use Skeletor\Core\Security\Authorization\AuthorizationService;
 use Skeletor\Core\Security\EntityRegistry;
@@ -252,7 +253,13 @@ $container->set(\Skeletor\ContentEditor\Contracts\BlockViewInterface::class, fun
         $container->get(\Solidarity\Transaction\Service\Transaction::class)
     ));
 
-    return $view;
+    // Wrapped last, so every filter above is registered through the decorator onto the same
+    // view. Block templates echo their link fields raw, so links authored as "doniraj" are
+    // normalised to "/doniraj" and swapped for the localised slug off the default locale.
+    return new \Solidarity\Frontend\Service\LocalizingBlockView(
+        $view,
+        $container->get(\Solidarity\Frontend\Service\Locale::class)
+    );
 });
 
 $container->set(\Skeletor\Exporter\Contracts\ExporterFactoryInterface::class, function() use ($container) {
@@ -283,8 +290,8 @@ $container->set(Engine::class, function() use ($container) {
     $plates->registerFunction('printError', function($error, $label) use($plates) {
         return $plates->render('partialsGlobal::error', ['error' => $error, 'label' => $label]);
     });
-    $plates->registerFunction('formToken', function () { return \Volnix\CSRF\CSRF::getHiddenInputString(); });
-    $plates->registerFunction('formTokenArray', function () { return  \Volnix\CSRF\CSRF::getTokenAsArray(); });
+    $plates->registerFunction('formToken', function () use ($container) { return $container->get(Csrf::class)->getHiddenInputString(); });
+    $plates->registerFunction('formTokenArray', function () use ($container) { return $container->get(Csrf::class)->getTokenAsArray(); });
     $plates->registerFunction('blockAttributes', function (array $block, string ...$classNames) {
         $additionalData = $block['additionalData'] ?? [];
         $attributes = [];
@@ -554,12 +561,18 @@ $container->set(EntityManagerInterface::class, function() use ($container) {
             APP_PATH . '/vendor/dj_avolak/skeletor/src/File',
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Image",
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Login",
+            // skeletor 6.x logs entity changes through Core\Activity; without this path the
+            // Activity entity is unmapped and every write warns instead of recording.
+            APP_PATH . "/vendor/dj_avolak/skeletor/src/Core/Activity/Entity",
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Translator",
             APP_PATH . '/vendor/dj_avolak/skeletor/src/ThemeSettings',
         ],
         isDevMode: !\Solidarity\Core\Environment::isProduction(),
     );
     $config->setAutoGenerateProxyClasses(true);
+    // symfony/var-exporter 8 removed LazyGhostTrait, so Doctrine's proxy factory throws unless
+    // native lazy objects are used. Requires PHP 8.4, and is mandatory in Doctrine ORM 4.
+    $config->enableNativeLazyObjects(true);
 //    $resultCache = new Symfony\Component\Cache\Adapter\RedisTagAwareAdapter($container->get(\Redis::class));
 //    $config->setResultCache($resultCache);
 //    $config->setMetadataCache($resultCache);

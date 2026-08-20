@@ -2,10 +2,9 @@
 
 namespace Solidarity\Delegate\Filter;
 
-use Laminas\Filter\ToInt;
 use Skeletor\Core\Filter\FilterInterface;
 use Turanjanin\SerbianTransliterator\Transliterator;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 use Skeletor\Core\Validator\ValidatorException;
 
 class Delegate implements FilterInterface
@@ -23,9 +22,8 @@ class Delegate implements FilterInterface
     {
         // todo if delegate is MSP it needs school relation
 
-        $int = new ToInt();
         $data = [
-            'id' => (isset($postData['id'])) ? $int->filter($postData['id']) : null,
+            'id' => (isset($postData['id'])) ? (int) ($postData['id']) : null,
             'name' => Transliterator::toLatin($postData['name']),
             'email' => $postData['email'] ?? null,
             'phone' => $postData['phone'],
@@ -37,12 +35,12 @@ class Delegate implements FilterInterface
             'comment' => Transliterator::toLatin($postData['comment'] ?? ''),
             'adminComment' => Transliterator::toLatin($postData['adminComment'] ?? ''),
             'status' => (isset($postData['status'])) ? $postData['status'] : 1,
-            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME],
+            Csrf::TOKEN_NAME => $postData[Csrf::TOKEN_NAME],
         ];
         if (!$this->validator->isValid($data)) {
             throw new ValidatorException();
         }
-        unset($data[CSRF::TOKEN_NAME]);
+        unset($data[Csrf::TOKEN_NAME]);
 
         return $data;
     }

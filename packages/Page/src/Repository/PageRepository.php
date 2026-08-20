@@ -122,7 +122,15 @@ class PageRepository extends \Skeletor\Page\Repository\PageRepository
         $translation->seoImage = $source->seoImage;
 
         $translation->languageCode = 'en';
-        $translation->translationGroupId = $pageId;
+
+        // A page already in a group keeps it: stamping the source's id unconditionally would put
+        // the new page in a group of its own and leave the existing locales behind, so the group
+        // has to survive a second translation rather than be replaced by one. The source joins
+        // the group as well — while it kept a NULL group the switcher could not get from either
+        // page to the other and both directions fell back to the homepage.
+        $groupId = $source->translationGroupId ?: $source->getId();
+        $source->translationGroupId = $groupId;
+        $translation->translationGroupId = $groupId;
 
         $this->entityManager->persist($translation);
         $this->entityManager->flush();

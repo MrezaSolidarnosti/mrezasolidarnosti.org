@@ -13,7 +13,7 @@ use Solidarity\Transaction\Service\Transaction;
 use Solidarity\Transaction\Service\TransactionImport;
 use Skeletor\Core\Controller\AjaxCrudController;
 use GuzzleHttp\Psr7\Response;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Tamtamchik\SimpleFlash\Flash;
@@ -80,11 +80,19 @@ class TransactionImportController extends AjaxCrudController
         ini_set('memory_limit', '512M');
 
         $uploadedFile = $this->getRequest()->getUploadedFiles()['file'];
-        $uploadedFile->moveTo(DATA_PATH . '/' . $uploadedFile->getClientFilename());
+
+        // Same guard as uploadTransactionList(): the posted name is concatenated into the move
+        // target, so reduce it to a bare filename and fall back when nothing usable is left.
+        $fileName = basename((string) $uploadedFile->getClientFilename());
+        if ($fileName === '' || trim($fileName, '.') === '') {
+            $fileName = 'upload.xlsx';
+        }
+        $sourceFile = DATA_PATH . '/' . $fileName;
+
+        $uploadedFile->moveTo($sourceFile);
 
         $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
         $reader->setReadDataOnly(true);
-        $sourceFile = DATA_PATH . '/' . $uploadedFile->getClientFilename();
         $excel = $reader->load($sourceFile);
 
 //        $excel = $reader->load(DATA_PATH . '/import/lista-uplata-po-donatorima-8.xlsx');

@@ -3,7 +3,7 @@
 namespace Solidarity\Backend\Action;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Action\Web\Html;

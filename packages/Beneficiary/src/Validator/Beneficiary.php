@@ -61,16 +61,36 @@ class Beneficiary implements ValidatorInterface
         } else {
             // todo might need to fetch period data, to determine limit, for half periods, limit should be halved
             foreach ($data['registeredPeriods'] as $index => $row) {
-                if (empty($row['period'])) {
+                // A stored row (one carrying an id) posts back without a usable period when the
+                // form could not render its option. It is preserved as-is rather than rewritten,
+                // so demanding a period here would refuse a save over a row the user never
+                // touched — and could not have fixed, since the missing option is the very one
+                // they would need. A new row still has to name its period.
+                $isStoredRow = isset($row['id']) && $row['id'] !== '' && (int) $row['id'] > 0;
+                if (empty($row['period']) && !$isStoredRow) {
                     $this->messages['registeredPeriods'][] = sprintf('Period je neophodan za red %d.', $index + 1);
                 }
+                // A period may carry its own maximum, which overrides the global limit in both
+                // directions — a leaner round caps lower, a catch-up round allows more. Blank and
+                // 0 both mean "use the global limit": MigrateLegacy writes 0 for every legacy
+                // period, so treating 0 as a real cap would reject everything.
+                $limit = \Solidarity\Beneficiary\Entity\Beneficiary::MONTHLY_LIMIT;
+                if (!empty($row['period'])) {
+                    $period = $this->entityManager
+                        ->getRepository(\Solidarity\Period\Entity\Period::class)
+                        ->find($row['period']);
+                    if ($period && (int) $period->maxAmount > 0) {
+                        $limit = (int) $period->maxAmount;
+                    }
+                }
+
                 if (!isset($row['amount']) || $row['amount'] <= 0) {
                     $this->messages['registeredPeriods'][] = sprintf('Iznos mora biti veći od nule za red %d.', $index + 1);
-                } elseif ($row['amount'] > \Solidarity\Beneficiary\Entity\Beneficiary::MONTHLY_LIMIT) {
+                } elseif ($row['amount'] > $limit) {
                     $this->messages['registeredPeriods'][] = sprintf(
                         'Iznos u redu %d je veći od limita od %s.',
                         $index + 1,
-                        number_format(\Solidarity\Beneficiary\Entity\Beneficiary::MONTHLY_LIMIT, 0)
+                        number_format($limit, 0)
                     );
                 }
             }

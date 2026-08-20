@@ -4,7 +4,7 @@ namespace Solidarity\Backend\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Skeletor\Core\Controller\AjaxCrudController;
 use GuzzleHttp\Psr7\Response;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\Beneficiary\Entity\Beneficiary;
@@ -12,6 +12,7 @@ use Solidarity\Beneficiary\Entity\RegisteredPeriods;
 use Solidarity\Delegate\Service\Delegate;
 use Solidarity\School\Service\City;
 use Solidarity\School\Service\School;
+use Solidarity\School\Entity\SchoolType as SchoolTypeEntity;
 use Solidarity\School\Service\SchoolType;
 use Solidarity\Transaction\Entity\Transaction;
 use Tamtamchik\SimpleFlash\Flash;
@@ -209,12 +210,32 @@ class SchoolController extends AjaxCrudController
                 $this->service->create([
                     'name' => $value,
                     'city' => $city,
-                    'schoolType' => $type,
+                    // School::$type is not nullable; a name matching none of the patterns above
+                    // is parked under the placeholder rather than dropped.
+                    'schoolType' => $type ?? $this->placeholderSchoolType(),
                 ]);
             }
         }
 
 
         die('done all');
+    }
+
+    /**
+     * The "unknown type" row, created on first use.
+     */
+    private function placeholderSchoolType(): SchoolTypeEntity
+    {
+        $repository = $this->em->getRepository(SchoolTypeEntity::class);
+        $type = $repository->findOneBy(['name' => SchoolTypeEntity::PLACEHOLDER]);
+
+        if ($type === null) {
+            $type = new SchoolTypeEntity();
+            $type->name = SchoolTypeEntity::PLACEHOLDER;
+            $this->em->persist($type);
+            $this->em->flush();
+        }
+
+        return $type;
     }
 }

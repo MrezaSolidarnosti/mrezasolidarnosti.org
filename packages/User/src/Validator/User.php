@@ -6,14 +6,14 @@ use Doctrine\ORM\EntityManagerInterface;
 use Skeletor\Core\Validator\InvalidFormTokenException;
 use Skeletor\Core\Validator\ValidatorInterface;
 use Skeletor\User\Repository\UserRepository;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class User extends \Skeletor\User\Validator\User implements ValidatorInterface
 {
     private $messages = [];
 
 
-    public function __construct(private EntityManagerInterface $entityManager, private CSRF $csrf)
+    public function __construct(private EntityManagerInterface $entityManager, private Csrf $csrf)
     {
     }
 

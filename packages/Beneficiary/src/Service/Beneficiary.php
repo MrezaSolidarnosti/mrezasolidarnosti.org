@@ -18,9 +18,9 @@ class Beneficiary extends TableView
 {
     public function __construct(
         BeneficiaryRepository $repo, Session $user, Logger $logger, BeneficiaryFilter $filter,
-        private Project $project, private School $school, private Delegate $delegate, private City $city
-    ) {
-        parent::__construct($repo, $user, $logger, $filter);
+        private Project $project, private School $school, private Delegate $delegate, private City $city,
+        \Skeletor\Core\Activity\Service\Activity $activity) {
+        parent::__construct($repo, $user, $logger, $filter, activity: $activity);
     }
 
     public function getByPeriod(int $periodId): array

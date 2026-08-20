@@ -5,13 +5,13 @@ namespace Solidarity\Post\Validator;
 use Skeletor\Core\Validator\InvalidFormTokenException;
 use Skeletor\Core\Validator\ValidatorInterface;
 use Solidarity\Post\Repository\PostRepository;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class Post implements ValidatorInterface
 {
     private array $messages = [];
 
-    public function __construct(private CSRF $csrf, protected PostRepository $postRepository)
+    public function __construct(private Csrf $csrf, protected PostRepository $postRepository)
     {
     }
 

@@ -12,7 +12,7 @@ use Solidarity\Transaction\Service\Project;
 use Solidarity\Transaction\Service\Transaction;
 use Skeletor\Core\Controller\AjaxCrudController;
 use GuzzleHttp\Psr7\Response;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\User\Entity\User;
@@ -115,15 +115,28 @@ class TransactionController extends AjaxCrudController
     {
         /* @var UploadedFile $uploadedFile */
         $uploadedFile = $this->getRequest()->getUploadedFiles()['file'];
-        $uploadedFile->moveTo(DATA_PATH . '/' . $uploadedFile->getClientFilename());
-        $parts = explode('.', basename($uploadedFile->getClientFilename()));
+
+        // The name comes from whoever posts the file and is concatenated straight into the move
+        // target, so reduce it to a bare filename first — "../../public/assets/pwned.xlsx" would
+        // otherwise land above the application root. basename() alone is not enough: "../" leaves
+        // "..", and moving onto that writes to DATA_PATH itself, which is a directory.
+        $fileName = basename((string) $uploadedFile->getClientFilename());
+        if ($fileName === '' || trim($fileName, '.') === '') {
+            $fileName = 'upload.xlsx';
+        }
+        $target = DATA_PATH . '/' . $fileName;
+
+        $uploadedFile->moveTo($target);
+        // Lowercased: Excel on Windows hands back .XLSX, and a case-sensitive check sends it to
+        // the Xls reader, which cannot open it.
+        $parts = explode('.', strtolower($fileName));
         if ($parts[count($parts)-1] === 'xlsx') {
             $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
         } else {
             $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
         }
         $reader->setReadDataOnly(true);
-        $excel = $reader->load(DATA_PATH . '/' . $uploadedFile->getClientFilename());
+        $excel = $reader->load($target);
         $failedData = [];
         foreach ($excel->getSheet($excel->getFirstSheetIndex())->toArray() as $key => $data) {
             if ($key < 2) {

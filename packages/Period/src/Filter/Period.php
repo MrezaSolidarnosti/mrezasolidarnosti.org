@@ -2,11 +2,11 @@
 
 namespace Solidarity\Period\Filter;
 
+use Skeletor\Core\Filter\Str;
+
 use Doctrine\ORM\EntityManagerInterface;
-use Laminas\Filter\ToInt;
 use Skeletor\Core\Filter\FilterInterface;
-use Volnix\CSRF\CSRF;
-use Laminas\I18n\Filter\Alnum;
+use Skeletor\Core\Security\Csrf;
 use Skeletor\Core\Validator\ValidatorException;
 class Period implements FilterInterface
 {
@@ -24,23 +24,25 @@ class Period implements FilterInterface
 
     public function filter($postData): array
     {
-        $alnum = new Alnum(true);
-        $int = new ToInt();
+        $alnum = static fn ($v) => Str::alnum((string) $v, true);
 
         $data = [
-            'id' => (isset($postData['id'])) ? $int->filter($postData['id']) : null,
+            'id' => (isset($postData['id'])) ? (int) ($postData['id']) : null,
             'month' => $postData['month'],
             'year' => $postData['year'],
             'type' => $postData['type'],
             'active' => $postData['active'],
             'project' => $postData['project'],
             'processing' => $postData['processing'],
-            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME],
+            // Blank and 0 both mean "use the global limit", which is what the hint under the
+            // field says. Dropping it here is why an admin's value never reached the entity.
+            'maxAmount' => (int) ($postData['maxAmount'] ?? 0),
+            Csrf::TOKEN_NAME => $postData[Csrf::TOKEN_NAME],
         ];
 //        if (!$this->validator->isValid($data)) {
 //            throw new ValidatorException();
 //        }
-        unset($data[CSRF::TOKEN_NAME]);
+        unset($data[Csrf::TOKEN_NAME]);
 
         return $data;
     }

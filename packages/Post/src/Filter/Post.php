@@ -2,12 +2,11 @@
 
 namespace Solidarity\Post\Filter;
 
-use Laminas\Filter\ToInt;
 use Skeletor\Blog\Service\UrlHelper;
 use Skeletor\Core\Filter\FilterInterface;
 use Skeletor\Core\Validator\ValidatorException;
 use Solidarity\ContentEditor\Contracts\ContentEditorFilterInterface;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class Post implements FilterInterface
 {
@@ -29,25 +28,25 @@ class Post implements FilterInterface
         $seoData = json_decode($data['seo'], true);
         $featuredImage = json_decode($data['featuredImage'], true);
         $filteredData = [
-            'id' => (isset($data['id'])) ? (new ToInt())->filter($data['id']) : null,
+            'id' => (isset($data['id'])) ? (int) ($data['id']) : null,
             'title' => $data['title'],
             'slug' => $slug,
             'shortDescription' => $data['excerpt'],
-            'status' => (new ToInt())->filter($statusData['status']),
+            'status' => (int) ($statusData['status']),
             'blockData' => $this->blockFilter->filter(json_decode($data['blocks'] ?? [], true) ?? []),
             'featuredImageId' => $featuredImage['id'] ?? null,
             'publishAt' => isset($statusData['schedule']) ? new \DateTime($statusData['schedule']) : null,
             'seoTitle' => $seoData['title'] ?? null,
             'seoDescription' => $seoData['description'] ?? null,
             'seoImageId' => $seoData['image']['id'] ?? null,
-            CSRF::TOKEN_NAME => $data[CSRF::TOKEN_NAME],
+            Csrf::TOKEN_NAME => $data[Csrf::TOKEN_NAME],
         ];
 
         if (!$this->validator->isValid($filteredData)) {
             throw new ValidatorException();
         }
 
-        unset($filteredData[CSRF::TOKEN_NAME]);
+        unset($filteredData[Csrf::TOKEN_NAME]);
 
         return $filteredData;
     }

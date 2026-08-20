@@ -23,9 +23,9 @@ class Delegate extends TableView
     public function __construct(
         DelegateRepository $repo, Session $user, Logger $logger, DelegateFilter $filter, private \DateTime $dt,
         private Mailer $mailer, private SchoolType $schoolType, private Project $project,
-        private BeneficiaryRepository $beneficiaryRepo, private School $school
-    ) {
-        parent::__construct($repo, $user, $logger, $filter);
+        private BeneficiaryRepository $beneficiaryRepo, private School $school,
+        \Skeletor\Core\Activity\Service\Activity $activity) {
+        parent::__construct($repo, $user, $logger, $filter, activity: $activity);
     }
 
     public function getAffectedDelegates()
@@ -67,16 +67,24 @@ class Delegate extends TableView
         $removedSchoolIds = array_diff($oldSchoolIds, $newSchoolIds);
         $addedSchoolIds = array_diff($newSchoolIds, $oldSchoolIds);
 
+        // nullifyCreatedByForDelegate is scoped to the *delegate*, not to the school that
+        // triggered it, so removing one school releases the kept schools' beneficiaries as
+        // collateral. When that happens the reclaim has to cover everything still on the list or
+        // a kept school is left permanently ownerless. With nothing released there is nothing to
+        // restore, so an ordinary add reclaims only what it added — reclaiming the whole list
+        // unconditionally would sweep up orphans an admin had deliberately unassigned.
+        $reclaimSchoolIds = $addedSchoolIds;
         if (!empty($removedSchoolIds)) {
             $this->beneficiaryRepo->nullifyCreatedByForDelegate((int) $data['id']);
+            $reclaimSchoolIds = $newSchoolIds;
         }
 
         $entity = parent::update($data);
 
-        if (!empty($addedSchoolIds)) {
-            foreach ($addedSchoolIds as $schoolId) {
-                $this->beneficiaryRepo->assignOrphanedBeneficiariesToDelegate($schoolId, (int) $data['id']);
-            }
+        // Release first, then reclaim: reversed, the nullify would undo the assignment it is
+        // supposed to precede.
+        foreach ($reclaimSchoolIds as $schoolId) {
+            $this->beneficiaryRepo->assignOrphanedBeneficiariesToDelegate($schoolId, (int) $data['id']);
         }
 
         return $entity;

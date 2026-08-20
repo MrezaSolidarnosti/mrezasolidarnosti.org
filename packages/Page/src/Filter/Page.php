@@ -2,12 +2,11 @@
 
 namespace Solidarity\Page\Filter;
 
-use Laminas\Filter\ToInt;
 use Skeletor\Blog\Service\UrlHelper;
 use Skeletor\ContentEditor\Contracts\ContentEditorParserInterface;
 use Skeletor\Core\Filter\FilterInterface;
 use Skeletor\Core\Validator\ValidatorException;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class Page implements FilterInterface
 {
@@ -32,7 +31,7 @@ class Page implements FilterInterface
             $slug = UrlHelper::slugify($postData['slug']);
         }
         $data = [
-            'id' => (isset($postData['id'])) ? (new ToInt())->filter($postData['id']) : null,
+            'id' => (isset($postData['id'])) ? (int) ($postData['id']) : null,
             'title' => $postData['title'],
             'slug' => $slug,
             'status' => $postData['status'],
@@ -43,12 +42,12 @@ class Page implements FilterInterface
             'seoImageId' => $postData['seoImageId'] ?? '',
             'isLoginProtected' => isset($postData['isLoginProtected']) && $postData['isLoginProtected'] === 'on',
             'languageCode' => $postData['languageCode'] ?? 'sr',
-            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME],
+            Csrf::TOKEN_NAME => $postData[Csrf::TOKEN_NAME],
         ];
         if (!$this->validator->isValid($data)) {
             throw new ValidatorException();
         }
-        unset($data[CSRF::TOKEN_NAME]);
+        unset($data[Csrf::TOKEN_NAME]);
 
         return $data;
     }

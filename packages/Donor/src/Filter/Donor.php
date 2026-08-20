@@ -2,12 +2,12 @@
 
 namespace Solidarity\Donor\Filter;
 
+use Skeletor\Core\Filter\Str;
+
 use Doctrine\ORM\EntityManagerInterface;
-use Laminas\Filter\ToInt;
 use Skeletor\Core\Filter\FilterInterface;
 use Skeletor\User\Service\Session;
-use Volnix\CSRF\CSRF;
-use Laminas\I18n\Filter\Alnum;
+use Skeletor\Core\Security\Csrf;
 use Skeletor\Core\Validator\ValidatorException;
 class Donor implements FilterInterface
 {
@@ -23,11 +23,10 @@ class Donor implements FilterInterface
 
     public function filter($postData): array
     {
-        $alnum = new Alnum(true);
-        $int = new ToInt();
+        $alnum = static fn ($v) => Str::alnum((string) $v, true);
 
         $data = [
-            'id' => (isset($postData['id'])) ? $int->filter($postData['id']) : null,
+            'id' => (isset($postData['id'])) ? (int) ($postData['id']) : null,
             'email' => $postData['email'],
             'firstName' => $postData['firstName'],
             'lastName' => $postData['lastName'],
@@ -36,7 +35,7 @@ class Donor implements FilterInterface
             'isActive' => $postData['isActive'],
             'projects' => $postData['projects'],
             'status' => (isset($postData['status'])) ? $postData['status'] : 1,
-            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME],
+            Csrf::TOKEN_NAME => $postData[Csrf::TOKEN_NAME],
         ];
 
         // Parse paymentMethods rows from form
@@ -65,7 +64,7 @@ class Donor implements FilterInterface
         if (!$this->validator->isValid($data)) {
             throw new ValidatorException();
         }
-        unset($data[CSRF::TOKEN_NAME]);
+        unset($data[Csrf::TOKEN_NAME]);
 
         return $data;
     }

@@ -1,7 +1,7 @@
 <?php
 namespace Solidarity\Mailer\Service;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use MailerSend\Helpers\Builder\Attachment;
 use MailerSend\Helpers\Builder\Recipient;
@@ -11,9 +11,25 @@ use Psr\Log\LoggerInterface as Logger;
 
 class Mailer extends \Skeletor\Core\Mailer\Service\MailerSendMailer
 {
-    public function __construct(MailerSend $mail, Config $config, Engine $template)
-    {
+    /**
+     * Builds the SMTP transport. Untyped because `callable` is not a valid property type.
+     *
+     * @var (callable(): \PHPMailer\PHPMailer\PHPMailer)|null
+     */
+    private $transportFactory;
+
+    /**
+     * @param (callable(): \PHPMailer\PHPMailer\PHPMailer)|null $transportFactory injected by
+     *        tests so the SMTP branch can be asserted without opening a socket to Mailpit
+     */
+    public function __construct(
+        MailerSend $mail,
+        Config $config,
+        Engine $template,
+        ?callable $transportFactory = null,
+    ) {
         parent::__construct($mail, $config, $template);
+        $this->transportFactory = $transportFactory;
     }
 
     /**
@@ -38,7 +54,9 @@ class Mailer extends \Skeletor\Core\Mailer\Service\MailerSendMailer
     {
         $smtp = $this->config->mailer->smtp;
 
-        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mail = $this->transportFactory !== null
+            ? ($this->transportFactory)()
+            : new \PHPMailer\PHPMailer\PHPMailer(true);
         $mail->isSMTP();
         $mail->Host = $smtp->host;
         $mail->Port = (int) $smtp->port;

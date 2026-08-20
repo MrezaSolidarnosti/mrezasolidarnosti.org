@@ -3,12 +3,12 @@
 namespace Solidarity\Donor\Validator;
 
 use Solidarity\Donor\Entity\PaymentMethod;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class DonorDonationData
 {
     private array $messages = [];
-    public function __construct(private CSRF $csrf)
+    public function __construct(private Csrf $csrf)
     {
 
     }
