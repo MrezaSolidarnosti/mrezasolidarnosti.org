@@ -37,14 +37,22 @@ class GetInstructions extends BaseAction
                 401
             );
         }
-        if(!CSRF::validate($data)) {
-            $success = false;
-            $statusCode = 401;
-            $responseData['errors'][] = 'Your session has expired, please refresh the page and try again.';
+        // Must return, not fall through. This used to set the flag and carry on, so a
+        // request that failed the check still got a body full of the donor's instructions —
+        // beneficiary names, amounts and reference codes — alongside its 401. Same mistake
+        // that was fixed in ConfirmPayment.
+        if (!CSRF::validate($data)) {
+            return $this->returnWithData(false, [
+                'errors' => ['Your session has expired, please refresh the page and try again.'],
+                'token' => CSRF::getToken(),
+            ], 401);
         }
         try {
             $page = max(1, (int) ($data['page'] ?? 1));
-            $perPage = (int)($data['perPage']) ?? 10;
+            // ?? never fired here: (int) yields 0, not null, for a missing key — so omitting
+            // perPage warned about the undefined index and then paged by zero, which
+            // setMaxResults(0) turns into "no instructions at all".
+            $perPage = max(1, (int) ($data['perPage'] ?? 10));
             $responseData['instructions'] = $this->donor->getInstructions($this->session->getId(), $page, $perPage);
         } catch (\Exception $e) {
             $success = false;

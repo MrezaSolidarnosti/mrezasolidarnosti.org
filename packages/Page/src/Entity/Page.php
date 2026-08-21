@@ -35,8 +35,9 @@ class Page
     #[ORM\JoinColumn(name: 'featuredImageId', referencedColumnName: 'id', unique: false, nullable: true)]
     public ?Image $featuredImage;
 
+    /** Draft by default: a page has to be published deliberately, never by omission. */
     #[ORM\Column(type: Types::INTEGER)]
-    public int $status;
+    public int $status = self::STATUS_DRAFT;
 
     /**
      * Locale this page's content is written in (e.g. 'sr', 'en'); matches the
@@ -55,8 +56,9 @@ class Page
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     public ?int $translationGroupId = null;
 
+    /** Opt-in flag: pages are public unless someone deliberately protects them. */
     #[ORM\Column(type: Types::INTEGER)]
-    public int $isLoginProtected;
+    public int $isLoginProtected = 0;
 
 
     public static function getHrStatuses(): array

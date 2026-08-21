@@ -77,6 +77,9 @@
                 <?=$this->t('Statistika')?>
             </span>
         </div>
+        <?php // schoolType.manage and city.manage are admin-only in permissions.php; showing
+              // these to staff gave them two links that bounce with a no-permissions flash. ?>
+        <?php if($loggedInRole === \Skeletor\User\Entity\User::ROLE_ADMIN): ?>
         <div class="item" data-href="/schoolType/view/">
             <span class="tooltip"><?=$this->t('Tipovi ustanova')?></span>
             <span class="itemAnchor">
@@ -91,7 +94,6 @@
                     <?=$this->t('Gradovi')?>
             </span>
         </div>
-        <?php if($loggedInRole === \Skeletor\User\Entity\User::ROLE_ADMIN): ?>
         <div class="item" data-href="/user/view/">
             <span class="tooltip"><?=$this->t('Korisnici')?></span>
             <span class="itemAnchor">

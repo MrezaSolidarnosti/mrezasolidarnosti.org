@@ -18,7 +18,11 @@ class SchoolType
     #[ORM\Column(type: Types::STRING, length: 255)]
     public string $name;
 
-    #[ORM\OneToMany(targetEntity: School::class, mappedBy: 'schoolType')]
+    // mappedBy names the property on the owning side, which is School::$type — it said
+    // 'schoolType', a field that does not exist there, so this collection could never have
+    // been loaded. Nothing reads it (the only ->schools in the app is Delegate's), so
+    // correcting the name is a fix with no behaviour to change.
+    #[ORM\OneToMany(targetEntity: School::class, mappedBy: 'type')]
     public Collection $schools;
 
     public function __construct()

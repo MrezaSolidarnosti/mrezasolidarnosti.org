@@ -67,6 +67,10 @@ $existingRegisteredPeriods = [];
 if ($data['model']?->registeredPeriods) {
     foreach ($data['model']->registeredPeriods as $rp) {
         $existingRegisteredPeriods[] = [
+            // Posted back as a hidden input so the save can match this row to its stored
+            // counterpart instead of rebuilding the list from the dropdowns — see
+            // BeneficiaryFactory::syncRegisteredPeriods().
+            'id' => $rp->getId(),
             'period' => $rp->period->getId(),
             'project' => $rp->project->getId(),
             'amount' => $rp->amount,

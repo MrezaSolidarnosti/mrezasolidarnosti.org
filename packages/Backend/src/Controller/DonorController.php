@@ -42,9 +42,23 @@ class DonorController extends AjaxCrudController
         $id = $this->getRequest()->getAttribute('id');
         // GDPR erasure: remove personal data, keep the (anonymised) transactions.
         $donor = $this->service->getById($id);
-        if ($donor) {
-            $this->redaction->redactDonor($donor);
+        if (!$donor) {
+            // Reported as a failure, not a confirmation. This used to fall through and claim
+            // the data was permanently removed whether or not there was anything to remove —
+            // a claim, on the one action where the admin may be asked to prove it. The shape
+            // matches AjaxCrudController::delete()'s failure envelope so the table renders it
+            // like any other failed delete.
+            $this->getResponse()->getBody()->write(json_encode([
+                'errors' => [],
+                'message' => '',
+                'generalErrors' => [['message' => $this->translate('Donator nije pronađen.')]],
+                'status' => false,
+            ]));
+            $this->getResponse()->getBody()->rewind();
+
+            return $this->getResponse()->withHeader('Content-Type', 'application/json');
         }
+        $this->redaction->redactDonor($donor);
 
         $this->getResponse()->getBody()->write(json_encode([
             'errors' => [],

@@ -3,6 +3,7 @@
     <div id="registeredProjectsList">
         <?php foreach($existingRegisteredPeriods as $registeredPeriod): ?>
             <div class="registeredPeriod">
+                <input type="hidden" class="registeredIdInput" value="<?=$registeredPeriod['id']?>">
                 <div class="inputContainer">
                     <label>Projekat</label>
                     <select class="input registeredProjectSelect">
@@ -40,6 +41,8 @@
 </div>
 <template id="registeredProjectTemplate">
     <div class="registeredPeriod">
+        <?php // Empty for a row the user is adding now: no stored counterpart to match. ?>
+        <input type="hidden" class="registeredIdInput" value="">
         <div class="inputContainer">
             <label>Projekat</label>
             <select class="input registeredProjectSelect">

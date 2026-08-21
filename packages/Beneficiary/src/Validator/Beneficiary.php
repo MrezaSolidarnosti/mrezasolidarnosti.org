@@ -61,22 +61,52 @@ class Beneficiary implements ValidatorInterface
         } else {
             // todo might need to fetch period data, to determine limit, for half periods, limit should be halved
             foreach ($data['registeredPeriods'] as $index => $row) {
+                // A stored row whose period the form could not render comes back without a
+                // usable one; syncRegisteredPeriods() preserves it as it is, so there is
+                // nothing here to validate — and refusing the save would block an edit the
+                // user made somewhere else entirely.
+                if (!empty($row['id']) && empty($row['period'])) {
+                    continue;
+                }
                 if (empty($row['period'])) {
                     $this->messages['registeredPeriods'][] = sprintf('Period je neophodan za red %d.', $index + 1);
                 }
                 if (!isset($row['amount']) || $row['amount'] <= 0) {
                     $this->messages['registeredPeriods'][] = sprintf('Iznos mora biti veći od nule za red %d.', $index + 1);
-                } elseif ($row['amount'] > \Solidarity\Beneficiary\Entity\Beneficiary::MONTHLY_LIMIT) {
-                    $this->messages['registeredPeriods'][] = sprintf(
-                        'Iznos u redu %d je veći od limita od %s.',
-                        $index + 1,
-                        number_format(\Solidarity\Beneficiary\Entity\Beneficiary::MONTHLY_LIMIT, 0)
-                    );
+                } else {
+                    $limit = $this->limitForPeriod($row['period']);
+                    if ($row['amount'] > $limit) {
+                        $this->messages['registeredPeriods'][] = sprintf(
+                            'Iznos u redu %d je veći od limita od %s.',
+                            $index + 1,
+                            number_format($limit, 0)
+                        );
+                    }
                 }
             }
         }
 
         return empty($this->messages);
+    }
+
+    /**
+     * How much one beneficiary may be registered for in a given period.
+     *
+     * A period can carry its own `maxAmount` — a round where less money is available, or
+     * more. It overrides the global `Beneficiary::MONTHLY_LIMIT` only when it is set to
+     * something above zero; blank and 0 both mean "use the global limit", which is what the
+     * hint under the field on the period form promises.
+     */
+    private function limitForPeriod(mixed $periodId): int
+    {
+        $global = \Solidarity\Beneficiary\Entity\Beneficiary::MONTHLY_LIMIT;
+        if (!$periodId) {
+            return $global;
+        }
+
+        $period = $this->entityManager->getRepository(\Solidarity\Period\Entity\Period::class)->find($periodId);
+
+        return ($period?->maxAmount ?? 0) > 0 ? $period->maxAmount : $global;
     }
 
     private function validateAccountNumberUniqueness(string $accountNumber, ?int $beneficiaryId): void

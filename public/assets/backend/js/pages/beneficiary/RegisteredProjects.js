@@ -45,6 +45,9 @@ export default class RegisteredProjects {
         const projectSelect = container.querySelector('.registeredProjectSelect');
         const periodSelect = container.querySelector('.registeredPeriodSelect');
         const amountInput = container.querySelector('.registeredAmountInput');
+        // Empty for a row added in the browser; carries the stored RegisteredPeriods id for
+        // one that came from the database, which is what lets the save match them up.
+        const idInput = container.querySelector('.registeredIdInput');
         const deleteButton = container.querySelector('.deleteRegisteredPeriod');
         container.setAttribute('data-id', identifier);
 
@@ -81,6 +84,9 @@ export default class RegisteredProjects {
             projectSelect.name = `registeredProjects[${identifier}][project]`;
             periodSelect.name = `registeredProjects[${identifier}][period]`;
             amountInput.name = `registeredProjects[${identifier}][amount]`;
+            if(idInput) {
+                idInput.name = `registeredProjects[${identifier}][id]`;
+            }
             this.#registeredProjects.set(identifier, {
                 container,
                 projectSelect,

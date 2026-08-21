@@ -111,19 +111,34 @@ class TransactionController extends AjaxCrudController
         return $this->respond('uploadTransactionList', []);
     }
 
+    /**
+     * The uploaded name is chosen by whoever sends the file and ends up in a filesystem
+     * path, so it is reduced to a bare filename first: basename() drops any directory part
+     * and the character filter drops what is left of a traversal, so nothing outside
+     * DATA_PATH can be written. Dots are kept (the extension picks the reader) but not
+     * leading ones, which would otherwise write a hidden file.
+     */
+    private static function safeUploadName(?string $clientFilename): string
+    {
+        $name = ltrim(preg_replace('/[^A-Za-z0-9._-]+/', '', basename((string) $clientFilename)) ?? '', '.');
+
+        return $name !== '' ? $name : 'upload.xlsx';
+    }
+
     public function uploadTransactionList()
     {
         /* @var UploadedFile $uploadedFile */
         $uploadedFile = $this->getRequest()->getUploadedFiles()['file'];
-        $uploadedFile->moveTo(DATA_PATH . '/' . $uploadedFile->getClientFilename());
-        $parts = explode('.', basename($uploadedFile->getClientFilename()));
-        if ($parts[count($parts)-1] === 'xlsx') {
+        $fileName = self::safeUploadName($uploadedFile->getClientFilename());
+        $uploadedFile->moveTo(DATA_PATH . '/' . $fileName);
+        $parts = explode('.', $fileName);
+        if (strtolower($parts[count($parts)-1]) === 'xlsx') {
             $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
         } else {
             $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
         }
         $reader->setReadDataOnly(true);
-        $excel = $reader->load(DATA_PATH . '/' . $uploadedFile->getClientFilename());
+        $excel = $reader->load(DATA_PATH . '/' . $fileName);
         $failedData = [];
         foreach ($excel->getSheet($excel->getFirstSheetIndex())->toArray() as $key => $data) {
             if ($key < 2) {
@@ -301,14 +316,18 @@ class TransactionController extends AjaxCrudController
                             break;
                         }
                     }
-                    $donorLeftover = 0;
-                    if ($donorPM) {
-                        $pledgedRsd = $donorPM->type === \Solidarity\Beneficiary\Entity\PaymentMethod::TYPE_BANK_TRANSFER
-                            ? $donorPM->amount
-                            : \Solidarity\Transaction\Entity\Transaction::eurToRsd($donorPM->amount);
-                        $donatedSoFar = $this->service->getPaidSumAmountForDonorPerProject($donor, $project, $paymentType);
-                        $donorLeftover = max(0, $pledgedRsd - $donatedSoFar);
+                    if (!$donorPM) {
+                        // Unreachable while matchPaymentType() picks $paymentType out of this
+                        // same project-filtered list. It used to fall through to a leftover of
+                        // 0, which presented a broken invariant as a real "nothing left to
+                        // give"; failing loudly is better than a wrong number an admin trusts.
+                        throw new \Exception('Donor has no pledge of the matched payment type for this project.');
                     }
+                    $pledgedRsd = $donorPM->type === \Solidarity\Beneficiary\Entity\PaymentMethod::TYPE_BANK_TRANSFER
+                        ? $donorPM->amount
+                        : \Solidarity\Transaction\Entity\Transaction::eurToRsd($donorPM->amount);
+                    $donatedSoFar = $this->service->getPaidSumAmountForDonorPerProject($donor, $project, $paymentType);
+                    $donorLeftover = max(0, $pledgedRsd - $donatedSoFar);
 
                     // Beneficiary leftover: period allocation minus already received
                     $beneficiaryTotal = $beneficiary->getAmountForPeriod($periodEntity);

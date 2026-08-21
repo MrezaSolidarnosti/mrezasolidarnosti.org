@@ -29,8 +29,10 @@ class Period
     #[ORM\Column(type: Types::INTEGER)]
     public ?int $year = null;
 
+    // Not nullable, in the database or here: 0 is how "no per-period override" is spelled,
+    // and a ?int invited the filter to write null into a NOT NULL column.
     #[ORM\Column(type: Types::INTEGER)]
-    public ?int $maxAmount = null;
+    public int $maxAmount = 0;
 
     #[ORM\Column(type: Types::STRING, length: 30)]
     public ?string $type = self::TYPE_FULL;

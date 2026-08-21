@@ -1,5 +1,7 @@
 import CrudPage from "https://skeletor.greenfriends.systems/skeletorjs/src/Page/CrudPage.js";
-import RegisteredProjects from "./RegisteredProjects.js";
+// Versioned because crud.js only busts the page module itself — a relative import stays
+// cached under its own URL, and a stale RegisteredProjects.js would post rows with no id.
+import RegisteredProjects from "./RegisteredProjects.js?v=0.0.6";
 import PaymentMethods from "./PaymentMethods.js";
 
 export default class Beneficiary extends CrudPage {
