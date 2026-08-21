@@ -12,7 +12,7 @@ use Solidarity\Transaction\Service\Project;
 use Solidarity\Transaction\Service\Transaction;
 use Skeletor\Core\Controller\AjaxCrudController;
 use GuzzleHttp\Psr7\Response;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\User\Entity\User;

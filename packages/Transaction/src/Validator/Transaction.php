@@ -5,14 +5,14 @@ namespace Solidarity\Transaction\Validator;
 use Skeletor\Core\Validator\ValidatorInterface;
 use Solidarity\Beneficiary\Repository\BeneficiaryRepository;
 use Solidarity\Donor\Repository\DonorRepository;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class Transaction implements ValidatorInterface
 {
     private $messages = [];
 
     public function __construct(
-        private CSRF $csrf,
+        private Csrf $csrf,
         private DonorRepository $donorRepo,
         private BeneficiaryRepository $beneficiaryRepo,
     ) {

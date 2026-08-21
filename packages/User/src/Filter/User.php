@@ -1,11 +1,11 @@
 <?php
 namespace Solidarity\User\Filter;
 
-use Laminas\Filter\ToInt;
-use Laminas\I18n\Filter\Alnum;
+use Skeletor\Core\Filter\Str;
+
 use Skeletor\Core\Validator\ValidatorException;
 use Solidarity\User\Validator\User as UserValidator;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class User extends \Skeletor\User\Filter\User
 {
@@ -24,8 +24,7 @@ class User extends \Skeletor\User\Filter\User
 
     public function filter(array $postData) : array
     {
-        $alnum = new Alnum(true);
-        $int = new ToInt();
+        $alnum = static fn ($v) => Str::alnum((string) $v, true);
         if ((int) $postData['role'] === \Solidarity\User\Entity\User::ROLE_ADMIN) {
             $postData['delegate'] = null;
         }
@@ -33,18 +32,18 @@ class User extends \Skeletor\User\Filter\User
             'id' => (isset($postData['id'])) ? $postData['id'] : null,
             'email' => $postData['email'],
             'role' => $postData['role'],
-            'isActive' => $int->filter($postData['isActive']),
-            'displayName' => (strlen($alnum->filter($postData['displayName'])) > 0) ? $alnum->filter($postData['displayName']) :
-                $alnum->filter($postData['firstName'] .' '. $postData['lastName']),
-            'firstName' => $alnum->filter($postData['firstName']),
-            'lastName' => $alnum->filter($postData['lastName']),
+            'isActive' => (int) ($postData['isActive']),
+            'displayName' => (strlen($alnum($postData['displayName'])) > 0) ? $alnum($postData['displayName']) :
+                $alnum($postData['firstName'] .' '. $postData['lastName']),
+            'firstName' => $alnum($postData['firstName']),
+            'lastName' => $alnum($postData['lastName']),
             'delegate' => $postData['delegate'],
-            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME],
+            Csrf::TOKEN_NAME => $postData[Csrf::TOKEN_NAME],
         ];
         if (!$this->validator->isValid($data)) {
             throw new ValidatorException();
         }
-        unset($data[CSRF::TOKEN_NAME]);
+        unset($data[Csrf::TOKEN_NAME]);
 
         return $data;
     }

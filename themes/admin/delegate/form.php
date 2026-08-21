@@ -45,7 +45,12 @@ if ($data['model']?->schools) {
     }
 }
 
-//todo find a clean way to avoid warnings when no school is set to index
+// Three school inputs are always rendered, so the list is padded to three: a delegate
+// with fewer schools left the higher indexes undefined. `?? null` did not cover it -
+// that suppresses the notice only for a plain variable/property chain, and a method
+// call is not one, which is why only the ?->getId() lines ever warned and the
+// ?->name lines beside them did not.
+$assignedSchools = array_pad($assignedSchools, 3, null);
 
 $school1 = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
     'schools[0]',

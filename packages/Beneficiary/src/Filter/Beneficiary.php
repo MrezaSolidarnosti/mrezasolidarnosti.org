@@ -35,16 +35,20 @@ class Beneficiary implements FilterInterface
         $totalAmount = 0;
         if (isset($postData['registeredProjects']) && is_array($postData['registeredProjects'])) {
             foreach ($postData['registeredProjects'] as $row) {
-                $id = (int) ($row['id'] ?? 0);
-                // A row with no period and no id is a blank one the user added and never
-                // filled in. A row *with* an id is a stored registration and is passed on
-                // even when its selects came back unusable — syncRegisteredPeriods() falls
-                // back to what is stored rather than dropping it.
-                if (empty($row['period']) && $id <= 0) {
+                $rowId = (isset($row['id']) && $row['id'] !== '') ? (int) $row['id'] : null;
+
+                // A row with no id and no period is one the user added with + and left alone:
+                // nothing to preserve, and inserting it would fail on a NOT NULL period. A row
+                // that *has* an id is kept even when its selects came back unusable — a delegate
+                // whose assigned list no longer contains the project posts a placeholder, and
+                // dropping the row here is what used to delete the registration outright. It has
+                // to reach syncRegisteredPeriods(), which falls back to what is stored.
+                if ($rowId === null && empty($row['period'])) {
                     continue;
                 }
+
                 $registeredPeriods[] = [
-                    'id' => $id ?: null,
+                    'id' => $rowId,
                     'project' => (int) ($row['project']),
                     'period' => (int) $row['period'],
                     'amount' => (int) ($row['amount']),

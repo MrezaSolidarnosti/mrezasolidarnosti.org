@@ -2,7 +2,7 @@
 namespace Solidarity\Backend\Controller;
 
 use Skeletor\Core\Controller\AjaxCrudController;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\EmailList\Service\EmailList;

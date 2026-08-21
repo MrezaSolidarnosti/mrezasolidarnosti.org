@@ -61,14 +61,13 @@ class Beneficiary implements ValidatorInterface
         } else {
             // todo might need to fetch period data, to determine limit, for half periods, limit should be halved
             foreach ($data['registeredPeriods'] as $index => $row) {
-                // A stored row whose period the form could not render comes back without a
-                // usable one; syncRegisteredPeriods() preserves it as it is, so there is
-                // nothing here to validate — and refusing the save would block an edit the
-                // user made somewhere else entirely.
-                if (!empty($row['id']) && empty($row['period'])) {
-                    continue;
-                }
-                if (empty($row['period'])) {
+                // A stored row (one carrying an id) posts back without a usable period when the
+                // form could not render its option. It is preserved as-is rather than rewritten,
+                // so demanding a period here would refuse a save over a row the user never
+                // touched — and could not have fixed, since the missing option is the very one
+                // they would need. A new row still has to name its period.
+                $isStoredRow = isset($row['id']) && $row['id'] !== '' && (int) $row['id'] > 0;
+                if (empty($row['period']) && !$isStoredRow) {
                     $this->messages['registeredPeriods'][] = sprintf('Period je neophodan za red %d.', $index + 1);
                 }
                 if (!isset($row['amount']) || $row['amount'] <= 0) {

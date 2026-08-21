@@ -3,7 +3,7 @@ namespace Solidarity\Backend\Controller;
 
 use Skeletor\Core\Controller\AjaxCrudController;
 use GuzzleHttp\Psr7\Response;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\School\Service\City;

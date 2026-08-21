@@ -1,7 +1,7 @@
 <?php
 namespace Solidarity\Mailer\Service;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use MailerSend\Helpers\Builder\Attachment;
 use MailerSend\Helpers\Builder\Recipient;

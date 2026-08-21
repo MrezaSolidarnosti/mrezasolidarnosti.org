@@ -4,7 +4,7 @@ namespace Solidarity\Backend\Action;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface as Logger;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Skeletor\Core\Action\Web\Html;
 use Solidarity\Beneficiary\Entity\Beneficiary;

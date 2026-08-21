@@ -2,7 +2,7 @@
 
 namespace Solidarity\Frontend\Action;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\ContentEditor\Contracts\BlockViewInterface;
@@ -70,7 +70,7 @@ class PageAction extends BaseAction
             $content = $this->blockView->getView($page->blockData ?? []);
             $mainClassName = $page->slug === 'homepage' ? '' : 'content';
         } catch (TemplateNotFoundException $e) {
-            throw new NotFoundException();
+            // If the template for a block is missing, we still want to show the page
         }
         return $this->respond('page/page', [
             'webpSupport' => (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') >= 0),

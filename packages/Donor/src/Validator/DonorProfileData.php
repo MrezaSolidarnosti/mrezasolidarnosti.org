@@ -2,13 +2,13 @@
 
 namespace Solidarity\Donor\Validator;
 
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class DonorProfileData
 {
 
     private array $messages = [];
-    public function __construct(private CSRF $csrf)
+    public function __construct(private Csrf $csrf)
     {
 
     }

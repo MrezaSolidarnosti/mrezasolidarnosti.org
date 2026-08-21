@@ -3,7 +3,7 @@
 namespace Solidarity\Backend\Action;
 
 use Psr\Log\LoggerInterface as Logger;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use \League\Plates\Engine;
 use Skeletor\Core\Action\Web\Html;
 use Laminas\Session\ManagerInterface as Session;
@@ -56,9 +56,9 @@ class Index extends Html
             if ($this->session->getStorage()->offsetGet('loggedInEntityType') === 'user') {
                 $url = $this->getConfig()->offsetGet('adminUrl') . '/user/view/';
             } else {
-                // Delegates. This used to point at /educator/view/, which has been retired
-                // and is not in permissions.php — so a delegate opening the dashboard root
-                // was denied, shown a no-permissions flash, and only then bounced here.
+                // Must match Delegate::getRedirectPath(), which is where verifyMagicLink() already
+                // sends them. /educator/ is retired and has no permission mapping, so landing
+                // there denied the delegate and bounced them on with a spurious error.
                 $url = $this->getConfig()->offsetGet('adminUrl') . '/beneficiary/view/';
             }
         }

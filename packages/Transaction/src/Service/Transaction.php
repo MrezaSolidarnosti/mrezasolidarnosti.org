@@ -1,6 +1,7 @@
 <?php
 namespace Solidarity\Transaction\Service;
 
+use Skeletor\Core\Filter\Str;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Solidarity\Beneficiary\Entity\Beneficiary;
 use Solidarity\Beneficiary\Entity\PaymentMethod;
@@ -30,8 +31,8 @@ class Transaction extends TableView
     public function __construct(
         TransactionRepository $repo, Session $user, Logger $logger, TransactionFilter $filter, private ProjectService $project,
         private BeneficiaryRepository $beneficiaryRepo, private PeriodRepository $periodRepo,
-    ) {
-        parent::__construct($repo, $user, $logger, $filter);
+        \Skeletor\Core\Activity\Service\Activity $activity) {
+        parent::__construct($repo, $user, $logger, $filter, activity: $activity);
     }
 
     /**

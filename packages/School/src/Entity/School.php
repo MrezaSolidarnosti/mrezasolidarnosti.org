@@ -19,9 +19,10 @@ class School
     #[ORM\Column(type: Types::STRING, length: 128)]
     public string $name;
 
-    // Required. Every reader already assumed so — the edit form dereferences
-    // $model->type->id and the table row builder reads $school->type->name, both unguarded,
-    // so a typeless row took out the whole school list rather than just itself.
+    // Required by the mapping rather than by every reader remembering to guard: the edit form
+    // dereferences $model->type->id and the table row builder reads $school->type->name, both
+    // unguarded, so one typeless row used to break the whole /school/view/ listing. The column
+    // is already NOT NULL — see migration 20260811120000_make_school_type_required.
     #[ORM\ManyToOne(targetEntity: SchoolType::class, inversedBy: 'schools')]
     #[ORM\JoinColumn(name: 'type_id', referencedColumnName: 'id', unique: false, nullable: false)]
     public SchoolType $type;

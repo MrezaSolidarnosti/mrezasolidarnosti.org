@@ -2,13 +2,13 @@
 
 namespace Solidarity\Frontend\Action;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Validator\ValidatorException;
 use Skeletor\ThemeSettings\Navigation\Service\Navigation;
 use Skeletor\ThemeSettings\SocialLinks\Service\SocialLinks;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class EmailList extends BaseAction
 {
@@ -17,8 +17,8 @@ class EmailList extends BaseAction
         protected Navigation $navigationService,
         protected SocialLinks $socialLinks,
         \Solidarity\Frontend\Service\Session $session,
-        protected \Solidarity\EmailList\Service\EmailList $emailList
-    ) {
+        protected \Solidarity\EmailList\Service\EmailList $emailList,
+        private \Skeletor\Core\Security\Csrf $csrf) {
         parent::__construct($logger, $config, $template, $this->navigationService, $this->socialLinks, $session);
 
     }
@@ -41,7 +41,7 @@ class EmailList extends BaseAction
                 }
             } catch(ValidatorException $e) {
                 $success = false;
-                $responseData['token'] = CSRF::getToken();
+                $responseData['token'] = $this->csrf->getToken();
                 foreach($this->emailList->getFilterErrors() as $error){
                     $responseData['errors'][] = $error;
                 }
@@ -49,7 +49,7 @@ class EmailList extends BaseAction
             }
             catch (\Exception $e) {
                 $success = false;
-                $responseData['token'] = CSRF::getToken();
+                $responseData['token'] = $this->csrf->getToken();
                 $statusCode = 400;
                 $responseData['errors'][] = 'An unexpected error occurred, please refresh the page and try again.';
             }

@@ -5,7 +5,7 @@ const pageIdentifier = document.getElementById('main').getAttribute('data-page')
 
 const configDirectory = './config';
 window.pageConfig = {};
-import(`${configDirectory}/config.js?v=0.0.2`).then(({config: pageConfig}) => {
+import(`${configDirectory}/config.js?v=0.0.6`).then(({config: pageConfig}) => {
     window.pageConfig = pageConfig;
 }).catch((e) => {
     console.error(e);

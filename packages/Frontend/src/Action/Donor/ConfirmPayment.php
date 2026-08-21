@@ -2,7 +2,7 @@
 
 namespace Solidarity\Frontend\Action\Donor;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Validator\ValidatorException;
@@ -10,7 +10,7 @@ use Skeletor\ThemeSettings\Navigation\Service\Navigation;
 use Skeletor\ThemeSettings\SocialLinks\Service\SocialLinks;
 use Solidarity\Frontend\Action\BaseAction;
 use Solidarity\Transaction\Service\Transaction;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class ConfirmPayment extends BaseAction
 {
@@ -19,8 +19,8 @@ class ConfirmPayment extends BaseAction
         protected Navigation $navigationService,
         protected SocialLinks $socialLinks,
         \Solidarity\Frontend\Service\Session $session,
-        protected Transaction $transaction
-    ) {
+        protected Transaction $transaction,
+        private \Skeletor\Core\Security\Csrf $csrf) {
         parent::__construct($logger, $config, $template, $this->navigationService, $this->socialLinks, $session);
 
     }
@@ -40,20 +40,17 @@ class ConfirmPayment extends BaseAction
                 401
             );
         }
-        if(!CSRF::validate($data)) {
-            // Must return, not fall through: without this the confirmation below still runs
-            // and only the response says 401, which makes the CSRF check decorative.
-            return $this->returnWithData(
-                false,
-                [
-                    'errors' => ['Your session has expired, please refresh the page and try again.'],
-                    'token' => CSRF::getToken(),
-                ],
-                401
-            );
+        if(!$this->csrf->validate($data)) {
+            // Refused outright. Falling through here confirmed the payment on a rejected token —
+            // the error was reported and the transaction was marked paid anyway. The fresh token
+            // still goes back so the page can recover from one stale submission.
+            $responseData['errors'][] = 'Your session has expired, please refresh the page and try again.';
+            $responseData['token'] = $this->csrf->getToken();
+
+            return $this->returnWithData(false, $responseData, 401);
         }
         try {
-            $responseData['token'] = CSRF::getToken();
+            $responseData['token'] = $this->csrf->getToken();
             $trx = $this->transaction->getById((int)$data['transactionId']);
             //@TODO move to validator
             if(!$trx) {

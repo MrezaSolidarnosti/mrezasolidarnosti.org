@@ -2,11 +2,11 @@
 
 namespace Solidarity\Period\Filter;
 
+use Skeletor\Core\Filter\Str;
+
 use Doctrine\ORM\EntityManagerInterface;
-use Laminas\Filter\ToInt;
 use Skeletor\Core\Filter\FilterInterface;
-use Volnix\CSRF\CSRF;
-use Laminas\I18n\Filter\Alnum;
+use Skeletor\Core\Security\Csrf;
 use Skeletor\Core\Validator\ValidatorException;
 class Period implements FilterInterface
 {
@@ -24,11 +24,10 @@ class Period implements FilterInterface
 
     public function filter($postData): array
     {
-        $alnum = new Alnum(true);
-        $int = new ToInt();
+        $alnum = static fn ($v) => Str::alnum((string) $v, true);
 
         $data = [
-            'id' => (isset($postData['id'])) ? $int->filter($postData['id']) : null,
+            'id' => (isset($postData['id'])) ? (int) ($postData['id']) : null,
             'month' => $postData['month'],
             'year' => $postData['year'],
             'type' => $postData['type'],
@@ -37,16 +36,16 @@ class Period implements FilterInterface
             'processing' => $postData['processing'],
             // Was missing, so the "Max iznos" input on the period form was posted and then
             // silently dropped on every save. Blank means 0, not null: the column is NOT
-            // NULL, and 0 is already how "no per-period override" is spelled — MigrateLegacy
+            // NULL, and 0 is already how "no per-period override" is spelled - MigrateLegacy
             // writes it for every legacy period, and Beneficiary\Validator reads any value
             // <= 0 as "fall back to the global limit". Writing null here was a 500 on save.
-            'maxAmount' => $int->filter($postData['maxAmount'] ?? 0),
-            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME],
+            'maxAmount' => (int) ($postData['maxAmount'] ?? 0),
+            Csrf::TOKEN_NAME => $postData[Csrf::TOKEN_NAME],
         ];
 //        if (!$this->validator->isValid($data)) {
 //            throw new ValidatorException();
 //        }
-        unset($data[CSRF::TOKEN_NAME]);
+        unset($data[Csrf::TOKEN_NAME]);
 
         return $data;
     }

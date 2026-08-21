@@ -5,14 +5,14 @@ namespace Solidarity\Page\Validator;
 use Skeletor\Core\Validator\InvalidFormTokenException;
 use Skeletor\Core\Validator\ValidatorInterface;
 use Solidarity\Page\Repository\PageRepository;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class Page implements ValidatorInterface
 {
     private $messages = [];
 
 
-    public function __construct(private CSRF $csrf, protected PageRepository $pageRepository)
+    public function __construct(private Csrf $csrf, protected PageRepository $pageRepository)
     {
     }
 

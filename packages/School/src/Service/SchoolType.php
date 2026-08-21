@@ -14,9 +14,9 @@ class SchoolType extends TableView
      * @param Logger $logger
      */
     public function __construct(
-        SchoolTypeRepository $repo, Session $user, Logger $logger
-    ) {
-        parent::__construct($repo, $user, $logger);
+        SchoolTypeRepository $repo, Session $user, Logger $logger,
+        \Skeletor\Core\Activity\Service\Activity $activity) {
+        parent::__construct($repo, $user, $logger, activity: $activity);
     }
 
     public function prepareEntities($entities)

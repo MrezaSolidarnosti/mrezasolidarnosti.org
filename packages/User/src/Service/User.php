@@ -12,9 +12,13 @@ class User extends \Skeletor\User\Service\User
 {
     public function __construct(
         UserRepo $repository, \Skeletor\User\Service\Session $userSession,
-        Logger $logger, \Solidarity\User\Filter\User $filter, protected ?TenantRepositoryInterface $tenant = null
+        Logger $logger, \Solidarity\User\Filter\User $filter,
+        \Skeletor\Core\Activity\Service\Activity $activity,
+        protected ?TenantRepositoryInterface $tenant = null
     ) {
-        parent::__construct($repository, $userSession, $logger, $filter, $tenant);
+        // Required, not optional: PHP-DI skips optional parameters when autowiring, so a
+        // nullable $activity would always arrive as null and nothing would ever be logged.
+        parent::__construct($repository, $userSession, $logger, $filter, $activity, $tenant);
     }
 
     /**
