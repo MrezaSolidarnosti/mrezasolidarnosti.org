@@ -7,6 +7,14 @@
     {
       "type": "git",
       "url" : "https://bitbucket.org/dj_avolak/skeletor"
+    },
+    {
+      "type": "git",
+      "url": "https://bitbucket.org/greenfriends/skeletorjs"
+    },
+    {
+      "type": "git",
+      "url": "https://bitbucket.org/dj_avolak/skeletor-asset-installer"
     }
   ],
   "require": {
@@ -57,6 +65,9 @@
       "Solidarity\\Tests\\": "tests"
     }
   },
+  "allow-plugins": {
+    "dj_avolak/skeletor-asset-installer": true
+  },
   "scripts": {
     "test": "phpunit",
     "test:coverage": [
@@ -73,7 +84,8 @@
     "preferred-install": "dist",
     "bin-dir": "vendor/bin/",
     "allow-plugins": {
-      "php-http/discovery": true
+      "php-http/discovery": true,
+      "dj_avolak/skeletor-asset-installer": true
     }
   }
 }

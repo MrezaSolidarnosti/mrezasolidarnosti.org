@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6a9d634ddd2b4f3d0a352f95a8d372bb",
+    "content-hash": "7c008d4681ce747238595a914cee6ba9",
     "packages": [
         {
             "name": "beberlei/assert",
@@ -514,10 +514,11 @@
             "source": {
                 "type": "git",
                 "url": "https://bitbucket.org/dj_avolak/skeletor",
-                "reference": "1235294cdd379b908d660ff943c8601a4b874b3e"
+                "reference": "7bcbe4d6586b3e9007c7f97542d86dbae867af1c"
             },
             "require": {
                 "beberlei/doctrineextensions": "^1",
+                "dj_avolak/skeletor-asset-installer": "^1.0",
                 "doctrine/dbal": "^4",
                 "doctrine/orm": "^3",
                 "ext-gd": "*",
@@ -527,6 +528,7 @@
                 "ext-json": "*",
                 "ext-pdo": "*",
                 "ext-redis": "*",
+                "greenfriends/skeletorjs": "^2.0",
                 "guzzlehttp/guzzle": "^8",
                 "guzzlehttp/psr7": "^3",
                 "laminas/laminas-session": "*",
@@ -560,7 +562,37 @@
             "license": [
                 "MIT"
             ],
-            "time": "2026-08-20T10:03:14+00:00"
+            "time": "2026-08-20T12:09:29+00:00"
+        },
+        {
+            "name": "dj_avolak/skeletor-asset-installer",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://bitbucket.org/dj_avolak/skeletor-asset-installer",
+                "reference": "3016aa5aa9e2803de77ee05bf369178b3f47171c"
+            },
+            "require": {
+                "composer-plugin-api": "^2.0",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "composer/composer": "^2.0"
+            },
+            "type": "composer-plugin",
+            "extra": {
+                "class": "Skeletor\\AssetInstaller\\Plugin"
+            },
+            "autoload": {
+                "psr-4": {
+                    "Skeletor\\AssetInstaller\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Composer plugin that installs skeletor-asset packages into the root project's public/vendor directory",
+            "time": "2026-08-20T09:55:49+00:00"
         },
         {
             "name": "doctrine/collections",
@@ -1311,6 +1343,21 @@
                 }
             ],
             "time": "2026-04-26T12:12:52+00:00"
+        },
+        {
+            "name": "greenfriends/skeletorjs",
+            "version": "2.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://bitbucket.org/greenfriends/skeletorjs",
+                "reference": "3cb2bb52d7fac38440b678afebfe3bc8ffed11bc"
+            },
+            "type": "skeletor-asset",
+            "license": [
+                "MIT"
+            ],
+            "description": "Core JavaScript library for the Skeletor PHP framework",
+            "time": "2026-08-20T12:04:24+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
