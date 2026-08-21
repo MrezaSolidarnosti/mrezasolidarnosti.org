@@ -52,14 +52,14 @@ class PostController extends AjaxCrudController
         }
         $entityData = [];
         if($entity) {
-            $entityData = $this->service->getEntityData($entity->id);
+            $entityData = ['id' => $entity->id, 'slug' => $entity->slug];
         }
         $this->getResponse()->getBody()->write(json_encode([
             'errors' => $errors,
             'message' => $message,
             'generalErrors' => $generalErrors,
             'status' => $status,
-            'data' =>  $entityData,
+            'data' => $entityData,
             'token' =>  $this->csrf()->getHiddenInputString()
         ]));
         $this->getResponse()->getBody()->rewind();
@@ -93,13 +93,19 @@ class PostController extends AjaxCrudController
 //            $this->logger->error('Update failed: ' . $e->getMessage(), ['exception' => $e]);
             $generalErrors[] = ['message' => $this->translate('An unexpected error occurred. Please try again.')];
         }
-
+        // Mirrors create(): a caught exception leaves $entity as the initial array, so the
+        // payload is built only for a real entity. post.js needs the slug to resync its
+        // slug module after a save that rewrote it.
+        $entityData = [];
+        if ($entity) {
+            $entityData = ['id' => $entity->id, 'slug' => $entity->slug];
+        }
         $this->getResponse()->getBody()->write(json_encode([
             'errors' => $errors,
             'message' => $message,
             'generalErrors' => $generalErrors,
             'status' => $status,
-            'data' => $this->service->getEntityData($data['id']),
+            'data' => $entityData,
             'token' => $this->csrf()->getHiddenInputString()
         ]));
         $this->getResponse()->getBody()->rewind();

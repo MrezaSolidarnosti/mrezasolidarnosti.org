@@ -14,20 +14,9 @@ export default class Quote extends Block {
     static description = 'Give quoted text visual emphasis.';
     static tags = ['blockquote'];
 
-    element;      // the <figure> root
-    quote;        // the editable <blockquote>
-    cite;         // the editable <cite>
-
-    /**
-     * The root is a <figure> wrapping the quote and its citation, because a citation is *about*
-     * the quote rather than part of it — keeping it inside the blockquote would put the
-     * attribution into the quoted text itself, which is wrong semantically and wrong in the
-     * saved html.
-     *
-     * That means the editable is no longer the root, so `setContent` and `focus` are overridden
-     * below to target the blockquote. Everything else that looks for an editable finds it by
-     * class or by `[contenteditable]`, so it keeps working unchanged.
-     */
+    element;
+    quote;
+    cite;
     render() {
         this.element = document.createElement('figure');
         this.element.classList.add(contentEditorSelectors.classes.quoteBlock);
@@ -64,9 +53,6 @@ export default class Quote extends Block {
         return this.element;
     }
 
-    // The base sets innerHTML on `this.element`, which is now the figure — that would wipe the
-    // cite and the structure with it. renderBlock calls this with the saved `html`, so it has to
-    // land on the blockquote instead.
     setContent(html) {
         if (this.quote) {
             this.quote.innerHTML = html;
@@ -94,8 +80,6 @@ export default class Quote extends Block {
             e.preventDefault();
             return;
         }
-        // Backspace in an empty quote deletes the block — but not while a citation is still there
-        // to lose, or clearing the quote to retype it would silently take the attribution too.
         if(e.key === 'Backspace'
             && this.quote.textContent.trim() === ''
             && this.cite.textContent.trim() === '') {
@@ -112,15 +96,11 @@ export default class Quote extends Block {
     }
 
     #handleCiteKeydown = (e) => {
-        // A citation is one line. Enter would otherwise reach the editor's global handler and add
-        // a paragraph after the block, which is not what pressing Enter in a name should mean.
-        if(e.key === 'Enter') {
+        if(e.key === 'Enter' && e.shiftKey) {
             e.preventDefault();
             e.stopPropagation();
             return;
         }
-        // Backspace out of an empty citation returns to the quote rather than deleting the block;
-        // the block-level delete lives on the quote itself, above.
         if(e.key === 'Backspace' && this.cite.textContent.trim() === '') {
             e.preventDefault();
             e.stopPropagation();
@@ -138,7 +118,7 @@ export default class Quote extends Block {
         if (window.getSelection && document.createRange) {
             const range = document.createRange();
             range.selectNodeContents(this.quote);
-            range.collapse(false); // false collapses the range to the end of the node
+            range.collapse(false);
 
             const sel = window.getSelection();
             sel.removeAllRanges();
@@ -147,8 +127,6 @@ export default class Quote extends Block {
     }
 
     getData() {
-        // textContent for the cite, not innerHTML: it is plain text by design, so anything pasted
-        // into it is stored as the words it reads as rather than the markup it arrived with.
         return {
             html: this.quote.innerHTML,
             cite: this.cite.textContent.trim(),

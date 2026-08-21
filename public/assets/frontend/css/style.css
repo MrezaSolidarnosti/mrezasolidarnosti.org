@@ -5349,8 +5349,30 @@ main.loggedIn #notFound {
 }
 .blogPostWrapper .blogPost .postContent {
   margin: 3rem 0;
+  container-type: inline-size;
 }
-.blogPostWrapper .blogPost .postContent > p {
+.blogPostWrapper .blogPost .postContent .columnsBlock {
+  margin: 2rem 0;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: var(--columnsTemplate, 1fr);
+}
+.blogPostWrapper .blogPost .postContent .columnsBlock > .column {
+  container-type: inline-size;
+  min-width: 0;
+}
+.blogPostWrapper .blogPost .postContent .columnsBlock > .column > *:first-child {
+  margin-top: 0;
+}
+.blogPostWrapper .blogPost .postContent .columnsBlock > .column > *:last-child {
+  margin-bottom: 0;
+}
+@container (max-width: 640px) {
+  .blogPostWrapper .blogPost .postContent .columnsBlock {
+    grid-template-columns: 1fr;
+  }
+}
+.blogPostWrapper .blogPost .postContent .columnsBlock p, .blogPostWrapper .blogPost .postContent > p {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.4;
@@ -5435,7 +5457,7 @@ main.loggedIn #notFound {
 .blogPostWrapper .blogPost .postContent .quoteBlock .quoteCite:before {
   content: "— ";
 }
-@media (max-width: 600px) {
+@container (max-width: 600px) {
   .blogPostWrapper .blogPost .postContent .quoteBlock {
     padding-left: 1rem;
   }
@@ -5576,7 +5598,7 @@ main.loggedIn #notFound {
 .blogPostWrapper .blogPost .postContent .tabsBlock .tabContent ol {
   list-style: decimal;
 }
-@media (max-width: 600px) {
+@container (max-width: 600px) {
   .blogPostWrapper .blogPost .postContent .tabsBlock .tab {
     padding: 0.625rem 1rem;
   }
@@ -5652,7 +5674,7 @@ main.loggedIn #notFound {
 .blogPostWrapper .blogPost .postContent .timelineBlock .timelineItemContent ol {
   list-style: decimal;
 }
-@media (max-width: 600px) {
+@container (max-width: 600px) {
   .blogPostWrapper .blogPost .postContent .timelineBlock {
     --timelineIndent:1.75rem;
   }
@@ -5750,7 +5772,7 @@ main.loggedIn #notFound {
   color: var(--colorDarkBlue);
   margin-top: 0.75rem;
 }
-@media (max-width: 600px) {
+@container (max-width: 600px) {
   .blogPostWrapper .blogPost .postContent .tableBlock .tableScroll {
     background: none;
     border-radius: 0;
