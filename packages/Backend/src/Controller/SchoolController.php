@@ -209,10 +209,14 @@ class SchoolController extends AjaxCrudController
                 }
                 $this->service->create([
                     'name' => $value,
-                    'city' => $city,
+                    // Ids keyed by property name, not entities keyed by column name:
+                    // AbstractFactory resolves a relation by handing the value to find(),
+                    // and looks the key up as the entity's property - so 'schoolType' never
+                    // matched School::$type and these objects were never valid identifiers.
+                    'city' => $city->getId(),
                     // School::$type is not nullable; a name matching none of the patterns above
                     // is parked under the placeholder rather than dropped.
-                    'schoolType' => $type ?? $this->placeholderSchoolType(),
+                    'type' => ($type ?? $this->placeholderSchoolType())->getId(),
                 ]);
             }
         }
