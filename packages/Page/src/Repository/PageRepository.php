@@ -43,19 +43,29 @@ class PageRepository extends \Skeletor\Page\Repository\PageRepository
     /**
      * [localeCode => slug] for every published page sharing a translation group.
      * Drives the language switcher so each locale links to its own localized slug.
+     *
+     * $pageId recovers the group for a page that is the root of one without carrying it:
+     * translations stamp the source's id, but only pages translated since createTranslation()
+     * started stamping the source itself also carry it. For an older pair the root was absent
+     * from its own group looking outwards and invisible to its translation looking back, so
+     * the switcher fell back to the homepage in both directions. Matching the id as well as
+     * the group column is what findTranslatedSlug() already does, which is why menu links
+     * localized correctly while the switcher did not.
      */
-    public function getLocalizedSlugs(?int $translationGroupId): array
+    public function getLocalizedSlugs(?int $translationGroupId, ?int $pageId = null): array
     {
-        if ($translationGroupId === null) {
+        $gid = $translationGroupId ?: $pageId;
+        if ($gid === null) {
             return [];
         }
 
         $rows = $this->entityManager->createQueryBuilder()
             ->select('p.languageCode AS code', 'p.slug AS slug')
             ->from(static::ENTITY, 'p')
-            ->where('p.translationGroupId = :gid')
+            // Parenthesised: andWhere() below would otherwise bind tighter than the OR.
+            ->where('(p.translationGroupId = :gid OR p.id = :gid)')
             ->andWhere('p.status = :status')
-            ->setParameter('gid', $translationGroupId)
+            ->setParameter('gid', $gid)
             ->setParameter('status', self::STATUS_PUBLISHED)
             ->getQuery()
             ->getArrayResult();

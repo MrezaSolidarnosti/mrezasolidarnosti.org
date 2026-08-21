@@ -89,19 +89,30 @@ class PageAction extends BaseAction
     }
 
     /**
-     * Point the language switcher at this page's sibling slug in each locale,
-     * falling back to the localized homepage where no translation exists yet.
+     * Point the language switcher at this page's sibling slug in each locale, so switching
+     * language keeps the reader on the page they were reading. Where the group offers no
+     * sibling, a page published under the same slug in that locale is used instead; only a
+     * genuinely untranslated page falls back to the localized homepage.
      */
     private function setLocalizedSwitcher(\Solidarity\Page\Entity\Page $page): void
     {
-        $slugs = $this->pageRepository->getLocalizedSlugs($page->translationGroupId);
+        $slugs = $this->pageRepository->getLocalizedSlugs($page->translationGroupId, $page->getId());
         $slugs[$this->locale->current()] = $page->slug; // a page is always its own variant
 
         $alternates = [];
         foreach ($this->locale->available() as $loc) {
-            $alternates[$loc] = isset($slugs[$loc])
-                ? $this->locale->localize('/' . $slugs[$loc], $loc)
-                : $this->locale->localize('/', $loc);
+            if (isset($slugs[$loc])) {
+                $alternates[$loc] = $this->locale->localize('/' . $slugs[$loc], $loc);
+                continue;
+            }
+
+            // No sibling in the group, but a page duplicated across locales without ever
+            // being grouped still lives under the same slug - offer that, so switching
+            // language keeps the reader where they were. Checked rather than assumed:
+            // linking a slug that does not resolve would 404 instead of switching.
+            $alternates[$loc] = $this->pageRepository->findPublishedBySlugAndLocale($page->slug, $loc)
+                ? $this->locale->localize('/' . $page->slug, $loc)
+                : $this->locale->localize('/', $loc); // genuinely untranslated: home
         }
         $this->setGlobalVariable('localeAlternates', $alternates);
     }
