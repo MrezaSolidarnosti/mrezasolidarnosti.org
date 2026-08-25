@@ -8,6 +8,7 @@ use Skeletor\Core\Security\Authentication\MagicLinkCredentials;
 use Skeletor\Core\Security\Authenticator\AuthenticatorRegistry;
 use Skeletor\Core\Security\EntityRegistry;
 use Skeletor\Login\Exception\InvalidCredentials;
+use Skeletor\Login\Repository\MagicLinkTokenRepository;
 use Skeletor\Login\Service\Login;
 use Skeletor\ThemeSettings\Navigation\Service\Navigation;
 use Skeletor\ThemeSettings\SocialLinks\Service\SocialLinks;
@@ -22,17 +23,46 @@ class VerifyEmail extends BaseAction
         protected Login $loginService,
         \Solidarity\Frontend\Service\Session $session,
         private \Solidarity\Frontend\Service\Locale $locale,
+        // Read-only peek at the token on GET, so an expired link reports itself before the
+        // donor clicks. Consumption still happens through the authenticator on POST.
+        private MagicLinkTokenRepository $tokenRepository,
     ) {
         parent::__construct($logger, $config, $template, $this->navigationService, $this->socialLinks, $session);
 
     }
 
+    /**
+     * Magic-link login, in two steps.
+     *
+     * GET only checks the token and renders a confirmation button; the POST spends it. That
+     * split exists because the token is single-use and consuming it on GET meant anything
+     * that merely *fetched* the URL logged nobody in and destroyed the link: mobile mail
+     * clients and in-app browsers prefetch links to build previews, and tokens were being
+     * marked used 14 seconds after being issued. Desktop mail did not do it, which is why
+     * this only ever failed on phones.
+     *
+     * Prefetchers issue GET and never POST, so this is immune rather than mitigated.
+     */
     public function __invoke(
         \Psr\Http\Message\ServerRequestInterface $request,
         \Psr\Http\Message\ResponseInterface $response
     ) {
         try {
-            $token = $request->getQueryParams()['token'] ?? null;
+            if (strtoupper($request->getMethod()) !== 'POST') {
+                $token = $request->getQueryParams()['token'] ?? null;
+                if (!$token) {
+                    return $this->respond('donor/invalidVerifyEmailToken');
+                }
+
+                // Validates without consuming — verifyToken() only reads; it is
+                // MagicLinkAuthenticator that invalidates afterwards. Checking here means an
+                // expired link says so immediately instead of after a pointless click.
+                $this->tokenRepository->verifyToken($token);
+
+                return $this->respond('donor/confirmMagicLink', ['token' => $token]);
+            }
+
+            $token = $request->getParsedBody()['token'] ?? null;
             if (!$token) {
                 return $this->respond('donor/invalidVerifyEmailToken');
             }

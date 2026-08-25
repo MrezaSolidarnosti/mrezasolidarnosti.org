@@ -1,17 +1,25 @@
 <?php
 
 use Psr\Log\LoggerInterface;
-use Skeletor\App\WebSkeletor;
+use Skeletor\Core\App\WebSkeletor;
 
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+// Defined here, not in config/constants.php: that file is gitignored and per-environment, so
+// a symlink deploy shares one copy across releases and __DIR__ inside it resolves to the
+// shared directory rather than the release. This file is a real file inside the release, so
+// its __DIR__ is always correct. Keep public/cli.php and bin/doctrine doing the same.
+define('APP_PATH', dirname(__DIR__));
 
-include("constants.php");
+include(APP_PATH . "/config/constants.php");
 include(APP_PATH . "/vendor/autoload.php");
+if (!\Solidarity\Core\Environment::isProduction()) {
+    \Tracy\Debugger::enable(false);
+}
 
 try {
     /* @var \DI\Container $container */
-    $container = require APP_PATH . '/config/bootstrap.php';
+    $container = require sprintf('%s/config/bootstrap.php', APP_PATH);
     $app = new WebSkeletor($container, $container->get(LoggerInterface::class));
 } catch (\Exception $e) {
     if (isset($app) && $app) {
@@ -25,4 +33,3 @@ try {
     exit();
 }
 $app->respond();
-
