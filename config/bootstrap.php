@@ -89,7 +89,21 @@ $container->set(ManagerInterface::class, function() use ($container) {
     $config = $container->get(Config::class);
     $redisHost = array_keys($config->redis->hosts->toArray())[0];
     $redisPort = array_values($config->redis->hosts->toArray())[0];
-    $sessionName = str_replace(' ', '_', $config->appName . \Solidarity\Core\Environment::application());
+    // ASCII only, and that is not cosmetic. appName is "Mreža Solidarnosti", so this used to
+    // produce the cookie name "Mreža_Solidarnostifrontend" — and RFC 6265 requires a cookie
+    // name to be a US-ASCII token. Chrome and Firefox accept the ž and carry on; **Safari
+    // rejects the cookie outright**, so every request started a fresh session, login() wrote
+    // into a session that was never sent back, and the donor arrived at a login-protected
+    // page anonymous. It presented as "magic link works on desktop, 404s on iPhone", with
+    // one orphaned logged-in session accumulating in Redis per attempt.
+    //
+    // Derived from appName rather than hardcoded so frontend and backend keep separate
+    // cookies; the filter just guarantees the result is a legal cookie name.
+    $sessionName = preg_replace(
+        '/[^A-Za-z0-9_]/',
+        '',
+        str_replace(' ', '_', $config->appName . \Solidarity\Core\Environment::application())
+    );
 
     // Set session name via ini_set BEFORE creating SessionConfig
     ini_set('session.name', $sessionName);
