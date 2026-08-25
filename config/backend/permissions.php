@@ -58,6 +58,7 @@ return [
         'emailList.create' => [User::ROLE_ADMIN],
         'emailList.edit' => [User::ROLE_ADMIN],
         'emailList.delete' => [User::ROLE_ADMIN],
+        'emailList.deleteBulk' => [User::ROLE_ADMIN],
 
         // Page permissions
         'page.view_list' => [User::ROLE_ADMIN],
@@ -205,6 +206,7 @@ return [
         '/emails/form/*' => 'emailList.edit',
         '/emails/update/*' => 'emailList.edit',
         '/emails/delete/*' => 'emailList.delete',
+        '/emails/deleteBulk/' => 'emailList.deleteBulk',
 
         // Image routes
         '/image/view/' => 'page.view_list',

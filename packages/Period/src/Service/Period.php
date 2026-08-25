@@ -1,6 +1,7 @@
 <?php
 namespace Solidarity\Period\Service;
 
+use Solidarity\Period\Entity\Period as PeriodEntity;
 use Solidarity\Period\Repository\PeriodRepository;
 use Skeletor\Core\TableView\Service\TableView;
 use Psr\Log\LoggerInterface as Logger;
@@ -37,7 +38,7 @@ class Period extends TableView
             $itemData = [
                 'id' => $period->getId(),
                 'project' => $period->project->code,
-                'month' => $period->month,
+                'month' => PeriodEntity::getHrMonth($period->month),
                 'year' => $period->year,
                 'type' => $period->type,
                 'active' => $period->active,

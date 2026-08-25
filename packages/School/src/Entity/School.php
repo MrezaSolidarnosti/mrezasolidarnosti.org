@@ -44,8 +44,14 @@ class School
         $this->beneficiaries = new ArrayCollection();
     }
 
+    // SET NULL, not the default RESTRICT: a school outliving its delegate is a normal state
+    // (the column is nullable, and the beneficiary form's school search filters on
+    // delegate => not_null precisely because delegate-less schools exist). Without it, a
+    // delegate holding any school simply could not be deleted, and AjaxCrudController turns
+    // the constraint violation into a generic "could not delete" with the logging commented
+    // out — so the reason never reached anyone.
     #[ORM\ManyToOne(targetEntity: Delegate::class, inversedBy: 'schools')]
-    #[ORM\JoinColumn(name: 'delegate_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'delegate_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     public ?Delegate $delegate = null;
 
     #[ORM\Column(name:'have_payout_priority')]
