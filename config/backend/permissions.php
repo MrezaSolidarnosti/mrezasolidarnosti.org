@@ -15,6 +15,7 @@ return [
         'user.create' => [User::ROLE_ADMIN],
         'user.edit' => [User::ROLE_ADMIN],
         'user.delete' => [User::ROLE_ADMIN],
+        'user.deleteBulk' => [User::ROLE_ADMIN],
 
         // Delegate permissions
         'delegate.view_list' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
@@ -120,6 +121,7 @@ return [
         '/user/form/*' => 'user.edit',
         '/user/update/*' => 'user.edit',
         '/user/delete/*' => 'user.delete',
+        '/user/deleteBulk/' => 'user.deleteBulk',
 
         // Delegate routes
         '/delegate/view/' => 'delegate.view_list',

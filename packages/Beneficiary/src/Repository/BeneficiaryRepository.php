@@ -35,14 +35,22 @@ class BeneficiaryRepository extends TableViewRepository
         return [];
     }
 
-    public function getBeneficiaryCount(int $excludeStatus = Beneficiary::STATUS_DELETED): int
+    /**
+     * @param int|null $excludeStatus status to leave out, or null to count everyone who has
+     *                                ever been registered — including those since removed,
+     *                                which is what "people supported" means on the front page.
+     */
+    public function getBeneficiaryCount(?int $excludeStatus = Beneficiary::STATUS_DELETED): int
     {
         $qb = $this->entityManager->createQueryBuilder();
 
         $qb->select('COUNT(b.id)')
-            ->from(Beneficiary::class, 'b')
-            ->where('b.status != :status')
-            ->setParameter('status', $excludeStatus);
+            ->from(Beneficiary::class, 'b');
+
+        if ($excludeStatus !== null) {
+            $qb->where('b.status != :status')
+                ->setParameter('status', $excludeStatus);
+        }
 
         return (int) $qb->getQuery()->getSingleScalarResult();
     }

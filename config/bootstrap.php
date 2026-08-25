@@ -232,7 +232,10 @@ $container->set(\Skeletor\ContentEditor\Contracts\BlockViewInterface::class, fun
     $view->registerViewFilter(HeroStats::NAME, new \Solidarity\Backend\Blocks\HeroStats\HeroStatsViewFilter(
         $container->get(\Solidarity\Donor\Service\Donor::class),
         $container->get(\Solidarity\Beneficiary\Service\Beneficiary::class),
-        $container->get(\Solidarity\Transaction\Service\Transaction::class)
+        $container->get(\Solidarity\Transaction\Service\Transaction::class),
+        // For the historical adjustment — the confirmed money the legacy app destroyed when
+        // it cascade-deleted inactive donors. See config `historicalAdjustment`.
+        $container->get(Config::class)
     ));
 
     $view->registerViewFilter(Blog::NAME, new \Solidarity\Backend\Blocks\Blog\BlogViewFilter(

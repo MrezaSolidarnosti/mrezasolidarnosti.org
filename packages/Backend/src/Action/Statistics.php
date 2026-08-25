@@ -71,6 +71,15 @@ class Statistics extends Html
 
     private function getStats(?Project $project = null): array
     {
+        // "Realized" is CONFIRMED + PAID — the same pair TransactionRepository::
+        // getRealizedStatuses() uses for the front page total, so both sides answer "how much
+        // was raised" identically. The historical adjustment belongs on that combined figure
+        // and nowhere else: the per-status amounts below stay pure database sums.
+        $confirmedAmount = $this->getTransactionSumByStatus(Transaction::STATUS_CONFIRMED, $project);
+        $paidAmount = $this->getTransactionSumByStatus(Transaction::STATUS_PAID, $project);
+        $confirmedCount = $this->getTransactionCountByStatus(Transaction::STATUS_CONFIRMED, $project);
+        $paidCount = $this->getTransactionCountByStatus(Transaction::STATUS_PAID, $project);
+
         return [
             'donorCount' => $this->getDonorCount($project),
             'monthlyDonorCount' => $this->getMonthlyDonorCount($project),
@@ -78,10 +87,18 @@ class Statistics extends Html
             'delegateCount' => $this->getDelegateCount($project),
             'totalPledged' => $this->getTotalPledged($project),
             'monthlyPledged' => $this->getMonthlyPledged($project),
-            'confirmedAmount' => $this->getTransactionSumByStatus(Transaction::STATUS_CONFIRMED, $project),
-            'confirmedCount' => $this->getTransactionCountByStatus(Transaction::STATUS_CONFIRMED, $project),
-            'paidAmount' => $this->getTransactionSumByStatus(Transaction::STATUS_PAID, $project),
-            'paidCount' => $this->getTransactionCountByStatus(Transaction::STATUS_PAID, $project),
+            'confirmedAmount' => $confirmedAmount,
+            'confirmedCount' => $confirmedCount,
+            'paidAmount' => $paidAmount,
+            'paidCount' => $paidCount,
+
+            // The headline "how much was raised" figure, matching the front page.
+            // The count is the real row count and is deliberately NOT adjusted — the
+            // adjustment is a sum with no rows behind it, so there is no honest number to add.
+            'realizedAmount' => $confirmedAmount + $paidAmount + $this->historicalAdjustment($project),
+            'realizedCount' => $confirmedCount + $paidCount,
+            'historicalAdjustment' => $this->historicalAdjustment($project),
+            'historicalAdjustmentNote' => $this->historicalAdjustmentNote($project),
             'activeAmount' => $this->getTransactionSumByStatus(Transaction::STATUS_NEW, $project),
             'activeCount' => $this->getTransactionCountByStatus(Transaction::STATUS_NEW, $project),
             'cancelledAmount' => $this->getTransactionSumByStatus(Transaction::STATUS_CANCELLED, $project),
@@ -229,6 +246,82 @@ class Statistics extends Html
         $eurTotal = (int) $qbEur->getQuery()->getSingleScalarResult();
 
         return $rsdTotal + Transaction::eurToRsd($eurTotal);
+    }
+
+    /**
+     * Confirmed money that no longer has rows behind it.
+     *
+     * The legacy app deleted donors who had gone inactive, and deleting a donor cascaded to
+     * their transactions. That began when the projects were running a **surplus** — more
+     * donors pledging than there were requests to fund — a state the old app was not designed
+     * for, so the inactivity cleanup ran against people whose confirmed donations had already
+     * been paid and counted. Roughly 6,400 donor deletions took their confirmed transactions
+     * with them.
+     *
+     * Nothing survives to rebuild them from. The cascade logged no row contents:
+     * `log_entity_change` has no Transaction delete rows at all, its `changes` column is a
+     * field diff that never carries `amount`, and `log_command_change` records only a fixed
+     * sentence per run. Both legacy databases were searched; the two recovery commands that
+     * exist already scraped everything the SF/msdash dumps had.
+     *
+     * So the figure is carried as a configured adjustment rather than reconstructed as data.
+     * Nothing is written to the transaction table: a synthetic row would be indistinguishable
+     * from a real donation, would flow into per-donor and per-period views that must stay
+     * evidential, and would corrupt exactly the comparisons the retained legacy databases
+     * exist to support.
+     *
+     * Set `historicalAdjustment` in config, keyed by project code. Absent = no adjustment,
+     * which is the right default for any project that never had this problem.
+     */
+    private function historicalAdjustment(?Project $project = null): int
+    {
+        $config = $this->getConfig()->offsetExists('historicalAdjustment')
+            ? $this->getConfig()->offsetGet('historicalAdjustment')
+            : null;
+
+        if (!$config) {
+            return 0;
+        }
+
+        $adjustments = [];
+        foreach ($config as $code => $entry) {
+            $adjustments[$code] = (int) ($entry->amount ?? 0);
+        }
+
+        // No project selected means "all projects", so every adjustment applies.
+        if (!$project) {
+            return array_sum($adjustments);
+        }
+
+        return $adjustments[$project->code] ?? 0;
+    }
+
+    /**
+     * The backend explanation for the adjustment. Deliberately not surfaced on the public
+     * site: the caveat needs context to read correctly, and a footnote on a donation total
+     * raises more questions than it answers for a visitor. Anyone who can see the dashboard
+     * can see why the number is what it is.
+     */
+    private function historicalAdjustmentNote(?Project $project = null): string
+    {
+        $amount = $this->historicalAdjustment($project);
+        if ($amount === 0) {
+            return '';
+        }
+
+        $config = $this->getConfig()->offsetGet('historicalAdjustment');
+        $notes = [];
+        foreach ($config as $code => $entry) {
+            if ($project && $project->code !== $code) {
+                continue;
+            }
+            if ((int) ($entry->amount ?? 0) === 0) {
+                continue;
+            }
+            $notes[] = sprintf('%s: %s RSD — %s', $code, number_format((int) $entry->amount), $entry->note ?? '');
+        }
+
+        return implode(' | ', $notes);
     }
 
     private function getTransactionSumByStatus(int $status, ?Project $project = null): int
