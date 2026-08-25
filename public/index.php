@@ -5,8 +5,9 @@ use Skeletor\Core\App\WebSkeletor;
 
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
+define('APP_PATH', dirname(__DIR__));
 
-include(__DIR__ . "/../config/constants.php");
+include(APP_PATH . "/config/constants.php");
 include(APP_PATH . "/vendor/autoload.php");
 if (!\Solidarity\Core\Environment::isProduction()) {
     \Tracy\Debugger::enable(false);
