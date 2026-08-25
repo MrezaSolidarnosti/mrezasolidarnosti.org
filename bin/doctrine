@@ -4,7 +4,13 @@
 use Doctrine\ORM\Tools\Console\ConsoleRunner;
 use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
 
-include(__DIR__ . "/../config/constants.php");
+// Same reason as public/index.php: config/constants.php is gitignored and deployed as a
+// SHARED symlink, so __DIR__ inside it resolves to the shared directory rather than the
+// release. Every entry point therefore defines APP_PATH from its own __DIR__ — a real file
+// inside the release — and constants.php yields to it.
+define('APP_PATH', dirname(__DIR__));
+
+include(APP_PATH . "/config/constants.php");
 include(APP_PATH . "/vendor/autoload.php");
 $container = require APP_PATH . '/config/bootstrap.php';
 
