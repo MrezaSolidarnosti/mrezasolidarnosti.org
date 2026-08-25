@@ -60,7 +60,12 @@
     <meta property="twitter:description" content="<?=$this->t('Mreža solidarnosti je inicijativa grupe neformalnih stručnjaka iz raznih oblasti. Služi za  direktnu finansijsku podršku nastavnicima i vannastavnom osoblju, kao i za donacije protiv represije. Pridruži se, doniraj i podrži one koji se bore za bolje obrazovanje i protiv represije!')?>">
     <meta property="twitter:image" content="/assets/img/social.webp">
 
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="775ac248-d1eb-4779-9e22-1ae08ede6310"></script>
+    <?php // Rendered only when both are configured, so development and staging traffic is
+          // never counted into the production site — same guard the legacy app used on
+          // UMAMI_TRACKING_SCRIPT / UMAMI_TRACKING_ID. Set them in config-local.php. ?>
+    <?php if (!empty($umamiScript) && !empty($umamiWebsiteId)): ?>
+        <script defer src="<?= $this->e($umamiScript) ?>" data-website-id="<?= $this->e($umamiWebsiteId) ?>"></script>
+    <?php endif; ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
     <!-- Tabler Icons -->
 

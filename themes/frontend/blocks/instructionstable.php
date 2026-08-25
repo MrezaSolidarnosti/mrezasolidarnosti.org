@@ -128,7 +128,9 @@
                             <img id="qrCodeImage" class="QR" src="" alt="">
                         </div>
                     </div>
-                    <div class="print">
+                    <?php // Umami tracks data-umami-event on click with no JS. Names match
+                          // the legacy app so historical funnel comparisons still line up. ?>
+                    <div class="print" data-umami-event="donor_transaction_print">
                         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M6 0.5H22C25.0376 0.5 27.5 2.96243 27.5 6V22C27.5 25.0376 25.0376 27.5 22 27.5H6C2.96243 27.5 0.5 25.0376 0.5 22V6C0.5 2.96243 2.96243 0.5 6 0.5Z" fill="white"/>
                             <path d="M6 0.5H22C25.0376 0.5 27.5 2.96243 27.5 6V22C27.5 25.0376 25.0376 27.5 22 27.5H6C2.96243 27.5 0.5 25.0376 0.5 22V6C0.5 2.96243 2.96243 0.5 6 0.5Z" stroke="#262185"/>
@@ -154,7 +156,7 @@
                 </a>
             </div>
         </div>
-        <div class="donateButton" id="confirmPayment"><?=$this->t('Potvrdi uplatu')?></div>
+        <div class="donateButton" id="confirmPayment" data-umami-event="donor_transaction_confirm_payment"><?=$this->t('Potvrdi uplatu')?></div>
     </dialog>
     <div id="legend">
         <h3><?=$this->t('Legenda')?></h3>
@@ -197,7 +199,13 @@
                 <span><?=$this->t('Oštampajte instrukcije za uplatu')?></span>
             </li>
             <li>
-                <div class="donateButton" id="confirmPayment" data-id="1"><?=$this->t('Potvrdi uplatu')?></div>
+                <?php // A picture of the button, not the button. No id: it duplicated the real
+                      // one in #paymentDialog, which is invalid HTML and worked only because
+                      // getElementById returns the first match and the real one comes first in
+                      // the document. No data-umami-event either — clicks here are people
+                      // reading the legend, not confirming a payment. The #confirmPayment CSS
+                      // is scoped to #paymentDialog, so dropping the id changes nothing visually. ?>
+                <div class="donateButton"><?=$this->t('Potvrdi uplatu')?></div>
                 <span><?=$this->t('Donator klikom potvrđuje da je izvršio uplatu')?></span>
             </li>
         </ul>

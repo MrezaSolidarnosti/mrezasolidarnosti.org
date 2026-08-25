@@ -56,11 +56,27 @@ return array(
             'general' => [
                 'djavolak@mail.ru',
             ],
+            // Read by MailerSendMailer::sendContactFormMail(). Nothing in this app calls it
+            // today, but the framework iterates this key without checking it exists, so
+            // wiring up a contact form without adding it here is an immediate fatal.
+            'contactForm' => [
+                'djavolak@mail.ru',
+            ],
         ],
+        // Production credentials only, set in config-local.php — see the .dist. Empty here
+        // so a missing override is visible rather than inherited from a committed default.
         'server' => [],
     ],
     'captcha' => [
         'siteKey' => '',
+    ],
+    // Umami analytics. Both empty here on purpose: the tag is only rendered when BOTH are
+    // set, so development and staging do not report into the production site's stats. Set
+    // them in the production config-local.php — same arrangement the legacy app had via
+    // UMAMI_TRACKING_SCRIPT / UMAMI_TRACKING_ID.
+    'umami' => [
+        'script' => '',
+        'websiteId' => '',
     ],
     // Translator JS export: the same generated module is written to both the backend and
     // frontend asset trees for now (deduped later). See TranslationFileExporter.
@@ -114,23 +130,22 @@ return array(
         // so the freed budget is reallocated in the same cycle.
         // Run: php public/cli.php expireInstructions run   (use "dry" to preview)
         'expireInstructions' => \Solidarity\Backend\Action\ExpireInstructions::class,
-        // Legacy data migration. Dry-run: `php public/cli.php migrateLegacy run`
-        // Commit:                `php public/cli.php migrateLegacy commit`
-        'migrateLegacy' => \Solidarity\Backend\Action\MigrateLegacy::class,
-
-        // MSPR from its own legacy instance (solidmspr_old). Runs AFTER migrateLegacy:
-        // it needs project 2 to exist, and matches donors/delegates on email against what
-        // that import created. Dry-run: `php public/cli.php migrateLegacyMspr run`
-        // Commit:                       `php public/cli.php migrateLegacyMspr commit`
-        'migrateLegacyMspr' => \Solidarity\Backend\Action\MigrateLegacyMspr::class,
-        // Recover lost instructions (periods 26/27). Dry-run: `php public/cli.php recoverInstructions run`
-        // Commit:                     `php public/cli.php recoverInstructions commit`
-        'recoverInstructions' => \Solidarity\Backend\Action\RecoverInstructions::class,
-        // Recover SF/msdash dump transactions absent from the DB. Dry-run: `php public/cli.php recoverSfTransactions run`
-        // Commit:                          `php public/cli.php recoverSfTransactions commit`
-        'recoverSfTransactions' => \Solidarity\Backend\Action\RecoverSfTransactions::class,
         // Clear the Translator's Redis cache after a manual `translation` table edit/import.
         // Run: `php public/cli.php resetTranslationsCache run`   (the 2nd arg is required but ignored)
+        // ---- one-shot migration, delete after cutover -------------------------------
+        // Run in this order, each `run` (dry) before `commit`:
+        //   1. migrateLegacy       — MSP from solid_old; also seeds both projects, creates the
+        //                            recovery-only periods and writes data/period_map.csv
+        //   2. recoverSfTransactions — data/recovered_sf.csv
+        //   3. recoverInstructions   — data/recovered_instructions.csv
+        //   4. migrateLegacyMspr     — MSPR from solidmspr_old; needs project 2 to exist and
+        //                              matches donors/delegates on email against step 1
+        // Then `php public/cli.php migrateLegacy verify`.
+        'migrateLegacy' => \Solidarity\Backend\Action\MigrateLegacy::class,
+        'recoverSfTransactions' => \Solidarity\Backend\Action\RecoverSfTransactions::class,
+        'recoverInstructions' => \Solidarity\Backend\Action\RecoverInstructions::class,
+        'migrateLegacyMspr' => \Solidarity\Backend\Action\MigrateLegacyMspr::class,
+        // -----------------------------------------------------------------------------
         'resetTranslationsCache' => \Solidarity\Backend\Action\ResetTranslationsCache::class,
         // Regenerate the JS translations module (public/assets/backend/js/config/translations.js)
         // from the `translation` table. Admin edits regenerate it automatically; run this after a

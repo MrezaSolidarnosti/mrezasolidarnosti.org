@@ -24,12 +24,30 @@ return array(
 			'127.0.0.1' => 6379
 		]
 	],
+	// Deep-merged over config/config.php, so only the keys below are overridden — `from`,
+	// `smtp` and `recipients` continue to come from there.
+	//
+	// PRODUCTION ONLY, AND REQUIRED THERE: Solidarity\Mailer\Service\Mailer sends through
+	// MailerSend when APPLICATION_ENV=production and catches everything via SMTP (Mailpit)
+	// otherwise. bootstrap.php reads exactly this path — mailer.server.mailersend.apiKey —
+	// and falls back to the placeholder 'unused-outside-production' when it is absent, so a
+	// missing key means MailerSend is handed a bogus one and **every mail fails silently**.
+	// Donor login is magic-link only, so that locks every donor out of the site.
 	'mailer'   => [
 		'server' => [
-			'mailersend' => '123'
-		]
+			'mailersend' => [
+				'apiKey' => 'mlsn.xxxxxxxx',
+			],
+		],
 	],
 	'captcha'  => [
 		'siteKey' => ''
+	],
+	// PRODUCTION ONLY. The tag renders only when both are non-empty, so leaving these unset
+	// outside production keeps dev and staging traffic out of the production stats — which is
+	// what the legacy app did with UMAMI_TRACKING_SCRIPT / UMAMI_TRACKING_ID.
+	'umami'    => [
+		'script'    => 'https://cloud.umami.is/script.js',
+		'websiteId' => '775ac248-d1eb-4779-9e22-1ae08ede6310',
 	],
 );

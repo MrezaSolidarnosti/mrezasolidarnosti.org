@@ -633,12 +633,20 @@ if (\Solidarity\Core\Environment::isFrontend()) {
         : ($navigationService->getByTitle('Main Navigation ' . $locale->current())
             ?? $navigationService->getByTitle('Main Navigation'));
 
+    // Analytics: passed as empty strings when unconfigured, and the layout renders the tag
+    // only when both are set — so dev and staging never report into the production site.
+    $umami = $container->get(Config::class)->offsetExists('umami')
+        ? $container->get(Config::class)->offsetGet('umami')
+        : null;
+
     $container->get(Engine::class)->addData([
         'currentLocale'    => $locale->current(),
         'defaultLocale'    => $locale->default(),
         'availableLocales' => $locale->available(),
         'localeAlternates' => $locale->alternates(),
         'mainNavigation'   => $mainNavigation,
+        'umamiScript'      => (string) ($umami?->script ?? ''),
+        'umamiWebsiteId'   => (string) ($umami?->websiteId ?? ''),
     ]);
 }
 
