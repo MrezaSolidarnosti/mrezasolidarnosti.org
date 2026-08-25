@@ -1,12 +1,20 @@
 <?php
 
-define('APP_PATH', __DIR__ . '/..');
-define('PUBLIC_PATH', __DIR__);
+// APP_PATH and PUBLIC_PATH are normally defined by the entry point (public/index.php,
+// public/cli.php) and this file must yield to them. It is gitignored and per-environment, so
+// a symlink deploy shares one copy across releases: __DIR__ here resolves to the real shared
+// directory, not to the release, and anything derived from it escapes the release entirely.
+// The fallbacks below only apply when something includes this file directly.
+defined('APP_PATH') || define('APP_PATH', __DIR__ . '/..');
+defined('PUBLIC_PATH') || define('PUBLIC_PATH', APP_PATH . '/public');
+
 define('DATA_PATH', APP_PATH . '/data');
-define('IMAGES_PATH', APP_PATH . '/../frontend/public/images');
+define('IMAGES_PATH', PUBLIC_PATH . '/images');
 define('ADMIN_ASSET_PATH', PUBLIC_PATH . '/assets/backend');
-define('ADMIN_ASSET_URL', strstr(ADMIN_ASSET_PATH,'/assets'));
+define('ADMIN_ASSET_URL', strstr(ADMIN_ASSET_PATH, '/assets'));
 define('FRONT_ASSET_PATH', PUBLIC_PATH . '/assets/frontend');
-define('FRONT_ASSET_URL', strstr(FRONT_ASSET_PATH,'/assets'));
+// Must derive from a FRONTEND path: deriving it from ADMIN_ASSET_PATH returns false (that
+// path contains /assets/backend), giving an empty prefix and broken asset URLs.
+define('FRONT_ASSET_URL', strstr(FRONT_ASSET_PATH, '/assets'));
 define('DEBUG_BACKEND', false);
 define('DEBUG_FRONTEND', false);
