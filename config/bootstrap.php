@@ -109,6 +109,25 @@ $container->set(ManagerInterface::class, function() use ($container) {
     return $session;
 });
 
+/**
+ * The concrete class resolves to the same instance as the interface.
+ *
+ * Only ManagerInterface was bound above — the one that sets the Redis save handler, names the
+ * session and calls start(). Services that type-hint the concrete SessionManager (the frontend
+ * donor Session, and every backend controller taking `SessionManager as Session`) were being
+ * handed a **freshly autowired** manager instead: default config, no Redis handler, never
+ * started.
+ *
+ * It appeared to work because Laminas' SessionArrayStorage proxies $_SESSION, so the second
+ * instance reads whatever the started one populated — but only when the started one is
+ * resolved first. That made login state depend on container resolution order, which is not a
+ * thing that should decide whether somebody is logged in: adding one GET to the magic-link
+ * flow reordered it, and donors authenticated successfully and then arrived anonymous.
+ */
+$container->set(\Laminas\Session\SessionManager::class, function() use ($container) {
+    return $container->get(ManagerInterface::class);
+});
+
 $container->set(BlockFilterFactoryInterface::class, function() use ($container) {
     $blockFilterFactory = new BlockFilterFactory(
         $container->get(Image::class)
