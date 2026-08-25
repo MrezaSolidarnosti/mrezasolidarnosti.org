@@ -68,7 +68,6 @@ class BeneficiaryFactory extends AbstractFactory
 
         $beneficiary = $em->getRepository(Beneficiary::class)->find($beneficiaryId);
         $submitted = [];
-
         foreach ($rows as $row) {
             $current = $stored[(int) ($row['id'] ?? 0)] ?? null;
 
@@ -145,6 +144,10 @@ class BeneficiaryFactory extends AbstractFactory
 
         $beneficiary = $em->getRepository(Beneficiary::class)->find($beneficiaryId);
 
+        // No project gate. It resolved a project from the beneficiary's first registered period
+        // and skipped every row when there wasn't one — so a beneficiary with no periods had
+        // their account number deleted above and never written back. The project it resolved was
+        // assigned to nothing either way: PaymentMethod::$project is commented out of the entity.
         foreach ($rows as $row) {
             if (empty($row['type'])) {
                 continue;

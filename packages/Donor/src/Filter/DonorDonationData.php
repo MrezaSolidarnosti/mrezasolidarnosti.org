@@ -2,7 +2,7 @@
 
 namespace Solidarity\Donor\Filter;
 
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class DonorDonationData
 {
@@ -21,7 +21,7 @@ class DonorDonationData
             'donorId' => filter_var($postData['donorId'] ?? null, FILTER_VALIDATE_INT) ?: null,
             'project' => filter_var($postData['project'] ?? null, FILTER_VALIDATE_INT) ?: null,
             'paymentData' => $paymentData,
-            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME] ?? '',
+            Csrf::TOKEN_NAME => $postData[Csrf::TOKEN_NAME] ?? '',
         ];
 
 

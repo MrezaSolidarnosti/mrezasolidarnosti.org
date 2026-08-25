@@ -1,4 +1,5 @@
 <?php
+use Skeletor\Core\Security\Csrf;
 use Doctrine\ORM\EntityManagerInterface;
 use Laminas\Session\SessionManager;
 use Laminas\Session\ManagerInterface;
@@ -7,12 +8,14 @@ use Monolog\ErrorHandler;
 use Monolog\Handler\BrowserConsoleHandler;
 use Monolog\Handler\StreamHandler;
 use Psr\Log\LoggerInterface as Logger;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Skeletor\Core\Mailer\Service\MailerInterface;
 use Skeletor\Core\Security\Authorization\AuthorizationService;
 use Skeletor\Core\Security\EntityRegistry;
+use Skeletor\Image\Service\Image;
 use Solidarity\Backend\Blocks\About\About;
 use Solidarity\Backend\Blocks\Banner\Banner;
+use Solidarity\Backend\Blocks\Blog\Blog;
 use Solidarity\Backend\Blocks\Connect\Connect;
 use Solidarity\Backend\Blocks\Contactcards\Contactcards;
 use Solidarity\Backend\Blocks\Ctabanner\Ctabanner;
@@ -39,6 +42,32 @@ use Solidarity\Backend\Blocks\Testimonials\Testimonials;
 use Solidarity\Backend\Blocks\Whywearedifferent\Whywearedifferent;
 use Solidarity\Backend\Blocks\Find\Find;
 use Solidarity\Backend\Blocks\HeroStats\HeroStats;
+use Solidarity\ContentEditor\BlockFilterFactory;
+use Solidarity\ContentEditor\BlockFilters\Accordion;
+use Solidarity\ContentEditor\BlockFilters\Chart;
+use Solidarity\ContentEditor\BlockFilters\Columns;
+use Solidarity\ContentEditor\BlockFilters\Divider;
+use Solidarity\ContentEditor\BlockFilters\Embed;
+use Solidarity\ContentEditor\BlockFilters\Footnotes;
+use Solidarity\ContentEditor\BlockFilters\Gallery;
+use Solidarity\ContentEditor\BlockFilters\Heading;
+use Solidarity\ContentEditor\BlockFilters\HeadingFive;
+use Solidarity\ContentEditor\BlockFilters\HeadingFour;
+use Solidarity\ContentEditor\BlockFilters\HeadingSix;
+use Solidarity\ContentEditor\BlockFilters\HeadingThree;
+use Solidarity\ContentEditor\BlockFilters\HeadingTwo;
+use Solidarity\ContentEditor\BlockFilters\Html;
+use Solidarity\ContentEditor\BlockFilters\Image as ImageBlockFilter;
+use Solidarity\ContentEditor\BlockFilters\OrderedList;
+use Solidarity\ContentEditor\BlockFilters\Paragraph;
+use Solidarity\ContentEditor\BlockFilters\Quote;
+use Solidarity\ContentEditor\BlockFilters\Spacer;
+use Solidarity\ContentEditor\BlockFilters\Table;
+use Solidarity\ContentEditor\BlockFilters\Tabs;
+use Solidarity\ContentEditor\BlockFilters\Timeline;
+use Solidarity\ContentEditor\BlockFilters\UnorderedList;
+use Solidarity\ContentEditor\Contracts\BlockFilterFactoryInterface;
+use Solidarity\ContentEditor\Contracts\ContentEditorFilterInterface;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Tamtamchik\SimpleFlash\Flash;
@@ -80,40 +109,96 @@ $container->set(ManagerInterface::class, function() use ($container) {
     return $session;
 });
 
+$container->set(BlockFilterFactoryInterface::class, function() use ($container) {
+    $blockFilterFactory = new BlockFilterFactory(
+        $container->get(Image::class)
+    );
+    $blockFilterFactory->registerBlockFilter('core/paragraph', new Paragraph());
+    $blockFilterFactory->registerBlockFilter('core/heading', new Heading());
+    $blockFilterFactory->registerBlockFilter('core/headingtwo', new HeadingTwo());
+    $blockFilterFactory->registerBlockFilter('core/headingthree', new HeadingThree());
+    $blockFilterFactory->registerBlockFilter('core/headingfour', new HeadingFour());
+    $blockFilterFactory->registerBlockFilter('core/headingfive', new HeadingFive());
+    $blockFilterFactory->registerBlockFilter('core/headingsix', new HeadingSix());
+    $blockFilterFactory->registerBlockFilter('core/unorderedList', new UnorderedList());
+    $blockFilterFactory->registerBlockFilter('core/orderedList', new OrderedList());
+    $blockFilterFactory->registerBlockFilter('core/quote', new Quote());
+    $blockFilterFactory->registerBlockFilter('core/html', new Html());
+    $blockFilterFactory->registerBlockFilter('core/image', new ImageBlockFilter());
+    $blockFilterFactory->registerBlockFilter('core/gallery', new Gallery());
+    $blockFilterFactory->registerBlockFilter('core/divider', new Divider());
+    $blockFilterFactory->registerBlockFilter('core/embed', new Embed());
+    $blockFilterFactory->registerBlockFilter('core/spacer', new Spacer());
+    $blockFilterFactory->registerBlockFilter('core/columns', new Columns());
+    $blockFilterFactory->registerBlockFilter('core/table', new Table());
+    $blockFilterFactory->registerBlockFilter('core/chart', new Chart());
+    $blockFilterFactory->registerBlockFilter('core/footnotes', new Footnotes());
+    $blockFilterFactory->registerBlockFilter('core/accordion', new Accordion());
+    $blockFilterFactory->registerBlockFilter('core/tabs', new Tabs());
+    $blockFilterFactory->registerBlockFilter('core/timeline', new Timeline());
+    return $blockFilterFactory;
+});
+
+$container->set(ContentEditorFilterInterface::class, function() use ($container) {
+    return $container->get(\Solidarity\ContentEditor\Filter::class);
+});
+
+// Renders core/* editor blocks (posts) from themes/frontend/contentEditor,
+// e.g. the core/paragraph block from contentEditor/core/paragraph.php.
+$container->set(\Solidarity\ContentEditor\Contracts\BlockViewInterface::class, function() use ($container) {
+    $view = new \Solidarity\ContentEditor\View(
+        $container->get(Engine::class),
+        APP_PATH . '/themes/frontend/contentEditor'
+    );
+
+    $view->registerViewFilter('core/image', new \Solidarity\ContentEditor\BlockViewFilters\Image(
+        $container->get(Image::class)
+    ));
+
+    $view->registerViewFilter('core/gallery', new \Solidarity\ContentEditor\BlockViewFilters\Gallery(
+        $container->get(Image::class)
+    ));
+
+    $view->registerViewFilter('core/embed', new \Solidarity\ContentEditor\BlockViewFilters\Embed());
+
+    return $view;
+});
+// Content Editor
+
 $container->set(\Skeletor\ContentEditor\Contracts\BlockParserFactoryInterface::class, function() use ($container) {
     $blockParserFactory =  new \Skeletor\ContentEditor\Factory\BlockParserFactory(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     );
 
     $blockParserFactory->registerBlockParser(HeroStats::NAME, new HeroStats());
     $blockParserFactory->registerBlockParser(Find::NAME, new Find(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Direction::NAME, new Direction());
     $blockParserFactory->registerBlockParser(Connect::NAME, new Connect());
     $blockParserFactory->registerBlockParser(Whywearedifferent::NAME, new Whywearedifferent());
     $blockParserFactory->registerBlockParser(Howitworks::NAME, new Howitworks(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Testimonials::NAME, new Testimonials());
     $blockParserFactory->registerBlockParser(Faq::NAME, new Faq());
     $blockParserFactory->registerBlockParser(Herotext::NAME, new Herotext());
     $blockParserFactory->registerBlockParser(Contactcards::NAME, new Contactcards(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Sidebyside::NAME, new Sidebyside());
     $blockParserFactory->registerBlockParser(Projectsdisplay::NAME, new Projectsdisplay(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Threepillars::NAME, new Threepillars(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Banner::NAME, new Banner());
     $blockParserFactory->registerBlockParser(Whotocall::NAME, new Whotocall());
     $blockParserFactory->registerBlockParser(Ctabanner::NAME, new Ctabanner());
     $blockParserFactory->registerBlockParser(About::NAME, new About());
     $blockParserFactory->registerBlockParser(Valuecards::NAME, new Valuecards(
-        $container->get(\Skeletor\Image\Service\Image::class)
+        $container->get(Image::class)
     ));
     $blockParserFactory->registerBlockParser(Howitworkstimeline::NAME, new Howitworkstimeline());
     $blockParserFactory->registerBlockParser(Registerform::NAME, new Registerform());
@@ -125,6 +210,7 @@ $container->set(\Skeletor\ContentEditor\Contracts\BlockParserFactoryInterface::c
     $blockParserFactory->registerBlockParser(Donate::NAME, new Donate());
     $blockParserFactory->registerBlockParser(Instructionsintro::NAME, new Instructionsintro());
     $blockParserFactory->registerBlockParser(Instructionstable::NAME, new Instructionstable());
+    $blockParserFactory->registerBlockParser(Blog::NAME, new Blog());
 
     return $blockParserFactory;
 });
@@ -146,7 +232,14 @@ $container->set(\Skeletor\ContentEditor\Contracts\BlockViewInterface::class, fun
     $view->registerViewFilter(HeroStats::NAME, new \Solidarity\Backend\Blocks\HeroStats\HeroStatsViewFilter(
         $container->get(\Solidarity\Donor\Service\Donor::class),
         $container->get(\Solidarity\Beneficiary\Service\Beneficiary::class),
-        $container->get(\Solidarity\Transaction\Service\Transaction::class)
+        $container->get(\Solidarity\Transaction\Service\Transaction::class),
+        // For the historical adjustment — the confirmed money the legacy app destroyed when
+        // it cascade-deleted inactive donors. See config `historicalAdjustment`.
+        $container->get(Config::class)
+    ));
+
+    $view->registerViewFilter(Blog::NAME, new \Solidarity\Backend\Blocks\Blog\BlogViewFilter(
+        $container->get(\Solidarity\Post\Service\Post::class)
     ));
 
     $view->registerViewFilter(Profiledata::NAME, new \Solidarity\Backend\Blocks\Profiledata\ProfiledataViewFilter(
@@ -163,16 +256,13 @@ $container->set(\Skeletor\ContentEditor\Contracts\BlockViewInterface::class, fun
         $container->get(\Solidarity\Transaction\Service\Transaction::class)
     ));
 
-    // On the frontend, localize internal URLs in block data (buttonLink, linkUrl, ...)
-    // for the active locale before rendering — same treatment as the menus/footer.
-    if (\Solidarity\Core\Environment::isFrontend()) {
-        return new \Solidarity\Frontend\Service\LocalizingBlockView(
-            $view,
-            $container->get(\Solidarity\Frontend\Service\Locale::class)
-        );
-    }
-
-    return $view;
+    // Wrapped last, so every filter above is registered through the decorator onto the same
+    // view. Block templates echo their link fields raw, so links authored as "doniraj" are
+    // normalised to "/doniraj" and swapped for the localised slug off the default locale.
+    return new \Solidarity\Frontend\Service\LocalizingBlockView(
+        $view,
+        $container->get(\Solidarity\Frontend\Service\Locale::class)
+    );
 });
 
 $container->set(\Skeletor\Exporter\Contracts\ExporterFactoryInterface::class, function() use ($container) {
@@ -203,8 +293,55 @@ $container->set(Engine::class, function() use ($container) {
     $plates->registerFunction('printError', function($error, $label) use($plates) {
         return $plates->render('partialsGlobal::error', ['error' => $error, 'label' => $label]);
     });
-    $plates->registerFunction('formToken', function () { return \Volnix\CSRF\CSRF::getHiddenInputString(); });
-    $plates->registerFunction('formTokenArray', function () { return  \Volnix\CSRF\CSRF::getTokenAsArray(); });
+    $plates->registerFunction('formToken', function () use ($container) { return $container->get(Csrf::class)->getHiddenInputString(); });
+    $plates->registerFunction('formTokenArray', function () use ($container) { return $container->get(Csrf::class)->getTokenAsArray(); });
+    // Container blocks (columns) save their children as nested block arrays, so a block template
+    // needs to render blocks itself. Resolved on call, not here, so the View can keep depending
+    // on this engine. View filters apply to the nested blocks exactly as they do to top level
+    // ones, and getView restores the template directory it found, so nesting is safe.
+    $plates->registerFunction('contentEditorBlocks', function (array $blocks) use ($container) {
+        if (empty($blocks)) {
+            return '';
+        }
+        try {
+            return $container->get(\Solidarity\ContentEditor\Contracts\BlockViewInterface::class)->getView($blocks);
+        } catch (\Solidarity\ContentEditor\Exceptions\TemplateNotFoundException $e) {
+            return '';
+        }
+    });
+    $plates->registerFunction('blockAttributes', function (array $block, string ...$classNames) {
+        $additionalData = $block['additionalData'] ?? [];
+        $attributes = [];
+
+        $htmlId = trim((string) ($additionalData['htmlId'] ?? ''));
+        if ($htmlId !== '') {
+            $attributes['id'] = $htmlId;
+        }
+
+        $classes = array_filter(array_merge(
+            $classNames,
+            preg_split('/\s+/', trim((string) ($additionalData['classNames'] ?? '')))
+        ));
+        if (!empty($classes)) {
+            $attributes['class'] = implode(' ', $classes);
+        }
+
+        $style = trim((string) ($additionalData['inlineCss'] ?? ''), "; \t\n\r");
+        $align = $block['align'] ?? null;
+        if (in_array($align, ['left', 'center', 'right'], true)) {
+            $style = ($style !== '' ? $style . ';' : '') . 'text-align:' . $align;
+        }
+        if ($style !== '') {
+            $attributes['style'] = $style;
+        }
+
+        $html = '';
+        foreach ($attributes as $name => $value) {
+            $html .= sprintf(' %s="%s"', $name, htmlspecialchars($value, ENT_QUOTES));
+        }
+
+        return $html;
+    });
     // i18n: the default locale (sr) is the source language strings are authored in,
     // so t() is a pass-through there. For any other frontend locale, drive t() through
     // the Translator (SR source -> translated string, falling back to the original).
@@ -435,17 +572,24 @@ $container->set(EntityManagerInterface::class, function() use ($container) {
             APP_PATH . "/packages/User/src/Entity",
             APP_PATH . "/packages/Page/src/Entity",
             APP_PATH . "/packages/EmailList/src/Entity",
+            APP_PATH . "/packages/Post/src/Entity",
             APP_PATH . '/vendor/dj_avolak/skeletor/src/ThemeSettings',
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Image",
             APP_PATH . '/vendor/dj_avolak/skeletor/src/File',
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Image",
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Login",
+            // skeletor 6.x logs entity changes through Core\Activity; without this path the
+            // Activity entity is unmapped and every write warns instead of recording.
+            APP_PATH . "/vendor/dj_avolak/skeletor/src/Core/Activity/Entity",
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Translator",
             APP_PATH . '/vendor/dj_avolak/skeletor/src/ThemeSettings',
         ],
         isDevMode: !\Solidarity\Core\Environment::isProduction(),
     );
     $config->setAutoGenerateProxyClasses(true);
+    // symfony/var-exporter 8 removed LazyGhostTrait, so Doctrine's proxy factory throws unless
+    // native lazy objects are used. Requires PHP 8.4, and is mandatory in Doctrine ORM 4.
+    $config->enableNativeLazyObjects(true);
 //    $resultCache = new Symfony\Component\Cache\Adapter\RedisTagAwareAdapter($container->get(\Redis::class));
 //    $config->setResultCache($resultCache);
 //    $config->setMetadataCache($resultCache);

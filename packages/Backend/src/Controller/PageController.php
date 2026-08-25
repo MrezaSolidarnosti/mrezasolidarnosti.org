@@ -1,7 +1,7 @@
 <?php
 
 namespace Solidarity\Backend\Controller;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\Page\Service\Page;

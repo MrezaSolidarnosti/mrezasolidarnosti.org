@@ -4,7 +4,7 @@ namespace Solidarity\Delegate\Validator;
 
 use Laminas\Validator\EmailAddress;
 use Skeletor\Core\Validator\ValidatorInterface;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 /**
  * Class Client.
@@ -16,7 +16,7 @@ class Delegate implements ValidatorInterface
 {
 
     /**
-     * @var CSRF
+     * @var Csrf
      */
     private $csrf;
 
@@ -29,10 +29,10 @@ class Delegate implements ValidatorInterface
     /**
      * User constructor.
      *
-     * @param CSRF $csrf
+     * @param Csrf $csrf
      */
     public function __construct(
-        CSRF $csrf,
+        Csrf $csrf,
         \Solidarity\Delegate\Repository\DelegateRepository $delegateRepository,
         \Solidarity\School\Repository\SchoolRepository $schoolRepository
     ) {

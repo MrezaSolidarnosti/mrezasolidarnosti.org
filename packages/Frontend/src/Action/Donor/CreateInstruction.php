@@ -2,7 +2,7 @@
 
 namespace Solidarity\Frontend\Action\Donor;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Validator\ValidatorException;
@@ -10,7 +10,7 @@ use Skeletor\ThemeSettings\Navigation\Service\Navigation;
 use Skeletor\ThemeSettings\SocialLinks\Service\SocialLinks;
 use Solidarity\Donor\Service\NoNeedsException;
 use Solidarity\Frontend\Action\BaseAction;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class CreateInstruction extends BaseAction
 {
@@ -20,7 +20,7 @@ class CreateInstruction extends BaseAction
         protected SocialLinks $socialLinks,
         \Solidarity\Frontend\Service\Session $session,
         private \Solidarity\Frontend\Service\Locale $locale,
-    ) {
+        private \Skeletor\Core\Security\Csrf $csrf) {
         parent::__construct($logger, $config, $template, $this->navigationService, $this->socialLinks, $session);
 
     }
@@ -59,7 +59,7 @@ class CreateInstruction extends BaseAction
             $statusCode = 400;
             $responseData['errors'][] = 'An unexpected error occurred, please try again.' . $e->getMessage();
         }
-        $responseData['token'] = CSRF::getToken();
+        $responseData['token'] = $this->csrf->getToken();
         return $this->returnWithData($success, $responseData, $statusCode);
     }
 }

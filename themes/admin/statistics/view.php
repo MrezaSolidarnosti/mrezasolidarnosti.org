@@ -156,6 +156,22 @@ $formatNumber = function(int $amount): string {
         <div class="statsSection">
             <h3>Transakcije</h3>
             <div class="statsGrid">
+                <?php // Potvrdene + placene, the same pair the front page totals. This is the
+                      // only figure carrying the historical adjustment; the two cards after it
+                      // are pure database sums. ?>
+                <div class="statCard">
+                    <span class="statLabel">Ukupno prikupljeno (<?= $formatNumber($s['realizedCount']) ?>)</span>
+                    <span class="statValue"><?= $formatNumber($s['realizedAmount']) ?> <span class="statUnit">RSD</span></span>
+                    <?php if (!empty($s['historicalAdjustment'])): ?>
+                        <?php // Backend only. The count is the real row count and is NOT adjusted,
+                              // so the two deliberately do not reconcile — this line says why. ?>
+                        <span class="statNote" style="display:block;margin-top:6px;font-size:12px;color:#fff;">
+                            Ukljucuje <?= $formatNumber($s['historicalAdjustment']) ?> RSD istorijske korekcije
+                            (nije sadrzano u broju transakcija).<br>
+                            <?= htmlspecialchars($s['historicalAdjustmentNote'], ENT_QUOTES, 'UTF-8') ?>
+                        </span>
+                    <?php endif; ?>
+                </div>
                 <div class="statCard">
                     <span class="statLabel">Potvrdene donacije (<?= $formatNumber($s['confirmedCount']) ?>)</span>
                     <span class="statValue"><?= $formatNumber($s['confirmedAmount']) ?> <span class="statUnit">RSD</span></span>
@@ -221,6 +237,18 @@ $formatNumber = function(int $amount): string {
             <div class="statsSection">
                 <h3>Transakcije (ukupno)</h3>
                 <div class="statsGrid">
+                    <?php // Project-scoped: getStats($project) resolves the adjustment by
+                          // project code, so a project without one shows a plain sum. ?>
+                    <div class="statCard">
+                        <span class="statLabel">Ukupno prikupljeno (<?= $formatNumber($s['realizedCount']) ?>)</span>
+                        <span class="statValue"><?= $formatNumber($s['realizedAmount']) ?> <span class="statUnit">RSD</span></span>
+                        <?php if (!empty($s['historicalAdjustment'])): ?>
+                            <span class="statNote" style="display:block;margin-top:6px;font-size:12px;color:#fff;">
+                                Ukljucuje <?= $formatNumber($s['historicalAdjustment']) ?> RSD istorijske korekcije
+                                (nije sadrzano u broju transakcija).
+                            </span>
+                        <?php endif; ?>
+                    </div>
                     <div class="statCard">
                         <span class="statLabel">Potvrdene donacije (<?= $formatNumber($s['confirmedCount']) ?>)</span>
                         <span class="statValue"><?= $formatNumber($s['confirmedAmount']) ?> <span class="statUnit">RSD</span></span>

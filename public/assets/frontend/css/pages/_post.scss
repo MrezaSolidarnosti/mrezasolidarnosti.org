@@ -1,0 +1,506 @@
+@use '../setup/typography';
+.blogPostWrapper {
+  background: var(--colorBackgroundGray);
+  .blogPost {
+    max-width: 872px;
+    margin: 0 auto;
+    padding:1.25rem;
+    header {
+      #backToBlog {
+        display:flex;
+        align-items:center;
+        gap:0.5rem;
+        @include typography.type(text);
+        color: var(--colorDarkBlue);
+        &:hover {
+          color:var(--colorOrange);
+        }
+      }
+      h1 {
+        @include typography.type(h1);
+        color: var(--colorDarkBlue);
+        text-align:center;
+        margin:2rem auto;
+        @media(max-width:768px) {
+          @include typography.type(h2);
+        }
+        @media(max-width:600px) {
+          @include typography.type(h3);
+        }
+      }
+      .date {
+        @include typography.type(h5);
+        color: var(--colorDarkBlue);
+        text-align:center;
+        display:block;
+        font-weight:500;
+        margin-bottom:2rem;
+      }
+      img {
+        width:100%;
+      }
+      figcaption {
+        @include typography.type(caption);
+        color: var(--colorDarkBlue);
+        margin-top:0.5rem;
+      }
+    }
+    .postContent {
+      margin:3rem 0;
+      container-type: inline-size;
+      .columnsBlock {
+        margin:2rem 0;
+        display:grid;
+        gap:1.5rem;
+        grid-template-columns: var(--columnsTemplate, 1fr);
+        > .column {
+          container-type: inline-size;
+          min-width:0;
+          > *:first-child {
+            margin-top:0;
+          }
+          > *:last-child {
+            margin-bottom:0;
+          }
+        }
+        @container (max-width: 640px) {
+          grid-template-columns:1fr;
+        }
+      }
+      .columnsBlock p,
+      &> p {
+        @include typography.type(text);
+        color: var(--colorDarkBlue);
+        margin:1rem 0;
+      }
+      h1,h2,h3,h4,h5,h6 {
+        color: var(--colorDarkBlue);
+        margin:1rem 0;
+      }
+      a {
+        text-decoration:underline;
+        &:hover {
+          color:var(--colorOrange);
+        }
+      }
+      .footnotesList {
+        display:flex;
+        flex-direction:column;
+        gap:0.5rem;
+        li {
+          display:flex;
+          gap:0.5rem;
+          @include typography.type(text);
+          color: var(--colorDarkBlue);
+        }
+        .footnotesBacklink {
+          cursor:pointer;
+        }
+      }
+      .footnoteRef {
+        cursor:pointer;
+        color:var(--colorOrange);
+      }
+      &>ul,ol {
+        @include typography.type(text);
+        color: var(--colorDarkBlue);
+        margin:1rem 0;
+        padding-left:1rem;
+      }
+      &>ul {
+        list-style:disc;
+        ul {
+          padding-left:1rem;
+          list-style:disc;
+        }
+      }
+      &>ol {
+        list-style: decimal;
+        ol {
+          padding-left:1rem;
+          list-style:disc;
+        }
+      }
+      .quoteBlock {
+        margin:2rem 0;
+        padding:0.5rem 0 0.5rem 1.5rem;
+        border-left:4px solid var(--colorOrange);
+        .quoteText {
+          @include typography.type(h3);
+          color: var(--colorDarkBlue);
+          font-style:italic;
+          font-weight:400;
+        }
+        .quoteCite {
+          @include typography.type(text);
+          color: var(--colorDarkBlue);
+          display:block;
+          margin-top:0.75rem;
+          font-style:normal;
+          font-weight:600;
+          &:before {
+            content:'— ';
+          }
+        }
+        @container (max-width: 600px) {
+          padding-left:1rem;
+          .quoteText {
+            @include typography.type(text);
+          }
+        }
+      }
+      figcaption {
+        margin:0.5rem 0;
+        color: var(--colorDarkBlue);
+        @include typography.type(text);
+      }
+      .imageBlock {
+        margin:2rem 0;
+        img {
+          max-width:100%;
+        }
+      }
+      .galleryBlock {
+        margin:2rem 0;
+      }
+      .accordionBlock {
+        margin:2rem 0;
+        display:flex;
+        flex-direction:column;
+        gap:1rem;
+        .faqQuestion {
+          display:flex;
+          gap:1rem;
+          justify-content:space-between;
+          align-items:center;
+          cursor:pointer;
+          padding:1.5rem;
+          color:white;
+          background:var(--colorDarkBlue);
+          border-radius:10px;
+          h3 {
+            @include typography.type(h4);
+            color:white;
+            margin:0;
+          }
+          svg {
+            flex-shrink:0;
+            transition:0.3s ease transform;
+            &.active {
+              transform:rotate(45deg);
+            }
+          }
+        }
+        .faqAnswer {
+          display:grid;
+          grid-template-rows:0fr;
+          transition:0.3s ease grid-template-rows;
+          .accordionContent {
+            overflow:hidden;
+            padding-top:1rem;
+            color: var(--colorDarkBlue);
+          }
+          &.active {
+            grid-template-rows:1fr;
+          }
+        }
+      }
+      .tabsBlock {
+        margin:2rem 0;
+        .tabs {
+          display:flex;
+          gap:0.25rem;
+          padding:0.25rem;
+          border-radius:10px;
+          overflow-x:auto;
+          scrollbar-width:none;
+          &::-webkit-scrollbar {
+            display:none;
+          }
+        }
+        .tab {
+          @include typography.type(h5);
+          color: var(--colorDarkBlue);
+          cursor:pointer;
+          white-space:nowrap;
+          padding:0.75rem 1.25rem;
+          border-radius:8px;
+          transition:0.3s ease background, 0.3s ease color;
+          // The component reads data-tab off the click target, so a click must never land on a
+          // child element of the tab.
+          * {
+            pointer-events:none;
+          }
+          &:hover {
+            background: var(--colorBackgroundGray);
+            color: var(--colorOrange);
+          }
+          &.active {
+            background: var(--colorDarkBlue);
+            color:white;
+            &:hover {
+              background: var(--colorBlueHover);
+              color:white;
+            }
+          }
+        }
+        .tabContent {
+          @include typography.type(text);
+          color: var(--colorDarkBlue);
+          background:white;
+          border-radius:10px;
+          padding:1.5rem;
+          margin-top:0.5rem;
+          &.hidden {
+            display:none;
+          }
+          > * {
+            margin:1rem 0;
+            &:first-child {
+              margin-top:0;
+            }
+            &:last-child {
+              margin-bottom:0;
+            }
+          }
+          ul, ol {
+            padding-left:1rem;
+          }
+          ul {
+            list-style:disc;
+          }
+          ol {
+            list-style:decimal;
+          }
+        }
+        @container (max-width: 600px) {
+          .tab {
+            padding:0.625rem 1rem;
+          }
+          .tabContent {
+            padding:1.25rem;
+          }
+        }
+      }
+      .timelineBlock {
+        --timelineIndent:2.5rem;
+        margin:2rem 0;
+        .timelineItems {
+          position:relative;
+          display:flex;
+          flex-direction:column;
+          gap:1.5rem;
+          padding-left: var(--timelineIndent);
+          // The rail runs between the first and last dot rather than the full height, so it
+          // doesn't stick out past the ends of the sequence.
+          &:before {
+            content:'';
+            position:absolute;
+            left:7px;
+            top:0.75rem;
+            bottom:0.75rem;
+            width:2px;
+            background: var(--colorGrayLight);
+          }
+        }
+        .timelineItem {
+          position:relative;
+          // Dot centre stays on the rail (8px from the container edge) whatever the indent is.
+          &:before {
+            content:'';
+            position:absolute;
+            left: calc(-1 * var(--timelineIndent));
+            top:0.5rem;
+            width:16px;
+            height:16px;
+            border-radius:50%;
+            background: var(--colorOrange);
+            box-shadow:0 0 0 4px var(--colorBackgroundGray);
+          }
+        }
+        .timelineItemTime {
+          @include typography.type(h5);
+          color: var(--colorOrange);
+          margin-bottom:0.5rem;
+        }
+        .timelineItemContent {
+          @include typography.type(text);
+          color: var(--colorDarkBlue);
+          background:white;
+          border-radius:10px;
+          padding:1.25rem;
+          > * {
+            margin:1rem 0;
+            &:first-child {
+              margin-top:0;
+            }
+            &:last-child {
+              margin-bottom:0;
+            }
+          }
+          ul, ol {
+            padding-left:1rem;
+          }
+          ul {
+            list-style:disc;
+          }
+          ol {
+            list-style:decimal;
+          }
+        }
+        @container (max-width: 600px) {
+          --timelineIndent:1.75rem;
+          .timelineItemContent {
+            padding:1rem;
+          }
+        }
+      }
+      .tableBlock {
+        margin:2rem 0;
+        .tableToolbar {
+          display:flex;
+          flex-wrap:wrap;
+          gap:0.5rem;
+          margin-bottom:0.75rem;
+          input, select {
+            @include typography.type(text);
+            color: var(--colorDarkBlue);
+            background:white;
+            border:1px solid var(--colorGrayLight);
+            border-radius:8px;
+            padding:0.625rem 0.875rem;
+            min-width:12rem;
+            flex:1 1 12rem;
+            max-width:100%;
+            // The browser default ring is replaced, not removed: :focus-visible keeps a ring for
+            // keyboard users, it just follows the theme instead of being a black box.
+            &:focus {
+              outline:none;
+              border-color: var(--colorOrange);
+            }
+            &:focus-visible {
+              outline:2px solid var(--colorOrange);
+              outline-offset:1px;
+            }
+          }
+          input[type="search"] {
+            &::-webkit-search-cancel-button {
+              -webkit-appearance:none;
+              appearance:none;
+            }
+            &::-ms-clear {
+              display:none;
+            }
+          }
+        }
+        .tableScroll {
+          overflow-x:auto;
+          border-radius:10px;
+          background:white;
+        }
+        table {
+          width:100%;
+          border-collapse:collapse;
+          @include typography.type(text);
+        }
+        th, td {
+          text-align:left;
+          padding:0.875rem 1rem;
+        }
+        th {
+          @include typography.type(h5);
+          background: var(--table-header-bg, var(--colorDarkBlue));
+          color: var(--table-header-color, white);
+          white-space:nowrap;
+          &.sortable {
+            cursor:pointer;
+            user-select:none;
+            &:after {
+              content:'↕';
+              margin-left:0.5rem;
+              opacity:0.5;
+            }
+            &[aria-sort="ascending"]:after {
+              content:'↑';
+              opacity:1;
+            }
+            &[aria-sort="descending"]:after {
+              content:'↓';
+              opacity:1;
+            }
+          }
+        }
+        tbody tr:nth-child(odd) td {
+          background: var(--table-odd-bg, white);
+          color: var(--table-odd-color, var(--colorDarkBlue));
+        }
+        tbody tr:nth-child(even) td {
+          background: var(--table-even-bg, var(--colorBackgroundGray));
+          color: var(--table-even-color, var(--colorDarkBlue));
+        }
+        .tableNoResults {
+          color: var(--colorDarkBlue);
+          margin-top:0.75rem;
+        }
+        // Below the breakpoint the table stops being a grid and each row becomes a card, with
+        // every cell labelled by its header - a table this wide cannot scroll gracefully on a
+        // phone, and the header row is off screen the moment it does.
+        @container (max-width: 600px) {
+          .tableScroll {
+            background:none;
+            border-radius:0;
+          }
+          thead {
+            display:none;
+          }
+          tr {
+            display:block;
+            border-radius:10px;
+            overflow:hidden;
+            margin-bottom:1rem;
+            box-shadow:0 2px 8px rgba(38, 33, 133, 0.15);
+          }
+          tr[hidden] {
+            display:none;
+          }
+          td {
+            display:flex;
+            justify-content:space-between;
+            gap:1rem;
+            padding:0.75rem 1rem;
+            &:before {
+              content:attr(data-label);
+              font-weight:600;
+              flex-shrink:0;
+            }
+            &[data-label=""]:before {
+              content:none;
+            }
+          }
+        }
+      }
+      .dividerBlock {
+        height: var(--dividerHeight, 1px);
+        background: var(--dividerColor, var(--colorDarkBlue));
+        border:0;
+        margin:2rem 0;
+      }
+      .embedBlock {
+        margin:2rem 0;
+        iframe {
+          display:block;
+          width:100%;
+          aspect-ratio:16 / 9;
+          border:0;
+        }
+        &.embedSpotify iframe {
+          aspect-ratio:auto;
+          height:352px;
+        }
+        &.embedGooglemaps iframe {
+          aspect-ratio:4 / 3;
+        }
+      }
+    }
+  }
+}

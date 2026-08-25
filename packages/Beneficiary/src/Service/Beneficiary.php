@@ -2,6 +2,7 @@
 
 namespace Solidarity\Beneficiary\Service;
 
+use Solidarity\Beneficiary\Entity\Beneficiary as BeneficiaryEntity;
 use Solidarity\Beneficiary\Entity\PaymentMethod;
 use Solidarity\Beneficiary\Repository\BeneficiaryRepository;
 use Skeletor\Core\TableView\Service\TableView;
@@ -18,9 +19,9 @@ class Beneficiary extends TableView
 {
     public function __construct(
         BeneficiaryRepository $repo, Session $user, Logger $logger, BeneficiaryFilter $filter,
-        private Project $project, private School $school, private Delegate $delegate, private City $city
-    ) {
-        parent::__construct($repo, $user, $logger, $filter);
+        private Project $project, private School $school, private Delegate $delegate, private City $city,
+        \Skeletor\Core\Activity\Service\Activity $activity) {
+        parent::__construct($repo, $user, $logger, $filter, activity: $activity);
     }
 
     public function getByPeriod(int $periodId): array
@@ -28,9 +29,10 @@ class Beneficiary extends TableView
         return $this->repo->fetchByPeriod($periodId);
     }
 
-    public function getBeneficiaryCount(): int
+    /** @param int|null $excludeStatus null counts everyone ever registered, removed included. */
+    public function getBeneficiaryCount(?int $excludeStatus = BeneficiaryEntity::STATUS_DELETED): int
     {
-        return $this->repo->getBeneficiaryCount();
+        return $this->repo->getBeneficiaryCount($excludeStatus);
     }
 
     public function fetchTableData(

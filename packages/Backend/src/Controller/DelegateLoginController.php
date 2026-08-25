@@ -2,7 +2,7 @@
 namespace Solidarity\Backend\Controller;
 
 use GuzzleHttp\Psr7\Response;
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\ManagerInterface;
 use League\Plates\Engine;
 use Psr\Http\Message\ResponseInterface;

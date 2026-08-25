@@ -2,10 +2,8 @@
 
 namespace Solidarity\Donor\Filter;
 
-use Laminas\Filter\ToInt;
-use Laminas\I18n\Filter\Alnum;
 use Skeletor\Core\Validator\ValidatorException;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class DonorProfileData
 {
@@ -20,10 +18,10 @@ class DonorProfileData
             'email' => trim($postData['email'] ?? ''),
             'firstName' => trim($postData['firstName'] ?? ''),
             'lastName' => trim($postData['lastName'] ?? ''),
-            CSRF::TOKEN_NAME => $postData[CSRF::TOKEN_NAME] ?? '',
+            Csrf::TOKEN_NAME => $postData[Csrf::TOKEN_NAME] ?? '',
         ];
 
-        unset($data[CSRF::TOKEN_NAME]);
+        unset($data[Csrf::TOKEN_NAME]);
 
         return $data;
     }

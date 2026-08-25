@@ -9,9 +9,9 @@ use Solidarity\EmailList\Repository\EmailListRepository;
 class EmailList extends TableView
 {
     public function __construct(
-        EmailListRepository $repo, Session $user, Logger $logger, \Solidarity\EmailList\Filter\EmailList $filter
-    ) {
-        parent::__construct($repo, $user, $logger, $filter);
+        EmailListRepository $repo, Session $user, Logger $logger, \Solidarity\EmailList\Filter\EmailList $filter,
+        \Skeletor\Core\Activity\Service\Activity $activity) {
+        parent::__construct($repo, $user, $logger, $filter, activity: $activity);
     }
 
     public function subscribe(string $email): void

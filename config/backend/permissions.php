@@ -15,6 +15,7 @@ return [
         'user.create' => [User::ROLE_ADMIN],
         'user.edit' => [User::ROLE_ADMIN],
         'user.delete' => [User::ROLE_ADMIN],
+        'user.deleteBulk' => [User::ROLE_ADMIN],
 
         // Delegate permissions
         'delegate.view_list' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
@@ -58,6 +59,7 @@ return [
         'emailList.create' => [User::ROLE_ADMIN],
         'emailList.edit' => [User::ROLE_ADMIN],
         'emailList.delete' => [User::ROLE_ADMIN],
+        'emailList.deleteBulk' => [User::ROLE_ADMIN],
 
         // Page permissions
         'page.view_list' => [User::ROLE_ADMIN],
@@ -66,6 +68,14 @@ return [
         'page.edit' => [User::ROLE_ADMIN],
         'page.delete' => [User::ROLE_ADMIN],
         'page.create_translation' => [User::ROLE_ADMIN],
+
+        // Post permissions
+        'post.view_list' => [User::ROLE_ADMIN],
+        'post.view' => [User::ROLE_ADMIN],
+        'post.create' => [User::ROLE_ADMIN],
+        'post.edit' => [User::ROLE_ADMIN],
+        'post.delete' => [User::ROLE_ADMIN],
+        'post.create_translation' => [User::ROLE_ADMIN],
 
         // Image permissions
         'image.view_list' => [User::ROLE_ADMIN],
@@ -111,6 +121,7 @@ return [
         '/user/form/*' => 'user.edit',
         '/user/update/*' => 'user.edit',
         '/user/delete/*' => 'user.delete',
+        '/user/deleteBulk/' => 'user.deleteBulk',
 
         // Delegate routes
         '/delegate/view/' => 'delegate.view_list',
@@ -178,6 +189,16 @@ return [
         '/page/delete/*' => 'page.delete',
         '/page/createTranslation/*' => 'page.create_translation',
 
+        // Post routes
+        '/post/view/' => 'post.view_list',
+        '/post/view/*' => 'post.view',
+        '/post/tableHandler/' => 'post.view_list',
+        '/post/create/' => 'post.create',
+        '/post/form/' => 'post.create',
+        '/post/form/*' => 'post.edit',
+        '/post/update/*' => 'post.edit',
+        '/post/delete/*' => 'post.delete',
+
         // Email list routes
         '/emails/view/' => 'emailList.view_list',
         '/emails/view/*' => 'emailList.view',
@@ -187,6 +208,7 @@ return [
         '/emails/form/*' => 'emailList.edit',
         '/emails/update/*' => 'emailList.edit',
         '/emails/delete/*' => 'emailList.delete',
+        '/emails/deleteBulk/' => 'emailList.deleteBulk',
 
         // Image routes
         '/image/view/' => 'page.view_list',

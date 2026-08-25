@@ -1,7 +1,7 @@
 <?php
 namespace Solidarity\Frontend\Action;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Skeletor\ContentEditor\Contracts\BlockViewInterface;
 use Skeletor\ContentEditor\Exceptions\TemplateNotFoundException;
@@ -26,7 +26,6 @@ class Index extends BaseAction
         protected Locale $locale,
     ) {
         parent::__construct($logger, $config, $template, $this->navigationService, $this->socialLinks, $session);
-
     }
 
     public function __invoke(

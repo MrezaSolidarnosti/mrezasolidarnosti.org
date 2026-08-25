@@ -43,19 +43,29 @@ class PageRepository extends \Skeletor\Page\Repository\PageRepository
     /**
      * [localeCode => slug] for every published page sharing a translation group.
      * Drives the language switcher so each locale links to its own localized slug.
+     *
+     * $pageId recovers the group for a page that is the root of one without carrying it:
+     * translations stamp the source's id, but only pages translated since createTranslation()
+     * started stamping the source itself also carry it. For an older pair the root was absent
+     * from its own group looking outwards and invisible to its translation looking back, so
+     * the switcher fell back to the homepage in both directions. Matching the id as well as
+     * the group column is what findTranslatedSlug() already does, which is why menu links
+     * localized correctly while the switcher did not.
      */
-    public function getLocalizedSlugs(?int $translationGroupId): array
+    public function getLocalizedSlugs(?int $translationGroupId, ?int $pageId = null): array
     {
-        if ($translationGroupId === null) {
+        $gid = $translationGroupId ?: $pageId;
+        if ($gid === null) {
             return [];
         }
 
         $rows = $this->entityManager->createQueryBuilder()
             ->select('p.languageCode AS code', 'p.slug AS slug')
             ->from(static::ENTITY, 'p')
-            ->where('p.translationGroupId = :gid')
+            // Parenthesised: andWhere() below would otherwise bind tighter than the OR.
+            ->where('(p.translationGroupId = :gid OR p.id = :gid)')
             ->andWhere('p.status = :status')
-            ->setParameter('gid', $translationGroupId)
+            ->setParameter('gid', $gid)
             ->setParameter('status', self::STATUS_PUBLISHED)
             ->getQuery()
             ->getArrayResult();
@@ -123,21 +133,14 @@ class PageRepository extends \Skeletor\Page\Repository\PageRepository
 
         $translation->languageCode = 'en';
 
-        // Both pages end up in the same group, and an existing one wins.
-        //
-        // The translation used to take the source's *id* as its group while the source kept
-        // a NULL one, so the two were never in the same group: the language switcher calls
-        // getLocalizedSlugs($page->translationGroupId), which found nothing from the source
-        // and only itself from the translation. A translated pair could not link to each
-        // other in either direction and both fell back to the homepage. (PageActionTest
-        // passed throughout because its fixtures give both pages one group id by hand —
-        // which is the shape this now actually produces.)
-        //
-        // Reusing the source's existing group rather than overwriting it matters once a
-        // third locale appears: stamping $pageId unconditionally would split the group.
-        $groupId = $source->translationGroupId ?? $pageId;
-        $translation->translationGroupId = $groupId;
+        // A page already in a group keeps it: stamping the source's id unconditionally would put
+        // the new page in a group of its own and leave the existing locales behind, so the group
+        // has to survive a second translation rather than be replaced by one. The source joins
+        // the group as well — while it kept a NULL group the switcher could not get from either
+        // page to the other and both directions fell back to the homepage.
+        $groupId = $source->translationGroupId ?: $source->getId();
         $source->translationGroupId = $groupId;
+        $translation->translationGroupId = $groupId;
 
         $this->entityManager->persist($translation);
         $this->entityManager->flush();

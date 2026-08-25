@@ -62,4 +62,23 @@ class Period
     {
         return sprintf('%s-%d-%d-%s', $this->project->code, $this->month, $this->year, $this->type);
     }
+
+    /** @return array<int, string> */
+    public static function getHrMonths(): array
+    {
+        return [
+            1 => 'Januar', 2 => 'Februar', 3 => 'Mart', 4 => 'April',
+            5 => 'Maj', 6 => 'Jun', 7 => 'Jul', 8 => 'Avgust',
+            9 => 'Septembar', 10 => 'Oktobar', 11 => 'Novembar', 12 => 'Decembar',
+        ];
+    }
+
+    /**
+     * Falls back to the raw number rather than an empty cell: a period carrying a month
+     * outside 1–12 is a data problem worth seeing in the table, not hiding.
+     */
+    public static function getHrMonth(?int $month): string
+    {
+        return self::getHrMonths()[$month] ?? (string) $month;
+    }
 }

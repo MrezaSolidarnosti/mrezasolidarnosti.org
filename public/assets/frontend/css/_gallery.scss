@@ -1,0 +1,385 @@
+/* ============================== Gallery ================================== */
+.gallery {
+  --galleryGap: 10px;
+  --galleryTileWidth: 220px;
+  --galleryTileRatio: 1.5;
+  --galleryColumns: 3;
+  --galleryRowHeight: 220px;
+
+  .galleryItem {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;   // tiles are often <a> to the full-size image
+    background: var(--colorSurface-200);
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: 0.3s ease transform;
+    }
+
+    &:hover img {
+      transform: scale(1.04);
+    }
+
+    // Shown on hover only, so the thumbnail stays clean until you're interested.
+    .galleryCaption {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      box-sizing: border-box;
+      padding: 0.45rem 0.6rem;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
+      color: #fff;
+      font-size: 0.8rem;
+      line-height: 1.3;
+      opacity: 0;
+      transform: translateY(0.4rem);
+      transition: 0.25s ease opacity, 0.25s ease transform;
+      pointer-events: none;
+    }
+
+    &:hover .galleryCaption,
+    &:focus-visible .galleryCaption {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    // The "+N" tile: the last visible one when visibleCount hides the rest.
+    .galleryExtras {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 1.9rem;
+      font-weight: 700;
+      transition: 0.25s ease background;
+    }
+
+    &.galleryItemLast {
+      .galleryCaption { display: none; }   // the +N overlay owns this tile
+      &:hover .galleryExtras { background: rgba(0, 0, 0, 0.68); }
+    }
+  }
+
+  .galleryItemHidden {
+    display: none;
+  }
+
+  // Skeleton tile: a shimmer sweeping across the surface colour. No image, no caption, no
+  // pointer — it only holds the space the real tile will occupy.
+  .galleryPlaceholder {
+    cursor: default;
+    background: var(--colorSurface-300);
+    background-image: linear-gradient(
+                    90deg,
+                    transparent 0%,
+                    rgba(255, 255, 255, 0.08) 50%,
+                    transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: galleryShimmer 1.4s ease-in-out infinite;
+
+    &:hover {
+      background-color: var(--colorSurface-300);   // no hover response; it isn't interactive
+    }
+  }
+
+  // In grid and carousel the tile shape comes from aspect-ratio; masonry has no fixed height,
+  // so give the skeleton one or it would collapse to nothing.
+  &.galleryMasonry .galleryPlaceholder {
+    aspect-ratio: var(--galleryTileRatio);
+  }
+}
+
+@keyframes galleryShimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+// Nothing to watch for someone who asked for less motion — just a flat block.
+@media (prefers-reduced-motion: reduce) {
+  .gallery .galleryPlaceholder {
+    animation: none;
+  }
+}
+
+/* Grid — uniform tiles that re-flow, cropped to a fixed ratio. */
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--galleryTileWidth), 1fr));
+  gap: var(--galleryGap);
+
+  .galleryItem {
+    aspect-ratio: var(--galleryTileRatio);
+  }
+}
+
+/* Justified — JS sets each tile's px size so every row fills the width exactly. */
+.galleryJustified {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--galleryGap);
+
+  .galleryItem {
+    flex: 0 0 auto;
+  }
+}
+
+/* Masonry — JS builds the columns and places each tile in the shortest one; this just lays
+   the columns out. Nothing is cropped, so heights vary. */
+.galleryMasonry {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--galleryGap);
+
+  .galleryColumn {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--galleryGap);
+  }
+
+  .galleryItem img {
+    height: auto;   // let the image keep its own proportions
+  }
+}
+
+/* Two columns on small screens rather than one very wide tile. */
+@media only screen and (max-width: 560px) {
+  .galleryGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============================== Lightbox ================================= */
+.galleryScrollLocked {
+  overflow: hidden;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.96);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+
+  &.lightboxOpen {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.25s ease, visibility 0s;
+  }
+
+  .lightboxTopBar {
+    position: relative;
+    z-index: 2;   // above the slides, whatever the DOM order
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+  }
+
+  .lightboxCount {
+    color: #d4d4d4;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .lightboxActions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .lightboxAction {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition: 0.2s ease background;
+
+    svg {
+      width: 22px;
+      height: 22px;
+      fill: #d4d4d4;
+      pointer-events: none;
+      transition: 0.2s ease fill;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      svg { fill: #fff; }
+    }
+
+    &.galleryDisabled {
+      opacity: 0.25;
+      pointer-events: none;
+    }
+  }
+
+  .lightboxShare {
+    position: relative;
+  }
+
+  .lightboxShareMenu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    display: none;
+    flex-direction: column;
+    min-width: 150px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    scrollbar-gutter: auto;
+
+    &.active {
+      display: flex;
+    }
+
+    a {
+      padding: 0.6rem 0.9rem;
+      color: #222;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: left;
+      text-decoration: none;
+      transition: 0.2s ease background, 0.2s ease color;
+
+      & + a {
+        border-top: 1px solid #e6e6e6;
+      }
+
+      &:hover {
+        background: var(--colorPrimary-500);
+        color: #fff;
+      }
+    }
+  }
+
+  .lightboxStage {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    min-height: 0;   // let it shrink inside the flex column instead of pushing the footer off
+  }
+
+  // Every slide exists from the start; only the active one is displayed. Anything else risks
+  // two slides showing at once.
+  .lightboxSlide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    // The slide covers the whole stage even when the image is small, so it would swallow every
+    // click around the image — stealing the arrows and stopping a backdrop click from closing.
+    // Only the image itself is interactive; the empty space passes clicks through to the stage.
+    pointer-events: none;
+
+    &.lightboxSlideActive {
+      display: flex;
+    }
+
+    img {
+      pointer-events: auto;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transform-origin: center center;
+      transition: transform 0.2s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+  }
+
+  // While zoomed the transform follows the finger, so the easing has to go.
+  &.lightboxZoomed .lightboxSlide img {
+    transition: none;
+    cursor: grab;
+  }
+
+  .lightboxLoader {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--colorPrimary-500);
+    border-radius: 50%;
+    animation: gallerySpin 0.9s linear infinite;
+
+    &.galleryHidden {
+      display: none;
+    }
+  }
+
+  .lightboxPrevious,
+  .lightboxNext {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.45);
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+  }
+
+  .lightboxPrevious { left: 1rem; }
+  .lightboxNext { right: 1rem; }
+
+  .lightboxFooter {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto;
+    padding: 0.9rem 1rem;
+    color: #d3d3d3;
+    text-align: center;
+    font-size: 0.85rem;
+
+    &.galleryHidden {
+      visibility: hidden;   // keep the height so the image doesn't jump between slides
+    }
+  }
+
+  @media only screen and (max-width: 768px) {
+    .lightboxPrevious { left: 0.35rem; }
+    .lightboxNext { right: 0.35rem; }
+  }
+}
+
+@keyframes gallerySpin {
+  to { transform: rotate(360deg); }
+}
+
+.galleryItem:focus-visible,
+.lightboxAction:focus-visible {
+  outline: 2px solid var(--colorOrange);
+}

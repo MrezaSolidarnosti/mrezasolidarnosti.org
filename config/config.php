@@ -75,6 +75,37 @@ return array(
         // invert on export to key the file by the English string: "Delete": {"sr": "Obriši"}.
         'jsInvert' => true,
     ],
+    /**
+     * Confirmed money that no longer has transactions behind it.
+     *
+     * The legacy app deleted donors who had gone inactive, and that cascaded to their
+     * transactions. It started while the projects were running a surplus — more donors
+     * pledging than requests to fund — which the old app was not built for, so the cleanup ran
+     * against people whose confirmed donations had already been paid, counted and published.
+     * ~6,400 donor deletions took their confirmed transactions with them.
+     *
+     * Nothing survives to rebuild them: the cascade logged no row contents, log_entity_change
+     * has no Transaction deletes and its diffs never carry `amount`, and log_command_change
+     * stores one fixed sentence per run. Both legacy databases were exhausted, as were the
+     * SF/msdash dumps (see the two recover* commands).
+     *
+     * So it is carried here rather than written into the transaction table, where a synthetic
+     * row would be indistinguishable from a real donation and would leak into per-donor and
+     * per-period views that have to stay evidential.
+     *
+     * Applied to `confirmedAmount` only — not to counts, not to any per-person or per-period
+     * figure. Shown with its note in the backend dashboard; deliberately not on the public
+     * site, where the caveat needs more context than a footnote can carry.
+     */
+    'historicalAdjustment' => [
+        'MSP' => [
+            'amount' => 90000000,
+            'note' => 'Confirmed donations lost when the legacy app cascade-deleted inactive'
+                . ' donors (from ~Aug 2025). Amount of 330,000,000 RSD confirmed as at August'
+                . ' 2025, publicly reported at the time. Unrecoverable — see Statistics::historicalAdjustment().',
+        ],
+    ],
+
     'cliMap' =>  [
         // Cron entry point. CliSkeletor invokes Action classes via __invoke().
         // Run: php public/cli.php createTransactions run   (the 2nd arg is ignored)
@@ -86,6 +117,12 @@ return array(
         // Legacy data migration. Dry-run: `php public/cli.php migrateLegacy run`
         // Commit:                `php public/cli.php migrateLegacy commit`
         'migrateLegacy' => \Solidarity\Backend\Action\MigrateLegacy::class,
+
+        // MSPR from its own legacy instance (solidmspr_old). Runs AFTER migrateLegacy:
+        // it needs project 2 to exist, and matches donors/delegates on email against what
+        // that import created. Dry-run: `php public/cli.php migrateLegacyMspr run`
+        // Commit:                       `php public/cli.php migrateLegacyMspr commit`
+        'migrateLegacyMspr' => \Solidarity\Backend\Action\MigrateLegacyMspr::class,
         // Recover lost instructions (periods 26/27). Dry-run: `php public/cli.php recoverInstructions run`
         // Commit:                     `php public/cli.php recoverInstructions commit`
         'recoverInstructions' => \Solidarity\Backend\Action\RecoverInstructions::class,

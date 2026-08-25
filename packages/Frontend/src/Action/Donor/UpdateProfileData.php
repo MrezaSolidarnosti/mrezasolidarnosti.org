@@ -2,14 +2,14 @@
 
 namespace Solidarity\Frontend\Action\Donor;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Validator\ValidatorException;
 use Skeletor\ThemeSettings\Navigation\Service\Navigation;
 use Skeletor\ThemeSettings\SocialLinks\Service\SocialLinks;
 use Solidarity\Frontend\Action\BaseAction;
-use Volnix\CSRF\CSRF;
+use Skeletor\Core\Security\Csrf;
 
 class UpdateProfileData extends BaseAction
 {
@@ -18,7 +18,7 @@ class UpdateProfileData extends BaseAction
         protected Navigation $navigationService,
         protected SocialLinks $socialLinks,
         \Solidarity\Frontend\Service\Session $session,
-    ) {
+        private \Skeletor\Core\Security\Csrf $csrf) {
         parent::__construct($logger, $config, $template, $this->navigationService, $this->socialLinks, $session);
 
     }
@@ -52,7 +52,7 @@ class UpdateProfileData extends BaseAction
             $statusCode = 400;
             $responseData['errors'][] = 'An unexpected error occurred, please try again.';
         }
-        $responseData['token'] = CSRF::getToken();
+        $responseData['token'] = $this->csrf->getToken();
         return $this->returnWithData($success, $responseData, $statusCode);
     }
 }

@@ -1,7 +1,7 @@
 <?php
 namespace Fakture\Backend\Controller;
 
-use Laminas\Config\Config;
+use Skeletor\Core\Config\Config;
 use Laminas\Session\SessionManager as Session;
 use Tamtamchik\SimpleFlash\Flash;
 use Twig\Environment as Twig;

@@ -56,7 +56,10 @@ class Page
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     public ?int $translationGroupId = null;
 
-    /** Opt-in flag: pages are public unless someone deliberately protects them. */
+    // Defaulted rather than left uninitialised: the column is NOT NULL, and factories and
+    // fixtures do `new Page()` without touching this — Doctrine then reads an uninitialised
+    // typed property as null and the insert dies on the constraint. A page is public unless
+    // someone ticks the box, so 0 is the right default. PHP-side only; the column is unchanged.
     #[ORM\Column(type: Types::INTEGER)]
     public int $isLoginProtected = 0;
 
