@@ -263,7 +263,7 @@
             <div id="donationFormActions">
                 <?php // Label and target follow the selected mode; defaults to monthly, which is
                       // also the only option when no one-time donation is possible. ?>
-                <button type="submit" class="buttonPrimary" title="<?=$monthlyLabel?>"><?=$monthlyLabel?></button>
+                <button type="submit" class="buttonPrimary" data-umami-event="donor_click_donate" title="<?=$monthlyLabel?>"><?=$monthlyLabel?></button>
             </div>
         </div>
     </form>
