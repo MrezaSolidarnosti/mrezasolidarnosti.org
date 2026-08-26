@@ -73,6 +73,25 @@ class ConfirmPayment extends BaseAction
                 $this->transaction->updateField('paymentCode', trim($data['paymentCode']), $trx->id);
             }
             $this->transaction->updateField('status', \Solidarity\Transaction\Entity\Transaction::STATUS_WAITING_CONFIRMATION, $trx->id);
+
+            // Paying clears an unpaid-instruction flag on the spot, without waiting for a
+            // human. The flag asserts "this donor's instructions keep going unpaid" and the
+            // donor has just disproved it; leaving it set would keep them out of allocation
+            // until somebody happened to notice. statusChangedAt moves with it — that is where
+            // ExpireInstructions restarts counting the streak, so the cleared donor cannot be
+            // re-flagged on their old history.
+            //
+            // Formatted, not a \DateTime: CrudRepository::updateField() interpolates the value
+            // straight into DQL, so an object would not survive the trip.
+            $donor = $trx->donor;
+            $flags = [
+                \Solidarity\Donor\Entity\Donor::STATUS_TRY_TO_CONTACT,
+                \Solidarity\Donor\Entity\Donor::STATUS_IGNORING_PAYMENTS,
+            ];
+            if ($donor && in_array($donor->status, $flags, true)) {
+                $this->donor->updateField('status', \Solidarity\Donor\Entity\Donor::STATUS_VERIFIED, $donor->id);
+                $this->donor->updateField('statusChangedAt', (new \DateTime())->format('Y-m-d H:i:s'), $donor->id);
+            }
         } catch (\Exception $e) {
             $success = false;
             $statusCode = 400;

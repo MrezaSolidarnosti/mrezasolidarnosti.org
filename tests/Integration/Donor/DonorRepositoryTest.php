@@ -209,6 +209,119 @@ final class DonorRepositoryTest extends IntegrationTestCase
         self::assertCount(0, $donor->projects);
     }
 
+    // ---- rotation: least recently allocated first -------------------------------
+
+    public function testDonorsAreOrderedByHowLongAgoTheyWereLastAllocatedAnything(): void
+    {
+        // With pledges exceeding need the allocator only ever reaches the front of this list,
+        // so the order decides who is served and who is permanently starved.
+        $project = $this->createProject('MSPR');
+        $period = $this->createPeriod($project);
+        $beneficiary = $this->createBeneficiary();
+
+        $recent = $this->donorForProject($project, Donor::STATUS_VERIFIED);
+        $ancient = $this->donorForProject($project, Donor::STATUS_VERIFIED);
+
+        $this->backdateTransaction(
+            $this->createTransaction($recent, $beneficiary, $project, $period, 1000),
+            '2026-08-01 00:00:00',
+        );
+        $this->backdateTransaction(
+            $this->createTransaction($ancient, $beneficiary, $project, $period, 1000),
+            '2020-01-01 00:00:00',
+        );
+
+        self::assertSame(
+            [$ancient->getId(), $recent->getId()],
+            $this->donorIds($this->repo()->getDonorsByProject($project)),
+        );
+    }
+
+    public function testADonorWhoHasNeverBeenAllocatedAnythingComesFirst(): void
+    {
+        // The whole point of the rotation: new registrations and the forgotten tail lead,
+        // because NULL sorts ahead of every date on ASC.
+        $project = $this->createProject('MSPR');
+        $period = $this->createPeriod($project);
+        $beneficiary = $this->createBeneficiary();
+
+        $served = $this->donorForProject($project, Donor::STATUS_VERIFIED);
+        $neverServed = $this->donorForProject($project, Donor::STATUS_VERIFIED);
+
+        $this->backdateTransaction(
+            $this->createTransaction($served, $beneficiary, $project, $period, 1000),
+            '2020-01-01 00:00:00',
+        );
+
+        self::assertSame(
+            [$neverServed->getId(), $served->getId()],
+            $this->donorIds($this->repo()->getDonorsByProject($project)),
+        );
+    }
+
+    public function testDonorsWithNoAllocationsKeepAStableOrderAmongThemselves(): void
+    {
+        // All NULL on the first sort key, so without the id tiebreak their order would be
+        // whatever MySQL felt like — and a dry run could preview a different round than the
+        // one that commits.
+        $project = $this->createProject('MSPR');
+
+        $first = $this->donorForProject($project, Donor::STATUS_VERIFIED);
+        $second = $this->donorForProject($project, Donor::STATUS_VERIFIED);
+        $third = $this->donorForProject($project, Donor::STATUS_VERIFIED);
+
+        self::assertSame(
+            [$first->getId(), $second->getId(), $third->getId()],
+            $this->donorIds($this->repo()->getDonorsByProject($project)),
+        );
+    }
+
+    public function testTheMostRecentAllocationDecidesPositionNotTheOldest(): void
+    {
+        // A long-standing donor served again last week must go to the back, not stay at the
+        // front on the strength of a transaction from years ago. MAX(), not MIN().
+        $project = $this->createProject('MSPR');
+        $period = $this->createPeriod($project);
+        $beneficiary = $this->createBeneficiary();
+
+        $servedTwice = $this->donorForProject($project, Donor::STATUS_VERIFIED);
+        $servedOnceMidway = $this->donorForProject($project, Donor::STATUS_VERIFIED);
+
+        $this->backdateTransaction(
+            $this->createTransaction($servedTwice, $beneficiary, $project, $period, 1000),
+            '2020-01-01 00:00:00',
+        );
+        $this->backdateTransaction(
+            $this->createTransaction($servedTwice, $beneficiary, $project, $period, 1000),
+            '2026-08-20 00:00:00',
+        );
+        $this->backdateTransaction(
+            $this->createTransaction($servedOnceMidway, $beneficiary, $project, $period, 1000),
+            '2023-01-01 00:00:00',
+        );
+
+        self::assertSame(
+            [$servedOnceMidway->getId(), $servedTwice->getId()],
+            $this->donorIds($this->repo()->getDonorsByProject($project)),
+        );
+    }
+
+    public function testGroupingDoesNotDuplicateADonorWithSeveralTransactions(): void
+    {
+        // The left join multiplies rows per transaction; GROUP BY is what collapses them.
+        // Without it the donor would be processed once per transaction they have ever had.
+        $project = $this->createProject('MSPR');
+        $period = $this->createPeriod($project);
+        $beneficiary = $this->createBeneficiary();
+
+        $donor = $this->donorForProject($project, Donor::STATUS_VERIFIED);
+        $this->createTransaction($donor, $beneficiary, $project, $period, 1000);
+        $this->createTransaction($donor, $beneficiary, $project, $period, 2000);
+        $this->createTransaction($donor, $beneficiary, $project, $period, 3000);
+
+        self::assertSame([$donor->getId()], $this->donorIds($this->repo()->getDonorsByProject($project)));
+    }
+
     /** @param array<int, array{amount: int, currency: int}> $paymentData */
     private function pledge(Donor $donor, int $projectId, array $paymentData): array
     {

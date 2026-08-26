@@ -57,19 +57,57 @@ class DonorRepository extends TableViewRepository implements LoginRepositoryInte
             ->execute();
     }
 
+    /**
+     * Donors eligible for allocation, least recently contacted first.
+     *
+     * Ordered by when the donor was last given anything, not by id. With pledges exceeding
+     * need — which is the normal state — the allocator drains the front of this list and never
+     * reaches the back, so a fixed id order permanently serves the same people and permanently
+     * starves everyone behind them. Ascending or descending makes no difference to that; it
+     * only decides which end is starved.
+     *
+     * MAX(t.createdAt) is "when did we last ask this person", so:
+     *   - donors who have never been allocated anything sort first (NULL leads on ASC in
+     *     MySQL) — new registrations and the long-forgotten tail;
+     *   - being allocated something moves a donor to the back on its own, so the rotation
+     *     needs no cursor to persist and nothing to reset;
+     *   - a donor who is processed but allocated nothing keeps their timestamp, and therefore
+     *     keeps their place at the front for the next round, which is what should happen.
+     *
+     * Deliberately counts transactions across ALL projects, not just this one: it measures
+     * contact, and the donor is mailed once per round regardless of which project funded it.
+     * CreateTransaction merges the per-project lists and dedupes by id anyway, so the first
+     * project a donor appears in fixes their position.
+     *
+     * Also deliberately every status, expired and cancelled included — an instruction the
+     * donor ignored is still an approach we made, and re-asking them immediately is exactly
+     * the pestering this ordering exists to avoid. Switch the join to the confirmed/paid
+     * statuses only if the policy should become "keep asking whoever actually pays".
+     *
+     * @return Donor[]
+     */
     public function getDonorsByProject($project): array
     {
         $qb = $this->entityManager->createQueryBuilder();
 
         $qb->select('d')
+            // HIDDEN so the result stays a list of Donor entities; same shape as
+            // BeneficiaryRepository::fetchByPeriod(), which sorts on a hidden aggregate too.
+            ->addSelect('MAX(t.createdAt) AS HIDDEN lastAllocatedAt')
             ->from(Donor::class, 'd')
             ->innerJoin('d.projects', 'p')
+            ->leftJoin('d.transactions', 't')
             ->where('p.id = :projectId')
             ->andWhere('d.isActive = 1')
             ->andWhere('d.status IN (:statuses)')
             ->setParameter('projectId', $project->id)
             ->setParameter('statuses', [Donor::STATUS_VERIFIED, Donor::STATUS_NEW])
-            ->orderBy('d.id', 'ASC');
+            ->groupBy('d.id')
+            ->orderBy('lastAllocatedAt', 'ASC')
+            // Stable tiebreak, so donors who have never been allocated anything (all NULL, so
+            // all equal on the first key) still come out in a fixed, reproducible order —
+            // without it the dry run could preview a different round than the one that commits.
+            ->addOrderBy('d.id', 'ASC');
 //            ->setMaxResults(100);
 
         $results = $qb->getQuery()->getResult();

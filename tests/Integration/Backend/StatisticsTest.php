@@ -218,7 +218,17 @@ final class StatisticsTest extends IntegrationTestCase
     {
         // Every figure goes straight into the template. COALESCE is what keeps a fresh
         // install from rendering blanks where the numbers should be.
+        //
+        // historicalAdjustmentNote is prose, not a figure: it explains the confirmed-amount
+        // adjustment to whoever reads the dashboard, and it is '' when there is no
+        // adjustment to explain. Asserting 0 on it was asserting the wrong type — skipped by
+        // value rather than by name so any further non-numeric entry is skipped too, while
+        // every numeric one stays guarded against null.
         foreach ($this->stats(null) as $key => $value) {
+            if (is_string($value)) {
+                self::assertSame('', $value, $key);
+                continue;
+            }
             self::assertSame(0, $value, $key);
         }
     }

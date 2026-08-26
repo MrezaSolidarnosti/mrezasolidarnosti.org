@@ -124,12 +124,22 @@ return array(
 
     'cliMap' =>  [
         // Cron entry point. CliSkeletor invokes Action classes via __invoke().
-        // Run: php public/cli.php createTransactions run   (the 2nd arg is ignored)
+        // Run: php public/cli.php createTransactions run   (use "dry" to preview)
+        // "dry" allocates for real inside a transaction, prints the full per-donor breakdown
+        // and then rolls back, sending no mail — the allocator re-reads its own writes, so a
+        // preview that skipped them would be wrong. Flag is "dry", not "commit", because the
+        // crontab already passes "run" and must keep meaning a real round.
         'createTransactions' => \Solidarity\Backend\Action\CreateTransaction::class,
         // Expire unpaid instructions past 72h. MUST run immediately before createTransactions
         // so the freed budget is reallocated in the same cycle.
         // Run: php public/cli.php expireInstructions run   (use "dry" to preview)
         'expireInstructions' => \Solidarity\Backend\Action\ExpireInstructions::class,
+        // Flag donors whose instructions keep going unpaid, so they stop being allocated to.
+        // Runs BETWEEN the two above: after expiry so this round's misses count, before
+        // allocation so a donor crossing the line is excluded from this round rather than
+        // handed one more instruction. Idempotent — safe to run at any time.
+        // Run: php public/cli.php flagDonors run   (use "dry" to preview)
+        'flagDonors' => \Solidarity\Backend\Action\FlagNonPayingDonors::class,
         // Clear the Translator's Redis cache after a manual `translation` table edit/import.
         // Run: `php public/cli.php resetTranslationsCache run`   (the 2nd arg is required but ignored)
         // ---- one-shot migration, delete after cutover -------------------------------

@@ -104,11 +104,16 @@ final class BeneficiaryRepositoryTest extends IntegrationTestCase
 
     public function testNullifiesOnlyBeneficiariesOfTheGivenDelegate(): void
     {
+        // Both need a school. nullifyCreatedByForDelegate() releases only beneficiaries held
+        // *through* a school, because the reclaim that follows it in Delegate::update() matches
+        // on school_id — a school-less one could be released and never restored. That case has
+        // its own test in BeneficiaryReassignmentTest; this one is about delegate scoping.
+        $school = $this->createSchool($this->createCity());
         $delegate = $this->createDelegate();
         $otherDelegate = $this->createDelegate();
 
-        $mine = $this->createBeneficiary('Mine', createdBy: $delegate);
-        $theirs = $this->createBeneficiary('Theirs', createdBy: $otherDelegate);
+        $mine = $this->createBeneficiary('Mine', school: $school, createdBy: $delegate);
+        $theirs = $this->createBeneficiary('Theirs', school: $school, createdBy: $otherDelegate);
 
         [$mineId, $theirsId] = [$mine->getId(), $theirs->getId()];
 
