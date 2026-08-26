@@ -122,6 +122,22 @@ final class BeneficiaryReassignmentTest extends IntegrationTestCase
         self::assertNull($this->reload($atKept)->createdBy);
     }
 
+    public function testReleasingADelegateLeavesTheirSchoollessBeneficiariesAlone(): void
+    {
+        // MSPR has no schools and names its delegate directly, so a released beneficiary could
+        // never be reclaimed: assignOrphanedBeneficiariesToDelegate() matches on school_id.
+        // Before the guard, editing any one of the delegate's MSP schools ran this and orphaned
+        // every MSPR beneficiary they held, permanently and with nothing logged.
+        $delegate = $this->createDelegate();
+        $atSchool = $this->createBeneficiary('At school', school: $this->school(), createdBy: $delegate);
+        $direct = $this->createBeneficiary('Assigned directly', school: null, createdBy: $delegate);
+
+        $this->repo()->nullifyCreatedByForDelegate($delegate->getId());
+
+        self::assertNull($this->reload($atSchool)->createdBy);
+        self::assertSame($delegate->getId(), $this->reload($direct)->createdBy?->getId());
+    }
+
     // ---- the create/update round trip --------------------------------------
 
     public function testReleasingThenReassigningRestoresOnlyTheRemainingSchool(): void

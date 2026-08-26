@@ -36,8 +36,14 @@ $schoolGroup = (new InputGroup())
     ->addInput($name)
     ->addInput($schoolSelect);
 
-if ($data['dataAction'] === 'update' && $data['model']?->school?->delegate) {
-    $delegateInfo = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
+// The delegate is always on the form now, but which way round depends on whether a school
+// carries one. MSP: the school owns the delegate, so it stays read-only and informational —
+// posting it would change nothing, since the filter takes the school's delegate first.
+// MSPR: there are no schools (MigrateLegacyMspr sets school = null), so nothing can be
+// derived and the delegate is chosen here directly. Deciding this server-side off the stored
+// model keeps it free of JS; the filter applies the same precedence on save either way.
+if ($data['model']?->school?->delegate) {
+    $delegateInput = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
         'delegateInfo',
         '/delegate/tableHandler/',
         'name',
@@ -48,8 +54,19 @@ if ($data['dataAction'] === 'update' && $data['model']?->school?->delegate) {
         '',
         [], [], null, null, true
     ));
-    $schoolGroup->addInput($delegateInfo);
+} else {
+    $delegateInput = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
+        'delegate',
+        '/delegate/tableHandler/',
+        'name',
+        'id',
+        'Delegat',
+        $data['model']?->createdBy?->id ?? null,
+        $data['model']?->createdBy?->name,
+        'Traži delegate...'
+    ));
 }
+$schoolGroup->addInput($delegateInput);
 
 $basicInfo = (new Tab('Osnovne Info'))
     ->addInputGroup($schoolGroup)

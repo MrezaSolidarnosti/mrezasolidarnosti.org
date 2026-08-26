@@ -82,7 +82,10 @@ class Beneficiary extends TableView
                     'editColumn' => true,
                 ],
                 'rp.project' => implode(', ', $projects),
-                'school' => $beneficiary->school->name,
+                // Null-safe like the city below it: a school is optional now that MSPR
+                // beneficiaries are assigned a delegate directly, and reading ->name off
+                // null warned on every row of the listing.
+                'school' => $beneficiary->school?->name,
                 'sumAmount' => number_format($totalAmount, 0),
                 'currentAmount' => number_format($confirmedAmount, 0),
                 'delegateVerified' => ($beneficiary->createdBy?->status === \Solidarity\Delegate\Entity\Delegate::STATUS_VERIFIED) ? 'Da' : 'Ne',

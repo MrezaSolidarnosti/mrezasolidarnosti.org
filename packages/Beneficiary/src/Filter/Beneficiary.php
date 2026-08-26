@@ -18,16 +18,29 @@ class Beneficiary implements FilterInterface
     public function filter($postData): array
     {
         // todo add validation for maxAmount from project if set for registered projects when saving
-        $school = $this->school->getById($postData['school']);
-//        var_dump($school->delegate);
-//        die();
+
+        // Two routes to a delegate, and the school wins whenever there is one. MSP hangs the
+        // delegate off the school, so choosing a school still stamps its delegate onto
+        // createdBy exactly as before. MSPR has no schools — MigrateLegacyMspr sets
+        // school = null — so there is nothing to derive it from and the form posts a delegate
+        // directly instead.
+        //
+        // Resolving the school unconditionally is what made every school-less beneficiary
+        // unsaveable: getById(null) returned null, ->delegate read off it gave null, and the
+        // validator then refused the save with "School has no delegate assigned". Both keys
+        // are always present so AbstractFactory::formatForWrite clears the relation on a
+        // falsy value rather than leaving a stale one behind.
+        $schoolId = !empty($postData['school']) ? $postData['school'] : null;
+        $school = $schoolId ? $this->school->getById($schoolId) : null;
+        $delegateId = !empty($postData['delegate']) ? (int) $postData['delegate'] : null;
+
         $data = [
             'id' => (isset($postData['id'])) ? $postData['id'] : null,
             'name' => trim($postData['name'] ?? ''),
             'status' => (int) ($postData['status'] ?? \Solidarity\Beneficiary\Entity\Beneficiary::STATUS_NEW),
             'comment' => trim($postData['comment'] ?? ''),
-            'school' => $postData['school'] ?? null,
-            'createdBy' => $school->delegate?->id ?? null,
+            'school' => $schoolId,
+            'createdBy' => $school?->delegate?->id ?? $delegateId,
         ];
 
         // Parse registeredPeriods rows from form
