@@ -942,6 +942,9 @@ strong {
 #footerMain #footerBottom #footerRight #footerRightContent #nlSignup .messagesContainer {
   flex-basis: 100%;
 }
+#footerMain #footerBottom #footerRight #footerRightContent #nlSignup .messagesContainer:empty {
+  display: none;
+}
 #footerMain #footerBottom #footerRight #footerRightContent #nlSignup input {
   background: var(--colorBeige);
   border: 1px solid var(--colorDarkBlue);
@@ -1168,7 +1171,6 @@ strong {
 }
 .faq.home {
   background-image: url("../images/faqArrow.png");
-  min-height: 743px;
   background-color: white;
 }
 .faq:not(.home) {
@@ -1710,6 +1712,7 @@ strong {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 .bannerWrapper .banner .buttons a.primary {
   border: none;
@@ -5826,6 +5829,11 @@ main.loggedIn #notFound {
 }
 .blogPostWrapper .blogPost .postContent .embedBlock.embedGooglemaps iframe {
   aspect-ratio: 4/3;
+}
+
+#confirmMagicLink .buttonPrimary {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 /* ============================== Gallery ================================== */
