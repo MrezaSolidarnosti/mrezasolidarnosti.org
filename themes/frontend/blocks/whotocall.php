@@ -102,7 +102,7 @@
                 <h3><?=$this->t('Kontakt za građane:')?></h3>
                 <div class="logo">
                     <div class="images">
-                        <img src="<?=FRONT_IMAGES_URL?>/stit.png" alt="logo">
+                        <img src="<?=FRONT_ASSET_URL?>/images/stit.png" alt="logo">
                     </div>
                     <h4>ŠTIT</h4>
                     <p><?=$this->t('Građani i građanke koji su izloženi pritiscima mogu se, radi pravne i druge hitne podrške, obratiti inicijativi ŠTIT')?></p>
@@ -125,7 +125,7 @@
                 <h3><?=$this->t('Kontakt za akademsku zajednicu u Beogradu:')?></h3>
                 <div class="logo">
                     <div class="images">
-                        <img src="<?=FRONT_IMAGES_URL?>/akc.png" alt="logo">
+                        <img src="<?=FRONT_ASSET_URL?>/images/akc.png" alt="logo">
                     </div>
                     <h4><?=$this->t('Akademski krizni centar Pobunjenog univerziteta u Beogradu')?></h4>
                 </div>
@@ -150,7 +150,7 @@
                 <h3><?=$this->t('Kontakt za akademsku zajednicu u Nišu:')?></h3>
                 <div class="logo">
                     <div class="images">
-                        <img src="<?=FRONT_IMAGES_URL?>/sunis.png" alt="logo">
+                        <img src="<?=FRONT_ASSET_URL?>/images/sunis.png" alt="logo">
                     </div>
                     <h4><?=$this->t('Akademski krizni centar Niš')?></h4>
                 </div>
@@ -167,8 +167,8 @@
                 <h3><?=$this->t('Kontakt za akademsku zajednicu u Novom Sadu:')?></h3>
                 <div class="logo">
                     <div class="images">
-                        <img src="<?=FRONT_IMAGES_URL?>/suns.png" alt="logo">
-                        <img src="<?=FRONT_IMAGES_URL?>/sikr.png" alt="logo">
+                        <img src="<?=FRONT_ASSET_URL?>/images/suns.png" alt="logo">
+                        <img src="<?=FRONT_ASSET_URL?>/images/sikr.png" alt="logo">
                     </div>
                     <h4><?=$this->t('Akademski krizni centar Slobodnog univerziteta u Novom Sadu')?></h4>
                 </div>
@@ -184,7 +184,7 @@
                 <h3><?=$this->t('Kontakt za akademsku zajednicu u Kragujevcu:')?></h3>
                 <div class="logo">
                     <div class="images">
-                        <img src="<?=FRONT_IMAGES_URL?>/akckg.png" alt="logo">
+                        <img src="<?=FRONT_ASSET_URL?>/images/akckg.png" alt="logo">
                     </div>
                     <h4><?=$this->t('Akademski krizni centar Slobodnog univerziteta u Kragujevcu')?></h4>
                 </div>
