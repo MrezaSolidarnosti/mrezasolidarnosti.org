@@ -514,7 +514,7 @@
             "source": {
                 "type": "git",
                 "url": "https://bitbucket.org/dj_avolak/skeletor",
-                "reference": "0327e469c5ad3b0a5aa7051c5d4c2287884ee6a8"
+                "reference": "7c31cf5cccb973248e1075fc53a4f18cacc33ce4"
             },
             "require": {
                 "beberlei/doctrineextensions": "^1",
@@ -524,7 +524,6 @@
                 "ext-gd": "*",
                 "ext-igbinary": "*",
                 "ext-imagick": "*",
-                "ext-intl": "*",
                 "ext-json": "*",
                 "ext-pdo": "*",
                 "ext-redis": "*",
@@ -562,7 +561,7 @@
             "license": [
                 "MIT"
             ],
-            "time": "2026-08-21T21:46:39+00:00"
+            "time": "2026-08-26T10:09:52+00:00"
         },
         {
             "name": "dj_avolak/skeletor-asset-installer",
