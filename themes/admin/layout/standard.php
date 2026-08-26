@@ -8,10 +8,10 @@
     <title><?=$this->e($pageTitle)?></title>
     <link rel="stylesheet" href="https://skeletor.greenfriends.systems/skeletorjs/css/style.css">
     <link rel="stylesheet" href="<?=ADMIN_ASSET_URL . '/css/style.css?v=0.0.8'?>">
-    <link rel="shortcut icon" href="<?= ADMIN_ASSET_URL ?>/images/favicon.ico"/>
-    <link rel="apple-touch-icon" sizes="180x180" href="<?= ADMIN_ASSET_URL ?>/images/apple-touch-icon.png"/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100;0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;0,9..40,1000;1,9..40,100;1,9..40,200;1,9..40,300;1,9..40,400;1,9..40,500;1,9..40,600;1,9..40,700;1,9..40,800;1,9..40,900;1,9..40,1000&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
 </head>
