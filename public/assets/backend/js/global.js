@@ -1,9 +1,9 @@
 import Config from "https://skeletor.greenfriends.systems/skeletorjs/src/Config/Config.js";
 import Translator from "https://skeletor.greenfriends.systems/skeletorjs/src/Translator/Translator.js";
-import {translations} from "./config/translations.js";
+import {translations} from "./config/translations.js?v=1.0.0";
 
 const configDirectory = './config';
-import(`${configDirectory}/config-local.js?v=2.0.2`).then(({configLocal: configLocal}) => {
+import(`${configDirectory}/config-local.js?v=2.0.3`).then(({configLocal: configLocal}) => {
     Object.keys(configLocal).forEach((key) => {
         Config.set(key, configLocal[key]);
     });
