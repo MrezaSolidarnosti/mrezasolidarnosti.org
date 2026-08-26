@@ -320,7 +320,7 @@
 </div>
 <div id="editorOverlay"></div>
 <!-- Media Library end -->
-<script src="<?=ADMIN_ASSET_URL .'/js/global.js?v=2.0.2'?>" type="module"></script>
+<script src="<?=ADMIN_ASSET_URL .'/js/global.js?v=2.0.3'?>" type="module"></script>
 <script src="<?=ADMIN_ASSET_URL .'/js/post/post.js'?>" type="module"></script>
 </body>
 </html>
