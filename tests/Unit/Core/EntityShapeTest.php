@@ -63,7 +63,8 @@ final class EntityShapeTest extends TestCase
             ]],
             'Donor' => [\Solidarity\Donor\Entity\Donor::class, [
                 'comment', 'email', 'firstName', 'ipv4', 'isActive', 'lastLogin', 'lastName',
-                'lastVisit', 'paymentMethods', 'projects', 'status', 'transactions', 'wantsToDonateTo',
+                'lastVisit', 'paymentMethods', 'projects', 'status', 'statusChangedAt', 'transactions',
+                'wantsToDonateTo',
             ]],
             'Donor payment method' => [\Solidarity\Donor\Entity\PaymentMethod::class, [
                 'amount', 'currency', 'donor', 'monthly', 'project', 'type',

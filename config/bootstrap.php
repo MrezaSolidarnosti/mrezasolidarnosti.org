@@ -111,11 +111,33 @@ $container->set(ManagerInterface::class, function() use ($container) {
     ini_set('session.save_handler', 'redis');
     ini_set('session.save_path', sprintf('tcp://%s:%s?weight=1&timeout=1', $redisHost, $redisPort));
 
+    // Which host this app answers on, taken from config rather than sniffed from $_SERVER.
+    // Behind Cloudflare $_SERVER['HTTPS'] is not reliable, and X-Forwarded-Proto is attacker-
+    // controllable on any request that does not actually come through the proxy. adminUrl is
+    // absent from some configs, hence the fallback.
+    $appUrl = (string) (\Solidarity\Core\Environment::isBackend()
+        ? ($config->adminUrl ?? $config->baseUrl)
+        : $config->baseUrl);
+
     $sessionConfig = new SessionConfig();
     $sessionConfig->setOptions([
         'remember_me_seconds' => 2592000, //2592000, // 30 * 24 * 60 * 60 = 30 days
         'use_cookies'         => true,
         'cookie_lifetime'     => 30 * 24 * 60 * 60,
+        // Laminas only mirrors whatever session.* ini already holds, and nothing set these, so
+        // the session cookie went out bare on every environment: readable by any script on the
+        // page — which turns any XSS into a session takeover — and attached to cross-site
+        // requests, widening the CSRF surface the form tokens exist to close.
+        'cookie_httponly'     => true,
+        // Lax, not Strict: the donor magic link is followed from an email client, and a Strict
+        // cookie is withheld on that first cross-site navigation, so the donor would land on
+        // the verify page with no session and be bounced.
+        'cookie_samesite'     => 'Lax',
+        // Derived, never hardcoded true: local dev runs on plain http (config-local baseUrl),
+        // and a Secure cookie there is never sent back — every request would start a fresh
+        // session and login would silently fail, exactly the way the non-ASCII cookie name
+        // above broke Safari.
+        'cookie_secure'       => str_starts_with($appUrl, 'https://'),
     ]);
     $session = new SessionManager($sessionConfig);
     $session->start();

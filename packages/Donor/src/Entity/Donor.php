@@ -22,6 +22,19 @@ class Donor implements AuthenticatableInterface
     const STATUS_PROBLEM = 3;
     const STATUS_DELETED = 4;
 
+    /**
+     * Set by ExpireInstructions when a donor's instructions keep going unpaid, cleared by a
+     * human (or by the donor paying — see Frontend\Action\Donor\ConfirmPayment).
+     *
+     * Both are excluded from allocation, because DonorRepository::getDonorsByProject() admits
+     * only NEW and VERIFIED. Neither blocks login: an unpaid instruction reserves a
+     * beneficiary's need, so the point is to stop *generating* new ones, not to lock the
+     * person out. TRY_TO_CONTACT in particular is set precisely because the donor never came
+     * back — barring them from returning would be self-defeating.
+     */
+    const STATUS_TRY_TO_CONTACT = 5;
+    const STATUS_IGNORING_PAYMENTS = 6;
+
     // Values aligned with the legacy app's UserDonor::SCHOOL_TYPE_* so the data
     // migration is a direct copy (ALL=1, UNIVERSITY/UNI=2, EDUCATION/SCHOOL=3).
     const DONATE_TO_ALL = 1;
@@ -56,6 +69,19 @@ class Donor implements AuthenticatableInterface
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     public ?\DateTime $lastVisit = null;
 
+    /**
+     * When this donor's status last changed, and therefore where the unpaid-instruction
+     * count starts over.
+     *
+     * Without it the auto-flagging is a loop: an admin clears a flagged donor, the same
+     * historical misses are still in the table, and the next expire run re-flags them within
+     * the round. "Misses since their last honoured payment" cannot serve instead — a flagged
+     * donor is allocated nothing, so they can never honour anything, and the streak could
+     * never reset. NULL means "never changed", i.e. count their whole history.
+     */
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    public ?\DateTime $statusChangedAt = null;
+
     #[ORM\OneToMany(targetEntity: PaymentMethod::class, mappedBy: 'donor')]
     public Collection $paymentMethods;
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'donor')]
@@ -82,7 +108,16 @@ class Donor implements AuthenticatableInterface
     public function isActive(): bool
     {
         // NEW can authenticate (the click *is* the verification); DELETED/PROBLEM cannot.
-        return in_array($this->status, [self::STATUS_NEW, self::STATUS_VERIFIED], true);
+        // The two unpaid-instruction flags deliberately CAN: they stop allocation, not access.
+        // TRY_TO_CONTACT exists because the donor never came back, so locking them out would
+        // defeat the only remedy it has; IGNORING_PAYMENTS is a shadow ban, and paying an
+        // outstanding instruction is how a donor clears it themselves.
+        return in_array($this->status, [
+            self::STATUS_NEW,
+            self::STATUS_VERIFIED,
+            self::STATUS_TRY_TO_CONTACT,
+            self::STATUS_IGNORING_PAYMENTS,
+        ], true);
     }
 
     public function supportsAuthenticator(string $type): bool { return $type === 'magic_link'; }
@@ -100,6 +135,11 @@ class Donor implements AuthenticatableInterface
             self::STATUS_VERIFIED => 'Potvrdjen email',
             self::STATUS_PROBLEM => 'Problem',
             self::STATUS_DELETED => 'Obrisan',
+            // Mandatory, not cosmetic: getHrStatus() returns getHrStatuses()[$status] with a
+            // string return type, so an unlisted status is a TypeError and the donor table
+            // fatals on the first flagged row.
+            self::STATUS_TRY_TO_CONTACT => 'Za kontakt',
+            self::STATUS_IGNORING_PAYMENTS => 'Ignoriše uplate',
         );
     }
 
