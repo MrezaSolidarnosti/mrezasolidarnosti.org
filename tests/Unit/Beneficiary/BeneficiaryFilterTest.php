@@ -94,6 +94,43 @@ final class BeneficiaryFilterTest extends TestCase
         self::assertNull($result['createdBy']);
     }
 
+    public function testADirectlyChosenDelegateIsUsedWhenThereIsNoSchool(): void
+    {
+        // The MSPR case. Those beneficiaries are created with school = null (MigrateLegacyMspr
+        // sets it), so there is nothing to hang a delegate off and the form posts one directly.
+        // The school service must not be consulted at all: resolving a null id is what returned
+        // null, made createdBy null, and left the validator refusing every save.
+        $schools = $this->createMock(SchoolService::class);
+        $schools->expects(self::never())->method('getById');
+
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $schools);
+
+        $result = $filter->filter(['school' => '', 'delegate' => '12'] + $this->postData());
+
+        self::assertNull($result['school']);
+        self::assertSame(12, $result['createdBy']);
+    }
+
+    public function testTheSchoolsDelegateStillWinsOverADirectlyChosenOne(): void
+    {
+        // MSP is unchanged. The school owns the delegate and the form renders it read-only,
+        // so a posted delegate must not be able to talk over it.
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService(delegateId: 8));
+
+        $result = $filter->filter(['delegate' => '12'] + $this->postData());
+
+        self::assertSame(8, $result['createdBy']);
+    }
+
+    public function testADirectDelegateFillsInWhenTheChosenSchoolHasNone(): void
+    {
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService(delegateId: null));
+
+        $result = $filter->filter(['delegate' => '12'] + $this->postData());
+
+        self::assertSame(12, $result['createdBy']);
+    }
+
     public function testFilterThrowsWhenValidatorFails(): void
     {
         $filter = new BeneficiaryFilter($this->validator(valid: false), $this->schoolService(delegateId: 8));

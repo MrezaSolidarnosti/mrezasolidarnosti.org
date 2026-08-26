@@ -83,11 +83,26 @@ class BeneficiaryRepository extends TableViewRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * Release the beneficiaries a delegate holds *through a school*, ahead of the reclaim in
+     * Delegate::update().
+     *
+     * The `school_id IS NOT NULL` guard is load-bearing. The reclaim that follows this call is
+     * assignOrphanedBeneficiariesToDelegate(), which matches on school_id — so a beneficiary
+     * with no school can be released here but never restored. MSPR has no schools and assigns
+     * its delegate directly, which made every MSPR beneficiary collateral damage of an
+     * unrelated edit to any of that delegate's MSP schools: createdBy cleared, silently, with
+     * nothing able to put it back.
+     *
+     * School-held beneficiaries are untouched by the guard, so the existing MSP behaviour —
+     * including the delegate-scoped over-release that Delegate::update() compensates for — is
+     * unchanged.
+     */
     public function nullifyCreatedByForDelegate(int $delegateId): void
     {
         $conn = $this->entityManager->getConnection();
         $conn->executeStatement(
-            'UPDATE beneficiary SET createdBy_id = NULL WHERE createdBy_id = ?',
+            'UPDATE beneficiary SET createdBy_id = NULL WHERE createdBy_id = ? AND school_id IS NOT NULL',
             [$delegateId]
         );
     }
