@@ -4,7 +4,7 @@ import Faq from "./faq/faq.js";
 import LineGrid from "./lineGrid/lineGrid.js";
 import InstructionsTable from "./instructionsTable/InstructionsTable.js?v=0.0.4";
 import Translator from "./Translator/Translator.js";
-import {translations} from "./config/translations.js?v=0.0.3";
+import {translations} from "./config/translations.js?v=1.0.0";
 
 Translator.setTranslations(translations);
 const isEnglish = window.location.pathname === '/en' || window.location.pathname.startsWith('/en/');
