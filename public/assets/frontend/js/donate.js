@@ -1,4 +1,4 @@
-import Donate from "./donate/Donate.js?v=0.0.9";
+import Donate from "./donate/Donate.js?v=1.0.0";
 
 document.addEventListener('DOMContentLoaded', () => {
     const donate = new Donate({
