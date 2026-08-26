@@ -16,18 +16,18 @@
  * forge this request would have to already possess it.
  */
 ?>
-<div id="confirmMagicLink">
-    <h1><?=$this->t('Prijavite se')?></h1>
-    <p><?=$this->t('Kliknite na dugme ispod da biste završili prijavu.')?></p>
+<div id="confirmMagicLink" class="textHero lowGapForm">
+    <h1><?=$this->t('Uloguj se')?></h1>
+    <p><?=$this->t('Kliknite na dugme ispod da biste se ulogovali.')?></p>
 
     <?php // $data, not $token: Html::respond() renders with ['data' => $data], so everything
-          // passed in arrives under that key. Reading $token directly gave an undefined
-          // variable, posted an empty field, and every login failed with "invalid token".
-          //
-          // Plain path, not localizeUrl(): /donor/verifyEmail is not locale-prefixed, so a
-          // donor browsing under /en/ would have posted to a path with no route. ?>
+    // passed in arrives under that key. Reading $token directly gave an undefined
+    // variable, posted an empty field, and every login failed with "invalid token".
+    //
+    // Plain path, not localizeUrl(): /donor/verifyEmail is not locale-prefixed, so a
+    // donor browsing under /en/ would have posted to a path with no route. ?>
     <form method="post" action="/donor/verifyEmail">
         <input type="hidden" name="token" value="<?=$this->e($data['token'])?>">
-        <button type="submit" class="buttonPrimary"><?=$this->t('Nastavi na prijavu')?></button>
+        <button type="submit" class="buttonPrimary centered"><?=$this->t('Uloguj se')?></button>
     </form>
 </div>

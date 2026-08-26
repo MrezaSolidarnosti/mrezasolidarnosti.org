@@ -153,6 +153,9 @@
           }
           .messagesContainer {
             flex-basis:100%;
+            &:empty {
+              display:none;
+            }
           }
           input {
             background:var(--colorBeige);

@@ -112,9 +112,7 @@
                     <p><?=$this->t('Prijavite se za važne vesti, priče i načine da se uključite kada je podrška najpotrebnija.')?></p>
                     <form id="nlSignup" action="" method="post">
                         <?=$this->formToken()?>
-                        <div class="messagesContainer">
-
-                        </div>
+                        <div class="messagesContainer"></div>
                         <input name="email" aria-label="Email" type="email" id="nlEmail" placeholder="test@example.com">
                         <button type="submit" title="<?=$this->t('Prijavi se')?>"><?=$this->t('Prijavi se')?></button>
                     </form>
