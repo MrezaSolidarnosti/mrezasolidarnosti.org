@@ -241,19 +241,19 @@
                         </div>
                         <div class="triggerContainer">
                             <div class="trigger" data-method="2">
-                                <img src="<?=FRONT_ASSET_URL?>/images/payment/sepa.png" alt="SEPA">
+                                <img src="<?=FRONT_ASSET_URL?>/images/payment/sepa.png?v=0.0.1" alt="SEPA">
                             </div>
                             <span><?=$this->t('SEPA Međunarodni devizni transfer (samo za EU)')?> </span>
                         </div>
                         <div class="triggerContainer">
                             <div class="trigger" data-method="3">
-                                <img class="wuImg" src="<?=FRONT_ASSET_URL?>/images/payment/WU.png" alt="WU">
+                                <img class="wuImg" src="<?=FRONT_ASSET_URL?>/images/payment/WU.png?v=0.0.1" alt="WU">
                             </div>
                             <span><?=$this->t('Western Union - Međunarodni devizni transfer (ceo svet)')?> </span>
                         </div>
                         <div class="triggerContainer">
                             <div class="trigger" data-method="4">
-                                <img src="<?=FRONT_ASSET_URL?>/images/payment/mg.png" alt="Moneygram">
+                                <img src="<?=FRONT_ASSET_URL?>/images/payment/mg.png?v=0.0.1" alt="Moneygram">
                             </div>
                             <span><?=$this->t('MoneyGram - Međunarodni devizni transfer (ceo svet)')?> </span>
                         </div>
@@ -283,5 +283,5 @@
         'projectId' => $block['existingProjectId'] ?? null,
         'paymentMethods' => $block['existingPaymentMethods'] ?? [],
     ])?></script>
-    <script type="module" src="<?=FRONT_ASSET_URL?>/js/donate.js?v=0.0.9"></script>
+    <script type="module" src="<?=FRONT_ASSET_URL?>/js/donate.js?v=1.0.0"></script>
 <?php endif; ?>

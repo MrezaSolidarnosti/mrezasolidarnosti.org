@@ -23,16 +23,16 @@ export default class Form {
     #messagesContainer;
     paymentLogoURLs =  {
         2: {
-            dark: '/assets/frontend/images/payment/sepa.png',
-            light: '/assets/frontend/images/payment/sepaW.png'
+            dark: '/assets/frontend/images/payment/sepa.png?v=0.0.1',
+            light: '/assets/frontend/images/payment/sepaW.png?v=0.0.1'
         },
         3: {
-            dark: '/assets/frontend/images/payment/WU.png',
-            light: '/assets/frontend/images/payment/wuW.png'
+            dark: '/assets/frontend/images/payment/WU.png?v=0.0.1',
+            light: '/assets/frontend/images/payment/wuW.png?v=0.0.1'
         },
         4: {
-            dark: '/assets/frontend/images/payment/mg.png',
-            light: '/assets/frontend/images/payment/mgW.png'
+            dark: '/assets/frontend/images/payment/mg.png?v=0.0.1',
+            light: '/assets/frontend/images/payment/mgW.png?v=0.0.1'
         }
     }
     constructor({form, eventEmitter}) {
