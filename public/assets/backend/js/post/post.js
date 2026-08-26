@@ -6,7 +6,7 @@ import {events} from "../../vendor/skeletorJS/src/ContentEditor/events.js";
 import Excerpt from "./Modules/Excerpt.js";
 import CommandPalette from "../../vendor/skeletorJS/src/ContentEditor/CommandPalette/CommandPalette.js";
 import Translator from "https://skeletor.greenfriends.systems/skeletorjs/src/Translator/Translator.js";
-import {configLocal} from "../config/config-local.js?v=0.0.7";
+import {configLocal} from "../config/config-local.js?v=2.0.1";
 import Message from "../../vendor/skeletorJS/src/Message/Message.js";
 
 window.mediaLibrary = new MediaLibrary();
