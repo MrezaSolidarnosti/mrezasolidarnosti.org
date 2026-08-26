@@ -3,7 +3,7 @@ import Translator from "https://skeletor.greenfriends.systems/skeletorjs/src/Tra
 import {translations} from "./config/translations.js";
 
 const configDirectory = './config';
-import(`${configDirectory}/config-local.js?v=0.0.6`).then(({configLocal: configLocal}) => {
+import(`${configDirectory}/config-local.js?v=2.0.1`).then(({configLocal: configLocal}) => {
     Object.keys(configLocal).forEach((key) => {
         Config.set(key, configLocal[key]);
     });
