@@ -104,6 +104,10 @@ class CreateTransaction extends Html
             $conn->beginTransaction();
         }
 
+        // Counted rather than thrown: a round that limps is still a round, but it must say so.
+        $donorFailures = 0;
+        $mailFailures = 0;
+
         $lastId = (int) $this->em->createQueryBuilder()
             ->select('COALESCE(MAX(t.id), 0)')
             ->from(TransactionEntity::class, 't')
@@ -113,7 +117,22 @@ class CreateTransaction extends Html
         try {
             foreach ($donors as $donor) {
                 $this->getLogger()->log(\Monolog\Level::Info, sprintf('Processing donor %s at %s', $donor->email, date('Y-m-d H:i:s')));
-                $allocated = $this->transaction->createBalancedForDonor($donor, $projects);
+
+                // One donor's failure must not end the round. Everything here used to run bare
+                // inside the loop, so a single throw propagated to the outer catch and stopped
+                // the whole thing — and because a real run is on autocommit, whatever had
+                // already been allocated stayed while every later donor was silently skipped.
+                // That is how a dry run could list a full round and the real one commit one
+                // transaction: the dry run sends no mail, so it never hit the thing that threw.
+                try {
+                    $allocated = $this->transaction->createBalancedForDonor($donor, $projects);
+                } catch (\Throwable $e) {
+                    $donorFailures++;
+                    $this->getLogger()->error(sprintf(
+                        'Allocation failed for donor %d (%s), skipped: %s', $donor->id, $donor->email, $e->getMessage()
+                    ));
+                    continue;
+                }
 
                 // Only when this round actually produced something for them. The return value
                 // used to be discarded and every processed donor was mailed regardless, so a
@@ -124,12 +143,34 @@ class CreateTransaction extends Html
                 //
                 // The one thing a rollback cannot take back, so nothing is sent while previewing.
                 if (!$dry && $allocated > 0) {
-                    $this->mailer->sendDonorInstructionsMail($donor->email, $donor->getDisplayName());
+                    // Isolated hardest of all: the transaction is already committed by now, so
+                    // an unsent notification is a donor to chase by hand, while letting it
+                    // abort would cost every remaining donor their allocation.
+                    try {
+                        $this->mailer->sendDonorInstructionsMail($donor->email, $donor->getDisplayName());
+                    } catch (\Throwable $e) {
+                        $mailFailures++;
+                        $this->getLogger()->error(sprintf(
+                            'Instructions mail failed for donor %d (%s): %s', $donor->id, $donor->email, $e->getMessage()
+                        ));
+                    }
                 }
             }
 
             // Built before the rollback, while the rows and their relations are still readable.
             $this->report($this->allocationsSince($lastId), $dry, count($donors));
+
+            // Never silent. A skipped donor is money that did not move, and an unsent mail is
+            // a donor holding instructions they were never told about — both need chasing.
+            if ($donorFailures || $mailFailures) {
+                $warning = sprintf(
+                    'WARNING: %d donor(s) skipped after an allocation error, %d instruction mail(s) failed to send. See the log.',
+                    $donorFailures,
+                    $mailFailures
+                );
+                $this->getLogger()->error($warning);
+                echo PHP_EOL . $warning . PHP_EOL;
+            }
 
             if ($dry) {
                 $conn->rollBack();

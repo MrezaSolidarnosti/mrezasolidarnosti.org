@@ -57,15 +57,39 @@ final class CreateTransactionMailTest extends IntegrationTestCase
         $this->runRound(allocated: 5000, mailer: $mailer, dry: true);
     }
 
+    public function testAFailingMailDoesNotStopTheRestOfTheRound(): void
+    {
+        // How a dry run can list a full round while the real one commits a single transaction:
+        // the mail is the only thing a real run does that a preview does not, and it used to
+        // run unguarded inside the loop. One throw propagated out, the outer catch rethrew it,
+        // and because a real round is on autocommit the first donor's allocation stayed while
+        // every later donor was skipped in silence.
+        //
+        // Both donors must still be attempted. Whether the notification arrives is a separate
+        // problem from whether the money moves.
+        $mailer = $this->createMock(Mailer::class);
+        $mailer->expects(self::exactly(2))
+            ->method('sendDonorInstructionsMail')
+            ->willThrowException(new \RuntimeException('mailer down'));
+
+        $output = $this->runRound(allocated: 5000, mailer: $mailer, donorCount: 2);
+
+        // And it says so rather than reporting a clean round.
+        self::assertStringContainsString('2 instruction mail(s) failed', $output);
+    }
+
     /**
-     * Runs the action against one donor and one project, with the allocator stubbed to report
-     * $allocated. What the allocator does is covered by CreateBalancedForDonorTest; the only
-     * thing under test here is what the action does with the number it gets back.
+     * Runs the action against $donorCount donors and one project, with the allocator stubbed
+     * to report $allocated. What the allocator does is covered by CreateBalancedForDonorTest;
+     * the only thing under test here is what the action does around it.
      */
-    private function runRound(int $allocated, Mailer $mailer, bool $dry = false): void
+    private function runRound(int $allocated, Mailer $mailer, bool $dry = false, int $donorCount = 1): string
     {
         $project = $this->createProject('MSPR');
-        $donor = $this->createDonor();
+        $donorList = [];
+        for ($i = 0; $i < $donorCount; $i++) {
+            $donorList[] = $this->createDonor();
+        }
 
         // createStub, not createMock: nothing here asserts on the allocator, it only needs to
         // report a number. A mock with no expectations is what PHPUnit warns about.
@@ -76,7 +100,7 @@ final class CreateTransactionMailTest extends IntegrationTestCase
         $projects->method('getEntities')->willReturn([$project]);
 
         $donors = $this->createStub(DonorService::class);
-        $donors->method('getDonorsByProject')->willReturn([$donor]);
+        $donors->method('getDonorsByProject')->willReturn($donorList);
 
         // isHoliday() is overridden rather than left to the calendar: the real one reads
         // date('d.m') against a fixed list, so on 1 May the whole class would return early
@@ -97,7 +121,9 @@ final class CreateTransactionMailTest extends IntegrationTestCase
         try {
             $action($request, new Response());
         } finally {
-            ob_get_clean();
+            $output = (string) ob_get_clean();
         }
+
+        return $output;
     }
 }
