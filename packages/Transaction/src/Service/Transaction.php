@@ -168,6 +168,18 @@ class Transaction extends TableView
         return $this->repo->getSumAmountForBeneficiary($beneficiary, $project, $period);
     }
 
+    /**
+     * CONFIRMED and PAID only — money that actually arrived, for reporting to a person.
+     *
+     * Not interchangeable with getSumAmountForBeneficiary() above: that one also counts NEW
+     * and WAITING_CONFIRMATION because they still reserve budget, which is what the allocator
+     * needs and the opposite of what a "received so far" figure should say.
+     */
+    public function getRealisedSumForBeneficiary(Beneficiary $beneficiary, ?Project $project = null, ?Period $period = null): int
+    {
+        return $this->repo->getRealisedSumForBeneficiary($beneficiary, $project, $period);
+    }
+
     public function getTotalNetworkedAmount(): int
     {
         return $this->repo->getTotalNetworkedAmount();

@@ -216,7 +216,11 @@ class BeneficiaryController extends AjaxCrudController
         $confirmed = [];
         foreach ($model->registeredPeriods as $rp) {
             $key = $rp->project->getId() . '_' . $rp->period->getId();
-            $confirmed[$key] = $this->transaction->getSumAmountForBeneficiary($model, $rp->project, $rp->period);
+            // Realised, not allocated. This feeds the form's "Potvrđeni iznos" and its
+            // percentage, so it has to mean what it says: CONFIRMED and PAID only. Reading the
+            // allocated sum here counted instructions issued that morning that nobody had
+            // paid — a 79,000 registration displayed 99,000 (125%) against 84,550 realised.
+            $confirmed[$key] = $this->transaction->getRealisedSumForBeneficiary($model, $rp->project, $rp->period);
         }
 
         return $confirmed;
