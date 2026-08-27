@@ -88,7 +88,17 @@ class Beneficiary extends TableView
                 'school' => $beneficiary->school?->name,
                 'sumAmount' => number_format($totalAmount, 0),
                 'currentAmount' => number_format($confirmedAmount, 0),
-                'delegateVerified' => ($beneficiary->createdBy?->status === \Solidarity\Delegate\Entity\Delegate::STATUS_VERIFIED) ? 'Da' : 'Ne',
+                // The school's delegate, not createdBy. The column asks whether this
+                // beneficiary has a verified delegate behind them, and for MSP that is a
+                // property of the school — reading createdBy reported "Ne" for a school with a
+                // perfectly good verified delegate whenever the beneficiary had been orphaned
+                // (Delegate::update() nullifies createdBy across the delegate whenever any
+                // school leaves their list), which says nothing about whether a delegate exists.
+                //
+                // Falls back to createdBy when there is no school: MSPR has none, and its
+                // beneficiaries carry their delegate directly. Same precedence the save path
+                // uses in Beneficiary\Filter, so the column agrees with what the form stores.
+                'delegateVerified' => $this->hasVerifiedDelegate($beneficiary) ? 'Da' : 'Ne',
                 'pm.accountNumber' => $methods,//$beneficiary->accountNumber,
                 's.city' => $beneficiary->school?->city?->name,
                 'status' => \Solidarity\Beneficiary\Entity\Beneficiary::getHrStatus($beneficiary->status),
@@ -101,6 +111,20 @@ class Beneficiary extends TableView
             ];
         }
         return $items;
+    }
+
+    /**
+     * Is there a verified delegate standing behind this beneficiary?
+     *
+     * The school owns the answer when there is one — that is what the MSP delegate structure
+     * means, and it stays true even if the beneficiary's own createdBy has been nulled. Only a
+     * school-less beneficiary (MSPR) falls back to the delegate assigned directly to them.
+     */
+    private function hasVerifiedDelegate(BeneficiaryEntity $beneficiary): bool
+    {
+        $delegate = $beneficiary->school?->delegate ?? $beneficiary->createdBy;
+
+        return $delegate?->status === \Solidarity\Delegate\Entity\Delegate::STATUS_VERIFIED;
     }
 
     public function compileTableColumns()

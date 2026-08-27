@@ -97,9 +97,10 @@ final class AccessControlTest extends TestCase
         return [
             'transaction list' => ['/transaction/view/'],
             'transaction table data' => ['/transaction/tableHandler/'],
-            'edit one transaction' => ['/transaction/form/5'],
-            // Delegates mark payouts paid or cancelled from the list.
+            // Delegates mark payouts paid or cancelled from the list, and that is the whole of
+            // what they may do to a transaction — the full edit form is staff and admin only.
             'set a transaction status' => ['/transaction/updateStatus/5'],
+            'set several transaction statuses' => ['/transaction/updateStatusBulk'],
             'beneficiary list' => ['/beneficiary/view/'],
             'beneficiary table data' => ['/beneficiary/tableHandler/'],
             'register a beneficiary' => ['/beneficiary/form/'],
@@ -130,6 +131,10 @@ final class AccessControlTest extends TestCase
             'the statistics dashboard' => ['/statistics'],
             'running the allocation cron by hand' => ['/createTransactions'],
             'creating a transaction' => ['/transaction/form/'],
+            // Status only. Re-authoring a transaction — amount, donor, beneficiary — is not a
+            // delegate's job, and transaction.edit no longer carries role 10.
+            'editing a whole transaction' => ['/transaction/form/5'],
+            'saving a whole transaction' => ['/transaction/update/5'],
             'deleting a transaction' => ['/transaction/delete/5'],
             'deleting a beneficiary' => ['/beneficiary/delete/5'],
             'deleting a delegate' => ['/delegate/delete/5'],
