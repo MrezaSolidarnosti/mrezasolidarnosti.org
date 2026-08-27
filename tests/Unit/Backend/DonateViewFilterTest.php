@@ -6,7 +6,7 @@ namespace Solidarity\Tests\Unit\Backend;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Solidarity\Backend\Blocks\Donate\DonateViewFilter;
+use Solidarity\Backend\Blocks\BlockViewFilters\Donate as DonateViewFilter;
 use Solidarity\Donor\Entity\Donor;
 use Solidarity\Donor\Entity\PaymentMethod;
 use Solidarity\Frontend\Service\Session;
