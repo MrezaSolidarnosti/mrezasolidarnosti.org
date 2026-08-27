@@ -114,11 +114,17 @@ $container->set(ManagerInterface::class, function() use ($container) {
     ini_set('session.save_handler', 'redis');
     ini_set('session.save_path', sprintf('tcp://%s:%s?weight=1&timeout=1', $redisHost, $redisPort));
 
+    $appUrl = (string) (\Solidarity\Core\Environment::isBackend()
+        ? ($config->adminUrl ?? $config->baseUrl)
+        : $config->baseUrl);
     $sessionConfig = new SessionConfig();
     $sessionConfig->setOptions([
         'remember_me_seconds' => 2592000, //2592000, // 30 * 24 * 60 * 60 = 30 days
         'use_cookies'         => true,
         'cookie_lifetime'     => 30 * 24 * 60 * 60,
+        'cookie_httponly'     => true,
+        'cookie_samesite'     => 'Lax',
+        'cookie_secure'       => str_starts_with($appUrl, 'https://')
     ]);
     $session = new SessionManager($sessionConfig);
     $session->start();

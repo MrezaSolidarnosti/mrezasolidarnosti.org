@@ -7,6 +7,7 @@ namespace Solidarity\Tests\Unit\Beneficiary;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Skeletor\User\Service\Session;
 use Solidarity\Beneficiary\Entity\Beneficiary;
 use Solidarity\Beneficiary\Validator\Beneficiary as BeneficiaryValidator;
 
@@ -114,6 +115,11 @@ final class BeneficiaryValidatorTest extends TestCase
 
     private function validator(): BeneficiaryValidator
     {
-        return new BeneficiaryValidator($this->createStub(EntityManagerInterface::class));
+        // A bare stub reports no entity type and no role, so isAdmin() is false and every
+        // limit in here applies — which is what these tests assert.
+        return new BeneficiaryValidator(
+            $this->createStub(EntityManagerInterface::class),
+            $this->createStub(Session::class),
+        );
     }
 }

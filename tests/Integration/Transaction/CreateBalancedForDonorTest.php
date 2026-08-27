@@ -94,7 +94,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $project = $this->createProject('MSPR');
         $period = $this->processingPeriod($project);
         $donor = $this->createDonor();
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 50000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 50000);
 
         foreach (['A', 'B'] as $name) {
             $beneficiary = $this->createBeneficiary($name);
@@ -120,7 +120,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         foreach (['MSPR', 'MSO'] as $code) {
             $project = $this->createProject($code);
             $period = $this->processingPeriod($project);
-            $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 10000);
+            $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 10000);
 
             $beneficiary = $this->createBeneficiary($code . ' beneficiary');
             $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
@@ -158,8 +158,16 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         self::assertSame(10000, $this->service()->createBalancedForDonor($donor, [$project]));
     }
 
-    public function testOneOffPledgeCountsSpendRegardlessOfAge(): void
+    public function testAPlainNonMonthlyPledgeIsNeverAllocatedByTheCron(): void
     {
+        // Neither flag set, so it is not the cron's business: one-time giving is initiated by
+        // the donor from their profile and goes through createForDonor() with the amounts they
+        // chose at that moment. The cron used to read every payment method a donor had, so an
+        // admin who left the "monthly" box unchecked on the donor form created a row it then
+        // treated as a standing pledge and generated instructions from.
+        //
+        // Note there is no prior spend at all — the pledge is untouched and would be fully
+        // allocatable if the gate were missing.
         $project = $this->createProject('MSPR');
         $period = $this->processingPeriod($project);
         $donor = $this->createDonor();
@@ -169,12 +177,70 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
         $this->createRegisteredPeriod($beneficiary, $project, $period, 240000);
 
+        self::assertSame(0, $this->service()->createBalancedForDonor($donor, [$project]));
+        self::assertCount(0, $this->newTransactions($donor));
+    }
+
+    public function testALegacyLumpSumIsAllocatedWhileItStillHasMoneyLeft(): void
+    {
+        // Migrated from the old app, where a one-time pledge was spread across instructions
+        // automatically. Still owed, so it is flagged to drain even though it is not monthly.
+        $project = $this->createProject('MSPR');
+        $period = $this->processingPeriod($project);
+        $donor = $this->createDonor();
+        $this->createDonorPaymentMethod(
+            $donor, $project, type: self::BANK, monthly: false, amount: 10000, allocateUntilSpent: true
+        );
+
+        $beneficiary = $this->createBeneficiary();
+        $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
+        $this->createRegisteredPeriod($beneficiary, $project, $period, 240000);
+
+        self::assertSame(10000, $this->service()->createBalancedForDonor($donor, [$project]));
+    }
+
+    public function testALegacyLumpSumStopsOnceItIsSpent(): void
+    {
+        // The reason this needs no expiry date and no cleanup: spend is counted over all time
+        // for a non-monthly pledge, so once it is used up the remainder never reaches the
+        // floor again and the row is inert forever. A monthly pledge would have replenished
+        // here — which is exactly why `monthly` could not be reused as the flag.
+        $project = $this->createProject('MSPR');
+        $period = $this->processingPeriod($project);
+        $donor = $this->createDonor();
+        $this->createDonorPaymentMethod(
+            $donor, $project, type: self::BANK, monthly: false, amount: 10000, allocateUntilSpent: true
+        );
+
+        $beneficiary = $this->createBeneficiary();
+        $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
+        $this->createRegisteredPeriod($beneficiary, $project, $period, 240000);
+
+        // Spent long ago: a monthly pledge would ignore this as outside the 30-day window.
         $old = $this->createTransaction($donor, $beneficiary, $project, $period, 10000, Transaction::STATUS_CONFIRMED);
         $this->backdateTransaction($old, '2020-01-01 00:00:00');
 
-        // Pledge exhausted: no window to reset it, so the budget never reaches the floor.
         self::assertSame(0, $this->service()->createBalancedForDonor($donor, [$project]));
         self::assertCount(0, $this->newTransactions($donor));
+    }
+
+    public function testOnlyTheMonthlyHalfOfAMixedPledgeIsAllocated(): void
+    {
+        // A donor can hold both: a standing monthly pledge and a leftover one-time method.
+        // Only the monthly one is the cron's business, so the budget is 5000, not 55000.
+        $project = $this->createProject('MSPR');
+        $period = $this->processingPeriod($project);
+        $donor = $this->createDonor();
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 5000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::WIRE, monthly: false, amount: 50000);
+        // ...and the one-time one is not flagged to drain, so it stays out.
+
+        $beneficiary = $this->createBeneficiary();
+        $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
+        $this->createBeneficiaryPaymentMethod($beneficiary, type: self::WIRE);
+        $this->createRegisteredPeriod($beneficiary, $project, $period, 240000);
+
+        self::assertSame(5000, $this->service()->createBalancedForDonor($donor, [$project]));
     }
 
     public function testAllocatesNothingWhenTheDonorHasNoPledgeForTheProject(): void
@@ -199,8 +265,8 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $donor = $this->createDonor();
         // 120000 + (68 EUR = 7990) = 127990, over the 100000 line, so minSlice becomes 10000
         // and the 7990 wire budget is no longer usable.
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 120000);
-        $this->createDonorPaymentMethod($donor, $project, type: self::WIRE, amount: 68, currency: 2);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 120000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::WIRE, monthly: true, amount: 68, currency: 2);
 
         // Only accepts wire — the one budget that just got dropped.
         $beneficiary = $this->createBeneficiary();
@@ -216,8 +282,8 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $period = $this->processingPeriod($project);
         $donor = $this->createDonor();
         // Same shape as above but under 100000, so minSlice stays at 500 and wire survives.
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 50000);
-        $this->createDonorPaymentMethod($donor, $project, type: self::WIRE, amount: 68, currency: 2);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 50000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::WIRE, monthly: true, amount: 68, currency: 2);
 
         $beneficiary = $this->createBeneficiary();
         $this->createBeneficiaryPaymentMethod($beneficiary, type: self::WIRE, accountNumber: null, wireInstructions: 'SWIFT');
@@ -236,7 +302,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $project->periods->add($period);
 
         $donor = $this->createDonor();
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 5000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 5000);
 
         $beneficiary = $this->createBeneficiary();
         $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
@@ -250,7 +316,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $project = $this->createProject('MSPR');
         $period = $this->processingPeriod($project);
         $donor = $this->createDonor();
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 5000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 5000);
 
         $beneficiary = $this->createBeneficiary('Problematic', status: Beneficiary::STATUS_PROBLEM);
         $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
@@ -264,7 +330,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $project = $this->createProject('MSPR');
         $period = $this->processingPeriod($project);
         $donor = $this->createDonor();
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 5000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 5000);
 
         $beneficiary = $this->createBeneficiary('No payment method');
         $this->createRegisteredPeriod($beneficiary, $project, $period, 240000);
@@ -277,7 +343,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $project = $this->createProject('MSPR');
         $period = $this->processingPeriod($project);
         $donor = $this->createDonor();
-        $this->createDonorPaymentMethod($donor, $project, type: self::WIRE, amount: 100, currency: 2);
+        $this->createDonorPaymentMethod($donor, $project, type: self::WIRE, monthly: true, amount: 100, currency: 2);
 
         $beneficiary = $this->createBeneficiary();
         $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
@@ -293,7 +359,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $project = $this->createProject('MSPR');
         $period = $this->processingPeriod($project);
         $donor = $this->createDonor();
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 50000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 50000);
 
         $beneficiary = $this->createBeneficiary();
         $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
@@ -310,7 +376,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $project = $this->createProject('MSPR');
         $period = $this->processingPeriod($project);
         $donor = $this->createDonor();
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 50000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 50000);
 
         $beneficiary = $this->createBeneficiary();
         $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
@@ -326,7 +392,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $project = $this->createProject('MSPR');
         $period = $this->processingPeriod($project);
         $donor = $this->createDonor();
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 50000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 50000);
 
         $beneficiary = $this->createBeneficiary();
         $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
@@ -346,7 +412,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
         $project = $this->createProject('MSPR');
         $period = $this->processingPeriod($project);
         $donor = $this->createDonor();
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 10000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 10000);
 
         $beneficiary = $this->createBeneficiary();
         $this->createBeneficiaryPaymentMethod($beneficiary, type: self::BANK);
@@ -365,7 +431,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
     {
         [$project, $period] = $this->mspProject();
         $donor = $this->createDonor(wantsToDonateTo: Donor::DONATE_TO_UNI);
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 10000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 10000);
 
         $this->beneficiaryAtSchoolOfType($project, $period, typeId: 5);
 
@@ -376,7 +442,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
     {
         [$project, $period] = $this->mspProject();
         $donor = $this->createDonor(wantsToDonateTo: Donor::DONATE_TO_UNI);
-        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, amount: 10000);
+        $this->createDonorPaymentMethod($donor, $project, type: self::BANK, monthly: true, amount: 10000);
 
         // 9 and 17 are the university school types the preference gate hardcodes.
         $this->beneficiaryAtSchoolOfType($project, $period, typeId: 9);

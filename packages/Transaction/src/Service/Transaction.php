@@ -342,6 +342,24 @@ class Transaction extends TableView
         foreach ($projects as $project) {
             $budgets = [];
             foreach ($donor->getPaymentMethodsForProject($project) as $pm) {
+                // Two kinds of pledge reach the cron, and nothing else does.
+                //
+                //   monthly            — a standing instruction. Spend is counted over the last
+                //                        30 days, so it replenishes and never runs out.
+                //   allocateUntilSpent — a lump sum still owed from the legacy app, where a
+                //                        one-time pledge was spread across instructions
+                //                        automatically. Spend is counted over all time, so it
+                //                        drains once and then stops on its own.
+                //
+                // Anything else is not the cron's business: one-time giving is initiated by the
+                // donor from their profile and goes through createForDonor() with the amounts
+                // they chose at that moment. This gate was missing entirely, so the cron read
+                // every payment method a donor had — including rows the admin donor form
+                // creates with `(int) ($row['monthly'] ?? 0)` when the box is left unchecked.
+                if (!$pm->monthly && !$pm->allocateUntilSpent) {
+                    continue;
+                }
+
                 $pledgedRsd = $pm->type === PaymentMethod::TYPE_BANK_TRANSFER
                     ? $pm->amount
                     : TransactionEntity::eurToRsd($pm->amount);

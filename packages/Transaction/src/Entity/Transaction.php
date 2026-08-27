@@ -51,11 +51,19 @@ class Transaction
     #[ORM\Column(type: Types::BOOLEAN, options: ['default' => false])]
     public bool $manual = false;
 
-    #[ORM\ManyToOne(inversedBy: 'transactions')]
+    // No inversedBy on these two, unlike donor/beneficiary below. They used to claim
+    // inversedBy: 'transactions', but neither Project nor Period declares that collection —
+    // only Donor and Beneficiary do. Doctrine does not check this at mapping time; it fails
+    // at hydration, where ObjectHydrator looks the named inverse association up by key and
+    // dies on "Undefined array key transactions". Harmless until something fetch-joins
+    // t.project or t.period, which nothing did until the createTransactions dry-run report.
+    // Dropping the claim is the honest fix — the inverse side genuinely does not exist, and
+    // this is ORM metadata only, so no schema change.
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(name: 'projectId', referencedColumnName: 'id', unique: false, nullable: false)]
     public Project $project;
 
-    #[ORM\ManyToOne(inversedBy: 'transactions')]
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(name: 'periodId', referencedColumnName: 'id', unique: false, nullable: false)]
     public Period $period;
 

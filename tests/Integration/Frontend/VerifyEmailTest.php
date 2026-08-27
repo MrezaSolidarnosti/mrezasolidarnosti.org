@@ -14,6 +14,7 @@ use Solidarity\Delegate\Service\Delegate as DelegateService;
 use Solidarity\Donor\Entity\Donor;
 use Solidarity\Donor\Repository\DonorRepository;
 use Solidarity\Frontend\Action\Donor\VerifyEmail;
+use Skeletor\Login\Repository\MagicLinkTokenRepository;
 use Solidarity\Frontend\Service\Locale;
 
 /**
@@ -25,9 +26,13 @@ use Solidarity\Frontend\Service\Locale;
  * without ever reaching the login call — a valid token for a disabled account is exactly
  * the case where a missing guard becomes an account takeover.
  *
- * The two branches that render a template (missing token, invalid credentials) are not
- * covered here: respond() needs the whole theme and its layout globals, which is a bigger
- * harness than the branch is worth.
+ * Only the POST leg is exercised. GET renders a confirmation button and spends nothing —
+ * that split exists because mail clients prefetch links and were destroying single-use
+ * tokens before the donor clicked.
+ *
+ * The branches that render a template (missing token, invalid credentials, the GET
+ * confirmation page) are not covered here: respond() needs the whole theme and its layout
+ * globals, which is a bigger harness than the branch is worth.
  */
 #[CoversClass(VerifyEmail::class)]
 final class VerifyEmailTest extends FrontendActionTestCase
@@ -111,10 +116,17 @@ final class VerifyEmailTest extends FrontendActionTestCase
             $login ?? $this->createStub(LoginService::class),
             $this->session(),
             $locale,
+            // Only read on the GET leg, to report an expired link before the donor clicks.
+            // These tests drive the POST leg, where the authenticator owns the token.
+            $this->createStub(MagicLinkTokenRepository::class),
         );
 
+        // POST, not GET. Since "added two step login to prevent clients from destroying a
+        // token", GET only renders a confirmation button — mail clients were prefetching the
+        // link and spending the single-use token before the donor ever clicked. Everything
+        // these tests assert (verify, log in, redirect) now happens on the POST.
         return $action(
-            (new ServerRequest('GET', '/donor/verifyEmail?token=t'))->withQueryParams(['token' => 't']),
+            (new ServerRequest('POST', '/donor/verifyEmail'))->withParsedBody(['token' => 't']),
             $this->emptyResponse(),
         );
     }

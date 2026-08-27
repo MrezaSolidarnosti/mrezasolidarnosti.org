@@ -212,9 +212,15 @@ final class ExpireInstructionsTest extends IntegrationTestCase
         // CliSkeletor hands the argv tail through as the "params" attribute.
         $request = (new ServerRequest('GET', '/'))->withAttribute('params', $dry ? ['dry'] : ['run']);
 
+        // finally, not a bare pair: an action that throws would otherwise leave the buffer
+        // open, hiding the real failure behind "did not close its own output buffers".
         ob_start();
-        $action($request, new Response());
+        try {
+            $action($request, new Response());
+        } finally {
+            $output = (string) ob_get_clean();
+        }
 
-        return (string) ob_get_clean();
+        return $output;
     }
 }
