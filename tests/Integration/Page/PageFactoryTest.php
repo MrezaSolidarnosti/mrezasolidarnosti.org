@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Solidarity\Tests\Integration\Page;
 
 use PHPUnit\Framework\Attributes\CoversClass;
-use Skeletor\ContentEditor\Contracts\ContentEditorParserInterface;
+use Skeletor\ContentEditor\Contracts\ContentEditorFilterInterface;
 use Solidarity\Page\Entity\Page;
 use Solidarity\Page\Factory\PageFactory;
 use Solidarity\Page\Filter\Page as PageFilter;
@@ -133,27 +133,55 @@ final class PageFactoryTest extends IntegrationTestCase
     }
 
     /**
-     * Runs $postData through the real filter.
+     * Runs the form's payload through the real filter.
      *
      * @param array<string, mixed> $overrides
      * @return array<string, mixed>
      */
     private function filter(array $overrides = []): array
     {
-        $parser = $this->createStub(ContentEditorParserInterface::class);
-        $parser->method('parse')->willReturn([]);
+        // The page filter runs the editor's blocks through this on the way in; what it
+        // returns is the block data that reaches the entity, so an empty list is enough here.
+        $blockFilter = $this->createStub(ContentEditorFilterInterface::class);
+        $blockFilter->method('filter')->willReturn([]);
 
         $filter = new PageFilter(
             new PageValidator(new CsrfTrueStub(), new PageRepository($this->em())),
-            $parser,
+            $blockFilter,
         );
 
         // Overrides first: `+` keeps the left-hand key.
-        return $filter->filter($overrides + self::WRITABLE + [
+        return $filter->filter($overrides + self::posted());
+    }
+
+    /**
+     * What the page form actually posts.
+     *
+     * The content editor sends its modules as objects — status, seo, featuredImage and the
+     * blocks — rather than as flat fields, and the filter reads them from there. So this is
+     * shaped the way the editor posts, while WRITABLE above stays shaped the way the entity
+     * stores; the two differ, which is the point of running the real filter between them.
+     *
+     * `isLoginProtected` is deliberately absent: an unticked checkbox posts nothing at all.
+     *
+     * @return array<string, mixed>
+     */
+    private static function posted(): array
+    {
+        return [
             'id' => null,
-            'featuredImageId' => '',
-            'seoImageId' => '',
+            'title' => self::WRITABLE['title'],
+            'slug' => self::WRITABLE['slug'],
+            'blocks' => [],
+            'status' => ['status' => self::WRITABLE['status']],
+            'featuredImage' => ['id' => ''],
+            'seo' => [
+                'title' => self::WRITABLE['seoTitle'],
+                'description' => self::WRITABLE['seoDescription'],
+                'image' => ['id' => ''],
+            ],
+            'languageCode' => self::WRITABLE['languageCode'],
             Csrf::TOKEN_NAME => 'token',
-        ]);
+        ];
     }
 }
