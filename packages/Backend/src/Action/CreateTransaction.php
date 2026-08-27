@@ -113,9 +113,17 @@ class CreateTransaction extends Html
         try {
             foreach ($donors as $donor) {
                 $this->getLogger()->log(\Monolog\Level::Info, sprintf('Processing donor %s at %s', $donor->email, date('Y-m-d H:i:s')));
-                $this->transaction->createBalancedForDonor($donor, $projects);
-                // The one thing a rollback cannot take back. Nothing is sent while previewing.
-                if (!$dry) {
+                $allocated = $this->transaction->createBalancedForDonor($donor, $projects);
+
+                // Only when this round actually produced something for them. The return value
+                // used to be discarded and every processed donor was mailed regardless, so a
+                // donor who was allocated nothing still got "Stigle su ti nove instrukcije za
+                // uplatu" — and since that mail names no transaction and just points at the
+                // instructions page, they would arrive to find an old outstanding instruction
+                // and reasonably conclude we had re-sent it.
+                //
+                // The one thing a rollback cannot take back, so nothing is sent while previewing.
+                if (!$dry && $allocated > 0) {
                     $this->mailer->sendDonorInstructionsMail($donor->email, $donor->getDisplayName());
                 }
             }
