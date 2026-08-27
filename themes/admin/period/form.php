@@ -16,7 +16,13 @@ $form = new TabbedForm($data['formAction'], $data['dataAction'], $this->formToke
 
 $action = $data['dataAction'] === 'create' ? 'Kreiraj' : 'Izmeni';
 
-$month = (new Number('month', $data['model']?->month, 'Mesec'));
+// A dropdown rather than a number box: the months are a closed set and the entity already
+// names them for the table. Required, like the project select and for the same reason — the
+// month column is NOT NULL, so a blank submission has nowhere to go. -1 is the sentinel this
+// codebase uses for "nothing chosen" (OptionCollection's own "---" placeholder value).
+$monthCollection = (new OptionCollection())->fromArray(Period::getHrMonths(), $data['model']?->month);
+$month = (new Select('month', $monthCollection, 'Mesec'))
+    ->required('Morate izabrati mesec', -1);
 $year = (new Number('year', $data['model']?->year, 'Godina'));
 $maxAmount = (new Number('maxAmount', $data['model']?->maxAmount, 'Max iznos', null, [], null, 'Ako je 0, primenjuje se globalni limit od: ' . \Solidarity\Beneficiary\Entity\Beneficiary::MONTHLY_LIMIT));
 $types = [

@@ -134,7 +134,8 @@ return array(
         // so the freed budget is reallocated in the same cycle.
         // Run: php public/cli.php expireInstructions run   (use "dry" to preview)
         'expireInstructions' => \Solidarity\Backend\Action\ExpireInstructions::class,
-        // Flag donors whose instructions keep going unpaid, so they stop being allocated to.
+        // Flag donors whose instructions keep going unpaid, so they stop being allocated to,
+        // and release TRY_TO_CONTACT ones again after the cooldown or on their next visit.
         // Runs BETWEEN the two above: after expiry so this round's misses count, before
         // allocation so a donor crossing the line is excluded from this round rather than
         // handed one more instruction. Idempotent — safe to run at any time.

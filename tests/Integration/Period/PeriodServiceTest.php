@@ -11,6 +11,7 @@ use Solidarity\Period\Entity\Period as PeriodEntity;
 use Solidarity\Period\Repository\PeriodRepository;
 use Solidarity\Period\Service\Period as PeriodService;
 use Solidarity\Tests\Integration\IntegrationTestCase;
+use Solidarity\Transaction\Service\Project as ProjectService;
 
 /**
  * Periods are rounds, and two flags decide what happens in one.
@@ -26,6 +27,9 @@ use Solidarity\Tests\Integration\IntegrationTestCase;
 #[CoversClass(PeriodRepository::class)]
 final class PeriodServiceTest extends IntegrationTestCase
 {
+    /** Supplies the project column's filter options; one test swaps in its own. */
+    private ?ProjectService $projectService = null;
+
     // ---- what the cron picks up --------------------------------------------------------
 
     public function testOnlyProcessingPeriodsAreHandedToTheAllocator(): void
@@ -134,12 +138,105 @@ final class PeriodServiceTest extends IntegrationTestCase
         }
     }
 
+    public function testTheProjectColumnOffersTheProjectsAsFilterOptions(): void
+    {
+        // Two projects run concurrent rounds, so an unfiltered period list interleaves them.
+        $this->projectService = $this->createStub(ProjectService::class);
+        $this->projectService->method('getFilterData')->willReturn([1 => 'MSP - Mreza', 2 => 'MSPR - Represija']);
+
+        $columns = array_column($this->service()->compileTableColumns(), null, 'name');
+
+        self::assertSame([1 => 'MSP - Mreza', 2 => 'MSPR - Represija'], $columns['project']['filterData']);
+    }
+
+    // ---- saving a period ----------------------------------------------------------------
+
+    public function testAMonthChosenFromTheDropdownIsStoredAsAnInteger(): void
+    {
+        // The select posts the month number as a string; the column is INTEGER.
+        $period = $this->createdWith(['month' => '11']);
+
+        self::assertSame(11, $period->month);
+    }
+
+
+    public function testABlankMaximumIsSavedAsZeroRatherThanFailing(): void
+    {
+        // The reported 500. maxAmount is a non-nullable int and the form posts '' when the
+        // field is left empty; PHP will coerce '5000' to an int but not '', so the assignment
+        // in AbstractFactory threw. Zero is already how "no per-period override" is spelled.
+        $period = $this->createdWith(['maxAmount' => '']);
+
+        self::assertSame(0, $period->maxAmount);
+    }
+
+    public function testAMaximumTypedIntoTheFormIsStoredAsAnInteger(): void
+    {
+        $period = $this->createdWith(['maxAmount' => '50000']);
+
+        self::assertSame(50000, $period->maxAmount);
+    }
+
+    public function testABlankMonthLandsAsZeroRatherThanBreakingTheInsert(): void
+    {
+        // month reads as ?int on the property but its #[ORM\Column] carries no
+        // `nullable: true`, so the column is NOT NULL and writing null is an integrity
+        // violation, not a saved period. The select is required, so this is the
+        // belt-and-braces path; 0 renders as a literal "0" in the table via getHrMonth(),
+        // which is visible rather than fatal.
+        $period = $this->createdWith(['month' => '']);
+
+        self::assertSame(0, $period->month);
+    }
+
+    public function testTheFlagsArriveAsBooleansNotStrings(): void
+    {
+        $period = $this->createdWith(['active' => '1', 'processing' => '0']);
+
+        self::assertTrue($period->active);
+        self::assertFalse($period->processing);
+    }
+
+    /**
+     * Creates a period through the service the way the form posts it — strings throughout,
+     * which is the point: the filter is what turns them into the entity's declared types.
+     *
+     * @param array<string, mixed> $overrides
+     */
+    private function createdWith(array $overrides): PeriodEntity
+    {
+        $project = $this->createProject('MSPR');
+
+        $this->service()->create($overrides + [
+            'month' => '8',
+            'year' => '2026',
+            'type' => PeriodEntity::TYPE_FULL,
+            'active' => '1',
+            'processing' => '0',
+            'project' => (string) $project->getId(),
+            'maxAmount' => '240000',
+        ]);
+
+        $this->em()->clear();
+        $periods = (new PeriodRepository($this->em()))->fetchAll([]);
+
+        return $periods[array_key_last($periods)];
+    }
+
     private function service(): PeriodService
     {
+        // The real filter, not a stub: it is what casts the posted strings to the types the
+        // entity declares, and wiring it is the whole point — CrudService skips filtering
+        // entirely when the slot is empty, which is how a blank "Max iznos" reached the
+        // factory as '' and became a TypeError.
         return new PeriodService(
             new PeriodRepository($this->em()),
             $this->createStub(Session::class),
             new NullLogger(),
+            new \Solidarity\Period\Filter\Period(),
+            // Stubbed: it only supplies the project column's filter options, and these tests
+            // are about what the service saves and renders, not about that list's contents.
+            $this->projectService ?? $this->createStub(ProjectService::class),
             $this->createStub(\Skeletor\Core\Activity\Service\Activity::class),
         );
     }

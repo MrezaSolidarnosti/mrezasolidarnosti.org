@@ -171,6 +171,109 @@ final class FlagNonPayingDonorsTest extends IntegrationTestCase
         self::assertEquals($stamped, $after->statusChangedAt);
     }
 
+    // ---- releasing donors back into allocation -------------------------------------
+
+    public function testAContactableDonorIsReleasedOnceTheCooldownHasElapsed(): void
+    {
+        // The flag is a timeout, not a verdict: nobody has to remember this donor exists.
+        $donor = $this->createDonor(status: Donor::STATUS_TRY_TO_CONTACT);
+        $this->stampStatusChangedAt($donor, '-61 days');
+
+        $this->flag();
+
+        self::assertSame(Donor::STATUS_VERIFIED, $this->reloadDonor($donor)->status);
+    }
+
+    public function testAContactableDonorStaysFlaggedInsideTheCooldown(): void
+    {
+        $donor = $this->createDonor(status: Donor::STATUS_TRY_TO_CONTACT);
+        $this->stampStatusChangedAt($donor, '-59 days');
+
+        $this->flag();
+
+        self::assertSame(Donor::STATUS_TRY_TO_CONTACT, $this->reloadDonor($donor)->status);
+    }
+
+    public function testAContactableDonorIsReleasedEarlyIfTheyComeBackToTheSite(): void
+    {
+        // lastVisit moving is exactly the thing this flag says they were not doing, so there
+        // is no reason to keep waiting out the clock.
+        $donor = $this->createDonor(status: Donor::STATUS_TRY_TO_CONTACT);
+        $this->stampStatusChangedAt($donor, '-2 days');
+        $donor->lastVisit = new \DateTime('-1 hour');
+        $this->em()->flush();
+
+        $this->flag();
+
+        self::assertSame(Donor::STATUS_VERIFIED, $this->reloadDonor($donor)->status);
+    }
+
+    public function testAVisitFromBeforeTheFlagDoesNotReleaseThem(): void
+    {
+        // The comparison has to be against statusChangedAt, not merely "has a lastVisit" —
+        // otherwise every donor who ever loaded a page walks straight back out.
+        $donor = $this->createDonor(status: Donor::STATUS_TRY_TO_CONTACT);
+        $this->stampStatusChangedAt($donor, '-2 days');
+        $donor->lastVisit = new \DateTime('-10 days');
+        $this->em()->flush();
+
+        $this->flag();
+
+        self::assertSame(Donor::STATUS_TRY_TO_CONTACT, $this->reloadDonor($donor)->status);
+    }
+
+    public function testAShadowBannedDonorIsNeverReleasedByTheCooldown(): void
+    {
+        // They have their own way out — pay a one-time instruction, which ConfirmPayment
+        // clears them for. A timer would just hand them another beneficiary's need to sit on.
+        $donor = $this->createDonor(status: Donor::STATUS_IGNORING_PAYMENTS);
+        $this->stampStatusChangedAt($donor, '-400 days');
+
+        $this->flag();
+
+        self::assertSame(Donor::STATUS_IGNORING_PAYMENTS, $this->reloadDonor($donor)->status);
+    }
+
+    public function testAShadowBannedDonorIsNeverReleasedByVisiting(): void
+    {
+        // IGNORING_PAYMENTS comes from STATUS_EXPIRED — "logged in but never confirmed" — so
+        // these donors visit by definition. A visit-based release would clear every one of
+        // them the moment it ran.
+        $donor = $this->createDonor(status: Donor::STATUS_IGNORING_PAYMENTS);
+        $this->stampStatusChangedAt($donor, '-2 days');
+        $donor->lastVisit = new \DateTime('-1 hour');
+        $this->em()->flush();
+
+        $this->flag();
+
+        self::assertSame(Donor::STATUS_IGNORING_PAYMENTS, $this->reloadDonor($donor)->status);
+    }
+
+    public function testADonorFlaggedByHandWithNoTimestampIsLeftForAHuman(): void
+    {
+        // An admin who sets the flag in the form leaves statusChangedAt untouched. Releasing
+        // on an unknown age would undo their decision days after they made it.
+        $donor = $this->createDonor(status: Donor::STATUS_TRY_TO_CONTACT);
+
+        $this->flag();
+
+        self::assertSame(Donor::STATUS_TRY_TO_CONTACT, $this->reloadDonor($donor)->status);
+    }
+
+    public function testAReleasedDonorIsNotImmediatelyReFlaggedOnTheirOldMisses(): void
+    {
+        // Release and flag run in the same invocation. The release stamps statusChangedAt,
+        // which is where the streak count starts, so the history that got them flagged is
+        // behind the line by the time the flagging pass looks.
+        $donor = $this->createDonor(status: Donor::STATUS_TRY_TO_CONTACT);
+        $this->missesFor($donor, notPaid: 6, expired: 0, ageHours: 100);
+        $this->stampStatusChangedAt($donor, '-61 days');
+
+        $this->flag();
+
+        self::assertSame(Donor::STATUS_VERIFIED, $this->reloadDonor($donor)->status);
+    }
+
     // ---- dry run ---------------------------------------------------------------------
 
     public function testADryRunNamesTheDonorWithoutFlaggingThem(): void
@@ -204,6 +307,16 @@ final class FlagNonPayingDonorsTest extends IntegrationTestCase
         for ($i = 0; $i < $expired; $i++) {
             $this->transactionFor($donor, Transaction::STATUS_EXPIRED, $ageHours + $i);
         }
+    }
+
+    /**
+     * statusChangedAt is an ordinary column, but the release rules key off it, so the tests
+     * need to place a donor at a given point in the cooldown.
+     */
+    private function stampStatusChangedAt(Donor $donor, string $when): void
+    {
+        $donor->statusChangedAt = new \DateTime($when);
+        $this->em()->flush();
     }
 
     private function transactionFor(Donor $donor, int $status, int $ageHours): Transaction

@@ -4,14 +4,22 @@ namespace Solidarity\Beneficiary\Validator;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Skeletor\Core\Validator\ValidatorInterface;
+use Skeletor\User\Service\Session;
 use Solidarity\Beneficiary\Entity\PaymentMethod;
+use Solidarity\User\Entity\User;
 
 class Beneficiary implements ValidatorInterface
 {
     private array $messages = [];
 
     public function __construct(
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        // Required, NOT optional-with-a-default. PHP-DI's ReflectionBasedAutowiring skips
+        // optional parameters outright (`if ($parameter->isOptional()) { continue; }`), so a
+        // defaulted one is never autowired: it would be null in the app forever, the exemption
+        // below would silently never apply, and tests that pass a session explicitly would
+        // still go green.
+        private Session $session,
     ) {
     }
 
@@ -77,7 +85,12 @@ class Beneficiary implements ValidatorInterface
                 }
                 if (!isset($row['amount']) || $row['amount'] <= 0) {
                     $this->messages['registeredPeriods'][] = sprintf('Iznos mora biti veći od nule za red %d.', $index + 1);
-                } else {
+                } elseif (!$this->isAdmin()) {
+                    // Admins are exempt. The period maximum is a guard rail for delegates and
+                    // staff; an admin typing a figure above it is making a deliberate
+                    // exception, and there is nowhere else in the UI to record one. The
+                    // amount-must-be-positive rule above still applies to everyone — that one
+                    // is nonsense rather than policy.
                     $limit = $this->limitForPeriod($row['period']);
                     if ($row['amount'] > $limit) {
                         $this->messages['registeredPeriods'][] = sprintf(
@@ -91,6 +104,22 @@ class Beneficiary implements ValidatorInterface
         }
 
         return empty($this->messages);
+    }
+
+    /**
+     * Deliberately NOT Session::isAdminLoggedIn(). That method compares against
+     * Skeletor\User\Model\User::ROLE_ADMIN, and Model\User declares only STATUS_* — the
+     * constant does not exist there, so calling it is a fatal. Nothing in this app reaches it
+     * today (it sits behind CrudService::APPLY_TENANT_FILTER), which is why it has gone
+     * unnoticed. The role integer is compared directly instead, as permissions.php does.
+     *
+     * The entity type is checked too: role is only meaningful within a type, and delegates
+     * carry their own numbering.
+     */
+    private function isAdmin(): bool
+    {
+        return $this->session->getLoggedInEntityType() === 'user'
+            && (int) $this->session->getLoggedInRole() === User::ROLE_ADMIN;
     }
 
     /**

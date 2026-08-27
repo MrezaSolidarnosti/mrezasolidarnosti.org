@@ -308,7 +308,14 @@ final class BeneficiaryFormTest extends IntegrationTestCase
             new Flash(),
             new \League\Plates\Engine(),
             new SchoolService(new SchoolRepository($em), $this->createStub(SkeletorSession::class), new NullLogger(), $this->createStub(\Skeletor\Core\Activity\Service\Activity::class)),
-            new PeriodService(new PeriodRepository($em), $this->createStub(SkeletorSession::class), new NullLogger(), $this->createStub(\Skeletor\Core\Activity\Service\Activity::class)),
+            new PeriodService(
+                new PeriodRepository($em),
+                $this->createStub(SkeletorSession::class),
+                new NullLogger(),
+                new \Solidarity\Period\Filter\Period(),
+                $this->createStub(ProjectService::class),
+                $this->createStub(\Skeletor\Core\Activity\Service\Activity::class),
+            ),
             new ProjectService(
                 new ProjectRepository($em),
                 $this->createStub(SkeletorSession::class),
