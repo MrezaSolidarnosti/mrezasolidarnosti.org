@@ -304,12 +304,16 @@ abstract class IntegrationTestCase extends TestCase
         bool $monthly = false,
         int $amount = 5000,
         int $currency = 1,
+        bool $allocateUntilSpent = false,
     ): DonorPaymentMethod {
         $pm = new DonorPaymentMethod();
         $pm->donor = $donor;
         $pm->project = $project;
         $pm->type = $type;
         $pm->monthly = $monthly ? 1 : 0;
+        // Defaults off, like the column: the cron takes monthly pledges plus the legacy
+        // lump sums explicitly flagged to drain, and nothing else.
+        $pm->allocateUntilSpent = $allocateUntilSpent ? 1 : 0;
         $pm->amount = $amount;
         $pm->currency = $currency;
 
