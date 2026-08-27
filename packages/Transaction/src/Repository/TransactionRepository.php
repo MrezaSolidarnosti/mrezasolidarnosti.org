@@ -134,6 +134,41 @@ class TransactionRepository extends TableViewRepository
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
+    /**
+     * Money that actually reached this beneficiary — CONFIRMED and PAID only.
+     *
+     * Deliberately not getAllocatedStatuses(). That set also carries NEW and
+     * WAITING_CONFIRMATION, which is right for the allocator (an unpaid instruction still
+     * reserves budget and must not be handed out twice) and wrong for anything reporting what
+     * a beneficiary has received. The beneficiary form's "Potvrđeni iznos" used the allocated
+     * set and so counted instructions issued that morning that nobody had paid: a registration
+     * of 79,000 read 99,000 (125%) where the realised figure was 84,550.
+     *
+     * Kept as its own method rather than a flag on getSumAmountForBeneficiary(), because the
+     * two answer different questions and five call sites depend on the allocated one.
+     */
+    public function getRealisedSumForBeneficiary(Beneficiary $beneficiary, ?Project $project = null, ?Period $period = null): int
+    {
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('SUM(t.amount)')
+            ->from(static::ENTITY, 't')
+            ->where('t.beneficiary = :beneficiary')
+            ->setParameter('beneficiary', $beneficiary->getId())
+            ->andWhere('t.status IN (:statuses)')
+            ->setParameter('statuses', Transaction::getRealisedStatuses());
+
+        if ($project) {
+            $qb->andWhere('t.project = :project')
+                ->setParameter('project', $project->getId());
+        }
+        if ($period) {
+            $qb->andWhere('t.period = :period')
+                ->setParameter('period', $period->getId());
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
     public function getSumAmountForBeneficiary(Beneficiary $beneficiary, ?Project $project = null, ?Period $period = null): int
     {
         $qb = $this->entityManager->createQueryBuilder();

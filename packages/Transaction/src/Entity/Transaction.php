@@ -126,6 +126,26 @@ class Transaction
         return (clone $this->createdAt)->modify('+72 hours');
     }
 
+    /**
+     * Money that actually reached the beneficiary.
+     *
+     * Distinct from TransactionRepository::getAllocatedStatuses(), which also counts NEW and
+     * WAITING_CONFIRMATION because those still reserve budget — right for the allocator,
+     * wrong for anything reporting what someone has received.
+     *
+     * Defined here, on the entity, because two screens ask this question independently: the
+     * beneficiary form's "Potvrđeni iznos" and the list's "Primljeno". They had drifted apart
+     * — the form summed the allocated set (so a 79,000 registration read 99,000 on the
+     * strength of instructions issued that morning and unpaid), while the list counted
+     * CONFIRMED alone and silently omitted PAID.
+     *
+     * @return int[]
+     */
+    public static function getRealisedStatuses(): array
+    {
+        return [self::STATUS_CONFIRMED, self::STATUS_PAID];
+    }
+
     public static function getHrStatus($status): string
     {
         return self::getHrStatuses()[$status];

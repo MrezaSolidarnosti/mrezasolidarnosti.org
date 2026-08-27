@@ -60,10 +60,13 @@ class Beneficiary extends TableView
                 $totalAmount += $rp->amount;
                 $projects[$rp->project->id] = $rp->project->code;
             }
-            // Sum confirmed transaction amounts
+            // Money actually received: CONFIRMED and PAID. This counted CONFIRMED alone and
+            // silently dropped PAID, so a beneficiary whose transactions had been marked paid
+            // read lower here than on their own form — the same question, two answers.
+            // Transaction::getRealisedStatuses() is the single definition both now use.
             $confirmedAmount = 0;
             foreach ($beneficiary->transactions as $transaction) {
-                if ($transaction->status === Transaction::STATUS_CONFIRMED) {
+                if (in_array($transaction->status, Transaction::getRealisedStatuses(), true)) {
                     $confirmedAmount += $transaction->amount;
                 }
             }
