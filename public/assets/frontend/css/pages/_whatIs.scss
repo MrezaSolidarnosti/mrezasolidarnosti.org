@@ -137,8 +137,10 @@
     ul, ol {
       list-style:disc;
       padding-left:1.5rem;
+      margin-top:0.5rem;
       li {
         color:var(--colorDarkBlue);
+        line-height:2;
       }
     }
     span {
@@ -156,6 +158,13 @@
     p {
         @include typography.type(text);
         color:var(--colorDarkBlue);
+    }
+    // A paragraph typed into the block's rich-text field arrives as a div, not a p - that is
+    // what contenteditable produces on Enter - so it has to read the same as one.
+    .sideBySideDescription > div {
+        @include typography.type(text);
+        color:var(--colorDarkBlue);
+        margin:1rem 0;
     }
     b {
         color:var(--colorDarkBlue);
@@ -253,13 +262,26 @@
         color:var(--colorBeige);
       font-weight:300;
     }
+    // A paragraph typed into a card's rich-text field arrives as a div, not a p.
+    .valueCardDescription > div,
+    .valueCardNote > div {
+      @include typography.type(text);
+      color:var(--colorBeige);
+      font-weight:300;
+      margin:1rem 0;
+    }
+    .valueCardNote {
+      margin-top:1rem;
+    }
     ul, ol {
       padding-left:1.5rem;
       list-style:disc;
+      margin-top:0.5rem;
       li {
         @include typography.type(text);
         color:var(--colorBeige);
         font-weight:300;
+        line-height:2;
       }
     }
   }

@@ -73,6 +73,13 @@
         @include typography.type(h2);
         margin-bottom:1.5rem;
       }
+      .directionProjectDescription {
+        p {
+          font-size: 0.875rem;
+          font-weight: 600;
+          line-height: 1.4;
+        }
+      }
       span {
         @include typography.type(h5);
         color:var(--colorBeige);
@@ -84,10 +91,14 @@
       }
       ul, ol {
         padding-left:1.5rem;
-        margin-top:1.5rem;
+        margin-top:0.5rem;
         margin-bottom:2rem;
         font-weight:600;
         list-style:disc;
+        li {
+          font-size: 0.875rem;
+          line-height: 2;
+        }
       }
       a  {
         display:flex;

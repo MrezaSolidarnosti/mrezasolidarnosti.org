@@ -3,9 +3,9 @@
 namespace Solidarity\Post\Filter;
 
 use Skeletor\Blog\Service\UrlHelper;
+use Skeletor\ContentEditor\Contracts\ContentEditorFilterInterface;
 use Skeletor\Core\Filter\FilterInterface;
 use Skeletor\Core\Validator\ValidatorException;
-use Solidarity\ContentEditor\Contracts\ContentEditorFilterInterface;
 use Skeletor\Core\Security\Csrf;
 
 class Post implements FilterInterface

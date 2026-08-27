@@ -74,8 +74,11 @@
       flex-direction: column;
       gap: 3rem;
 
+      // Colour on the card, so anything inside inherits it - a paragraph typed into the
+      // block's rich-text field arrives as a div, which a list of element selectors misses.
       &.education {
         background: var(--colorBlue);
+        color: var(--colorBeige);
 
         h2, p, span, li {
           color: var(--colorBeige);
@@ -84,6 +87,7 @@
 
       &.repression {
         background: var(--colorGreen);
+        color: var(--colorDarkBlue);
 
         h2, p, span, li {
           color: var(--colorDarkBlue);
@@ -94,9 +98,21 @@
         @include typography.type(h2);
       }
 
-      p, span, li {
+      p, span, li,
+      .projectDisplayDescription > div,
+      .projectDisplayNote > div {
         @include typography.type(text);
         font-weight: 300;
+      }
+
+      .projectDisplayDescription > div,
+      .projectDisplayNote > div {
+        margin: 1rem 0;
+      }
+
+      // The note sits under the bullets and reads as an aside rather than more body copy.
+      .projectDisplayNote {
+        margin-top: 1.5rem;
       }
 
       span {
@@ -107,6 +123,11 @@
       ul, ol {
         list-style: disc;
         padding-left: 1.5rem;
+        margin-top: 0.5rem;
+
+        li {
+          line-height: 2;
+        }
       }
     }
   }

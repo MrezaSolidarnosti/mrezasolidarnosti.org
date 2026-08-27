@@ -1574,12 +1574,14 @@ strong {
 }
 .projectsWrapper .projectsDisplay .projectDisplay.education {
   background: var(--colorBlue);
+  color: var(--colorBeige);
 }
 .projectsWrapper .projectsDisplay .projectDisplay.education h2, .projectsWrapper .projectsDisplay .projectDisplay.education p, .projectsWrapper .projectsDisplay .projectDisplay.education span, .projectsWrapper .projectsDisplay .projectDisplay.education li {
   color: var(--colorBeige);
 }
 .projectsWrapper .projectsDisplay .projectDisplay.repression {
   background: var(--colorGreen);
+  color: var(--colorDarkBlue);
 }
 .projectsWrapper .projectsDisplay .projectDisplay.repression h2, .projectsWrapper .projectsDisplay .projectDisplay.repression p, .projectsWrapper .projectsDisplay .projectDisplay.repression span, .projectsWrapper .projectsDisplay .projectDisplay.repression li {
   color: var(--colorDarkBlue);
@@ -1589,11 +1591,20 @@ strong {
   font-weight: 700;
   line-height: 1.2;
 }
-.projectsWrapper .projectsDisplay .projectDisplay p, .projectsWrapper .projectsDisplay .projectDisplay span, .projectsWrapper .projectsDisplay .projectDisplay li {
+.projectsWrapper .projectsDisplay .projectDisplay p, .projectsWrapper .projectsDisplay .projectDisplay span, .projectsWrapper .projectsDisplay .projectDisplay li,
+.projectsWrapper .projectsDisplay .projectDisplay .projectDisplayDescription > div,
+.projectsWrapper .projectsDisplay .projectDisplay .projectDisplayNote > div {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.4;
   font-weight: 300;
+}
+.projectsWrapper .projectsDisplay .projectDisplay .projectDisplayDescription > div,
+.projectsWrapper .projectsDisplay .projectDisplay .projectDisplayNote > div {
+  margin: 1rem 0;
+}
+.projectsWrapper .projectsDisplay .projectDisplay .projectDisplayNote {
+  margin-top: 1.5rem;
 }
 .projectsWrapper .projectsDisplay .projectDisplay span {
   display: block;
@@ -1602,6 +1613,10 @@ strong {
 .projectsWrapper .projectsDisplay .projectDisplay ul, .projectsWrapper .projectsDisplay .projectDisplay ol {
   list-style: disc;
   padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+.projectsWrapper .projectsDisplay .projectDisplay ul li, .projectsWrapper .projectsDisplay .projectDisplay ol li {
+  line-height: 2;
 }
 .projectsWrapper .points {
   border-radius: 20px;
@@ -3478,6 +3493,11 @@ strong {
   line-height: 1.2;
   margin-bottom: 1.5rem;
 }
+#direction #directionRight .directionProject .directionProjectDescription p {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
 #direction #directionRight .directionProject span {
   font-size: 0.875rem;
   font-weight: 600;
@@ -3493,10 +3513,14 @@ strong {
 }
 #direction #directionRight .directionProject ul, #direction #directionRight .directionProject ol {
   padding-left: 1.5rem;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 2rem;
   font-weight: 600;
   list-style: disc;
+}
+#direction #directionRight .directionProject ul li, #direction #directionRight .directionProject ol li {
+  font-size: 0.875rem;
+  line-height: 2;
 }
 #direction #directionRight .directionProject a {
   display: flex;
@@ -4065,9 +4089,11 @@ strong {
 .whatIsContent > .whatIsSection ul, .whatIsContent > .whatIsSection ol {
   list-style: disc;
   padding-left: 1.5rem;
+  margin-top: 0.5rem;
 }
 .whatIsContent > .whatIsSection ul li, .whatIsContent > .whatIsSection ol li {
   color: var(--colorDarkBlue);
+  line-height: 2;
 }
 .whatIsContent > .whatIsSection span {
   color: var(--colorDarkBlue);
@@ -4092,6 +4118,13 @@ strong {
   font-weight: 400;
   line-height: 1.4;
   color: var(--colorDarkBlue);
+}
+.whatIsContent > .whatIsSection .sideBySideDescription > div {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--colorDarkBlue);
+  margin: 1rem 0;
 }
 .whatIsContent > .whatIsSection b {
   color: var(--colorDarkBlue);
@@ -4207,9 +4240,22 @@ strong {
   color: var(--colorBeige);
   font-weight: 300;
 }
+.whatIsVisual > div .valueCardDescription > div,
+.whatIsVisual > div .valueCardNote > div {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--colorBeige);
+  font-weight: 300;
+  margin: 1rem 0;
+}
+.whatIsVisual > div .valueCardNote {
+  margin-top: 1rem;
+}
 .whatIsVisual > div ul, .whatIsVisual > div ol {
   padding-left: 1.5rem;
   list-style: disc;
+  margin-top: 0.5rem;
 }
 .whatIsVisual > div ul li, .whatIsVisual > div ol li {
   font-size: 1rem;
@@ -4217,6 +4263,7 @@ strong {
   line-height: 1.4;
   color: var(--colorBeige);
   font-weight: 300;
+  line-height: 2;
 }
 
 .threePillars {
