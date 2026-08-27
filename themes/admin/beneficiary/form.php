@@ -36,36 +36,31 @@ $schoolGroup = (new InputGroup())
     ->addInput($name)
     ->addInput($schoolSelect);
 
-// The delegate is always on the form now, but which way round depends on whether a school
-// carries one. MSP: the school owns the delegate, so it stays read-only and informational —
-// posting it would change nothing, since the filter takes the school's delegate first.
-// MSPR: there are no schools (MigrateLegacyMspr sets school = null), so nothing can be
-// derived and the delegate is chosen here directly. Deciding this server-side off the stored
-// model keeps it free of JS; the filter applies the same precedence on save either way.
-if ($data['model']?->school?->delegate) {
-    $delegateInput = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
-        'delegateInfo',
-        '/delegate/tableHandler/',
-        'name',
-        'id',
-        'Delegat',
-        $data['model']->school->delegate->id,
-        $data['model']->school->delegate->name,
-        '',
-        [], [], null, null, true
-    ));
-} else {
-    $delegateInput = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
-        'delegate',
-        '/delegate/tableHandler/',
-        'name',
-        'id',
-        'Delegat',
-        $data['model']?->createdBy?->id ?? null,
-        $data['model']?->createdBy?->name,
-        'Traži delegate...'
-    ));
-}
+// Always editable, and always posted under the same name.
+//
+// It used to render read-only whenever the stored school carried a delegate, on the grounds
+// that the school owns it for MSP and the filter would override anything posted anyway. That
+// locked the form: the school field above is editable, so clearing it left a delegate field
+// that could not be filled in and posted nothing under `delegate` — the validator then
+// refused the save with no way for the user to satisfy it. The branch was decided from the
+// stored model, but the input it depended on can change in the browser.
+//
+// Precedence still lives in the filter, which is the only place that sees the submitted
+// school and delegate together: a school's delegate wins when a school is chosen, and this
+// field is the fallback when there is none. So for MSP nothing changes on save, and for MSPR
+// (no school) the delegate is chosen here. The tooltip says as much, since a field that can
+// be edited but is sometimes overridden needs to explain itself.
+$delegateInput = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
+    'delegate',
+    '/delegate/tableHandler/',
+    'name',
+    'id',
+    'Delegat',
+    $data['model']?->createdBy?->id ?? null,
+    $data['model']?->createdBy?->name,
+    'Traži delegate...',
+    tooltip: 'Ako je izabrana škola, delegat se preuzima sa škole. Bez škole (MSPR), izaberite delegata ovde.',
+));
 $schoolGroup->addInput($delegateInput);
 
 $basicInfo = (new Tab('Osnovne Info'))
