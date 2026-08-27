@@ -1,5 +1,6 @@
 <div id="mainTable">
     <?php echo $data['tableFilters']; ?>
+    <?=$this->formToken();?>
     <div id="tableContainer">
         <div id="tableTop">
             <div class="tablePaginationContainer" id="tablePaginationContainerTop">

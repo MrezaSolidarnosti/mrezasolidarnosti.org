@@ -1,4 +1,4 @@
-import Config from "https://skeletor.greenfriends.systems/skeletorjs/src/Config/Config.js";
+import Config from "../../../vendor/skeletorjs/src/Config/Config.js";
 import Translator from "https://skeletor.greenfriends.systems/skeletorjs/src/Translator/Translator.js";
 import {translations} from "./config/translations.js?v=1.0.0";
 

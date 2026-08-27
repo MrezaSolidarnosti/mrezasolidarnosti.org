@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><?=$this->e($pageTitle)?></title>
     <link rel="stylesheet" href="https://skeletor.greenfriends.systems/skeletorjs/css/style.css">
-    <link rel="stylesheet" href="<?=ADMIN_ASSET_URL . '/css/style.css?v=0.0.8'?>">
+    <link rel="stylesheet" href="<?=ADMIN_ASSET_URL . '/css/style.css?v=0.0.9'?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" href="/favicon.ico" sizes="any">
