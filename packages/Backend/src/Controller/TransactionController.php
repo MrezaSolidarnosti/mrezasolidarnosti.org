@@ -50,6 +50,24 @@ class TransactionController extends AjaxCrudController
         }
     }
 
+    /**
+     * A single JSON 403 for every ownership refusal on this controller.
+     *
+     * Deliberately says nothing about whether the id exists: "not yours" and "no such
+     * transaction" must look identical, or the endpoint becomes a way to enumerate the
+     * network's transactions one id at a time.
+     */
+    private function forbidden(): Response
+    {
+        $this->getResponse()->getBody()->write(json_encode([
+            'success' => false,
+            'message' => 'Nemate pristup ovoj transakciji.',
+        ]));
+        $this->getResponse()->getBody()->rewind();
+
+        return $this->getResponse()->withHeader('Content-Type', 'application/json')->withStatus(403);
+    }
+
     public function updateStatusBulk(): Response
     {
         $returnStatus = 200;
@@ -77,6 +95,14 @@ class TransactionController extends AjaxCrudController
             $failed = [];
             $message = '';
             foreach($data['ids'] as $id) {
+                // Per id, not once for the batch: the ids arrive in the request body, so a
+                // delegate could otherwise mix one of their own in with anyone else's.
+                if (!$this->service->isAccessibleToLoggedInUser((int) $id)) {
+                    $failed[$id] = 'Nemate pristup ovoj transakciji.';
+                    $success = false;
+                    $returnStatus = 403;
+                    continue;
+                }
                 try {
                     $this->service->updateStatus($id, $status);
                     if ($status === \Solidarity\Transaction\Entity\Transaction::STATUS_CONFIRMED) {
@@ -204,6 +230,13 @@ class TransactionController extends AjaxCrudController
             ]));
             $this->getResponse()->getBody()->rewind();
             return $this->getResponse()->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        // Route permission says a delegate may change a status; it cannot say *whose*. The id
+        // comes straight off the URL, so without this a delegate could confirm or cancel any
+        // transaction in the network — including payments feeding someone else's reconciliation.
+        if (!$this->service->isAccessibleToLoggedInUser($id)) {
+            return $this->forbidden();
         }
 
         if ($status === \Solidarity\Transaction\Entity\Transaction::STATUS_CONFIRMED) {
@@ -355,6 +388,11 @@ class TransactionController extends AjaxCrudController
 
     public function getEntityData()
     {
+        // Reads one transaction by id, so it bypasses the list scoping entirely.
+        if (!$this->service->isAccessibleToLoggedInUser((int) $this->getRequest()->getAttribute('id'))) {
+            return $this->forbidden();
+        }
+
         $this->getResponse()->getBody()->write(json_encode($this->service->getEntityData(
             (int) $this->getRequest()->getAttribute('id'), $this->getRequest()->getQueryParams()['currency']
         )));

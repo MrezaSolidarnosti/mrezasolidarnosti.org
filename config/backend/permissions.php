@@ -43,7 +43,12 @@ return [
         'transaction.view_list' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
         'transaction.view' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
         'transaction.create' => [User::ROLE_ADMIN, User::ROLE_STUFF],
-        'transaction.edit' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
+        // Full edit is staff and admin only. A delegate may move a status and nothing else —
+        // they reconcile payments for their own beneficiaries, they do not re-author
+        // transactions. Splitting the permission is what stops /transaction/update/* and
+        // /transaction/form/* from riding along with that.
+        'transaction.edit' => [User::ROLE_ADMIN, User::ROLE_STUFF],
+        'transaction.edit_status' => [User::ROLE_ADMIN, User::ROLE_STUFF, 10],
         'transaction.delete' => [User::ROLE_ADMIN],
 
         // School/City permissions
@@ -161,9 +166,9 @@ return [
         '/transaction/create/' => 'transaction.create',
         '/transaction/form/' => 'transaction.create',
         '/transaction/form/*' => 'transaction.edit',
-        '/transaction/updateStatus/*' => 'transaction.edit',
+        '/transaction/updateStatus/*' => 'transaction.edit_status',
         '/transaction/update/*' => 'transaction.edit',
-        '/transaction/updateStatusBulk*' => 'transaction.edit',
+        '/transaction/updateStatusBulk*' => 'transaction.edit_status',
         '/transaction/getPaymentMethodPreview/' => 'transaction.create',
         '/transaction/getEntityData/*' => 'transaction.view',
         '/transaction/delete/*' => 'transaction.delete',
