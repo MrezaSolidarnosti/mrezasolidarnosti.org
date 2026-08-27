@@ -73,12 +73,43 @@ class BeneficiaryController extends AjaxCrudController
         return $this->getResponse()->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * The other half of the form guard. Blocking the rendered form stops the link but not the
+     * POST — /beneficiary/update/7829 does not need the form to have been served first.
+     */
+    public function update(): Response
+    {
+        $id = $this->getRequest()->getAttribute('id');
+        if ($id && !$this->mayAccess($this->service->getById($id))) {
+            $this->getResponse()->getBody()->write(json_encode([
+                'errors' => [],
+                'message' => '',
+                'generalErrors' => [['message' => $this->translate('Nemate pristup ovom korisniku.')]],
+                'status' => false,
+            ]));
+            $this->getResponse()->getBody()->rewind();
+
+            return $this->getResponse()->withHeader('Content-Type', 'application/json')->withStatus(403);
+        }
+
+        return parent::update();
+    }
+
     public function form(): Response
     {
         $id = $this->getRequest()->getAttribute('id');
         $model = null;
         if ($id) {
             $model = $this->service->getById($id);
+
+            // The list is scoped to a delegate's own beneficiaries, but this takes an id from
+            // the URL, so /beneficiary/form/7829 opened any record in the network regardless.
+            // Scoping a table decides what is offered; it is not access control.
+            if (!$this->mayAccess($model)) {
+                $this->getFlash()->error('Nemate pristup ovom korisniku.');
+
+                return $this->redirect('/beneficiary/view/');
+            }
         }
 
         $assignedProjects = $this->editableProjects();
@@ -90,6 +121,25 @@ class BeneficiaryController extends AjaxCrudController
         $this->formData['confirmedAmounts'] = $this->confirmedAmountsFor($model);
 
         return parent::form();
+    }
+
+    /**
+     * May the logged-in user work on this beneficiary?
+     *
+     * Staff and admins work across the whole network. A delegate is confined to the
+     * beneficiaries they own — the same rule Beneficiary::fetchTableData() applies to the
+     * list, applied here to a single record fetched by id.
+     *
+     * A missing record answers false: "not yours" and "does not exist" must be
+     * indistinguishable, or the form becomes a way to probe for ids.
+     */
+    protected function mayAccess(?\Solidarity\Beneficiary\Entity\Beneficiary $beneficiary): bool
+    {
+        if ($this->getSession()->getStorage()->offsetGet('loggedInEntityType') !== 'delegate') {
+            return true;
+        }
+
+        return $beneficiary?->createdBy?->getId() === (int) $this->getSession()->getStorage()->offsetGet('loggedIn');
     }
 
     /**

@@ -220,6 +220,27 @@ class TransactionRepository extends TableViewRepository
         return max(0, Transaction::PER_PERSON_LIMIT - $donated);
     }
 
+    /**
+     * Does this transaction belong to a beneficiary the given delegate owns?
+     *
+     * Scoping the table alone is not access control — it only decides what is listed. Every
+     * write endpoint takes an id straight off the URL or the request body, so without this the
+     * rows a delegate cannot see are still ones they can change.
+     */
+    public function belongsToDelegate(int $transactionId, int $delegateId): bool
+    {
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('COUNT(t.id)')
+            ->from(static::ENTITY, 't')
+            ->join('t.beneficiary', 'b')
+            ->where('t.id = :transactionId')
+            ->andWhere('b.createdBy = :delegateId')
+            ->setParameter('transactionId', $transactionId)
+            ->setParameter('delegateId', $delegateId);
+
+        return (int) $qb->getQuery()->getSingleScalarResult() > 0;
+    }
+
     public function getJoinableEntities(): array
     {
         return [

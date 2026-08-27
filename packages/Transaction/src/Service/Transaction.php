@@ -36,6 +36,45 @@ class Transaction extends TableView
     }
 
     /**
+     * A delegate sees only transactions belonging to beneficiaries they own.
+     *
+     * This override was missing entirely while Beneficiary and Delegate both had one, so the
+     * transaction list showed a delegate every transaction in the system — every other
+     * delegate's donors and beneficiaries, with names, emails, amounts and account numbers.
+     *
+     * 'b.createdBy' carries the alias deliberately: TransactionRepository::getJoinableEntities()
+     * already joins beneficiary as `b`, and TableViewRepository leaves a dotted key alone
+     * instead of prefixing it with `a.`.
+     */
+    public function fetchTableData(
+        $search, $filter, $offset, $limit, $order, $uncountableFilter = null, $idsToInclude = [], $idsToExclude = []
+    ) {
+        if ($this->getUserSession()->getLoggedInEntityType() === 'delegate') {
+            $uncountableFilter['b.createdBy'] = $this->getUserSession()->getLoggedInUserId();
+        }
+
+        return parent::fetchTableData($search, $filter, $offset, $limit, $order, $uncountableFilter, $idsToInclude, $idsToExclude);
+    }
+
+    /**
+     * May the logged-in user act on this transaction at all?
+     *
+     * Anyone who is not a delegate is unrestricted — staff and admins work across the whole
+     * network. A delegate is confined to transactions of beneficiaries they own.
+     *
+     * Every write endpoint has to ask this. Filtering the list decides what is *shown*; an id
+     * posted straight to updateStatus is never shown to anybody.
+     */
+    public function isAccessibleToLoggedInUser(int $transactionId): bool
+    {
+        if ($this->getUserSession()->getLoggedInEntityType() !== 'delegate') {
+            return true;
+        }
+
+        return $this->repo->belongsToDelegate($transactionId, (int) $this->getUserSession()->getLoggedInUserId());
+    }
+
+    /**
      * First payment method the beneficiary accepts from $types, or null when none match.
      * Shared by the allocator and hasUnmetNeeds() so "can this beneficiary be paid" is
      * answered in exactly one place.
@@ -558,7 +597,11 @@ class Transaction extends TableView
                 'id' => $transaction->getId(),
                 'accountNumber' =>  [
                     'value' => $instructions,
-                    'editColumn' => true,
+                    // Not for delegates: /transaction/form/* is staff and admin only now, so
+                    // offering them the link would be a menu item that bounces them. They act
+                    // on transactions through the status controls, which is the whole of what
+                    // they need — see permissions transaction.edit vs transaction.edit_status.
+                    'editColumn' => $this->getUserSession()->getLoggedInEntityType() !== 'delegate',
                 ],
                 // @TODO find a clean way to translate
                 'status' => \Solidarity\Transaction\Entity\Transaction::getHrStatuses()[$transaction->status],
