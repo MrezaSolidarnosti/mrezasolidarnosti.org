@@ -76,7 +76,7 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-<script src="/<?=$this->getVersionString()?><?=ADMIN_ASSET_URL .'/js/global.js'?>" type="module"></script>
-<script type="module" src="/<?=$this->getVersionString()?><?=ADMIN_ASSET_URL . '/js/dashboard.js'?>"></script>
+<script src="<?=$this->getVersionPathPrefix()?><?=ADMIN_ASSET_URL .'/js/global.js'?>" type="module"></script>
+<script type="module" src="<?=$this->getVersionPathPrefix()?><?=ADMIN_ASSET_URL . '/js/dashboard.js'?>"></script>
 </body>
 </html>

@@ -323,7 +323,7 @@
 </div>
 <div id="editorOverlay"></div>
 <!-- Media Library end -->
-<script src="/<?=$this->getVersionString()?><?=ADMIN_ASSET_URL .'/js/global.js'?>" type="module"></script>
-<script src="/<?=$this->getVersionString()?><?=ADMIN_ASSET_URL .'/js/post/post.js'?>" type="module"></script>
+<script src="<?=$this->getVersionPathPrefix()?><?=ADMIN_ASSET_URL .'/js/global.js'?>" type="module"></script>
+<script src="<?=$this->getVersionPathPrefix()?><?=ADMIN_ASSET_URL .'/js/post/post.js'?>" type="module"></script>
 </body>
 </html>
