@@ -114,8 +114,8 @@
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-    <script type="module" src="<?=ADMIN_ASSET_URL . '/js/global.js?v=2.0.3'?>"></script>
-    <script type="module" src="<?=ADMIN_ASSET_URL . '/js/dashboard.js?v=1.0.2'?>"></script>
-    <script type="module" src="<?=ADMIN_ASSET_URL . '/js/crud.js?v=1.0.2'?>"></script>
+    <script type="module" src="/<?=$this->getVersionString()?>/<?=ADMIN_ASSET_URL . '/js/global.js'?>"></script>
+    <script type="module" src="/<?=$this->getVersionString()?>/<?=ADMIN_ASSET_URL . '/js/dashboard.js'?>"></script>
+    <script type="module" src="/<?=$this->getVersionString()?>/<?=ADMIN_ASSET_URL . '/js/crud.js'?>"></script>
 </body>
 </html>

@@ -177,6 +177,7 @@ return array(
         THUMBNAIL_250x500 => [250,125, false],
         SINGLE_350x150 => [350,150, false],
         SINGLE_350x700 => [350, 700, false]
-    ]
+    ],
+    'versionString' => '0.0.1'
 );
 

@@ -1,7 +1,7 @@
 import { config } from "./config.js";
 import Excerpt from "./Modules/Excerpt.js";
-import {configLocal} from "../config/config-local.js?v=2.0.2";
-import ContentEditor from "../../../../vendor/skeletorjs/src/ContentEditor/ContentEditor.js?v=3.0.0";
+import {configLocal} from "../config/config-local.js";
+import ContentEditor from "../../../../vendor/skeletorjs/src/ContentEditor/ContentEditor.js?";
 import MediaLibrary from "../../../../vendor/skeletorjs/src/MediaLibrary/MediaLibrary.js";
 import SaveResponse from "../../../../vendor/skeletorjs/src/ContentEditor/SaveResponse.js";
 import {events} from "../../../../vendor/skeletorjs/src/ContentEditor/events.js";
