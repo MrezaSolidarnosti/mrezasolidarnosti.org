@@ -1,6 +1,7 @@
 import Navigation from "./Navigation.js";
 import Social from "./Social.js";
-import Loader from "https://skeletor.greenfriends.systems/skeletorjs/src/Loader/Loader.js";
+import Loader from "../../../../vendor/skeletorjs/src/Loader/Loader.js";
+
 
 export default class ThemeSettings {
 

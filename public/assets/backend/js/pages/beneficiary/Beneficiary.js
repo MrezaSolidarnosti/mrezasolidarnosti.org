@@ -1,4 +1,4 @@
-import CrudPage from "https://skeletor.greenfriends.systems/skeletorjs/src/Page/CrudPage.js";
+import CrudPage from "../../../../../vendor/skeletorjs/src/Page/CrudPage.js";
 // Versioned because crud.js only busts the page module itself — a relative import stays
 // cached under its own URL, and a stale RegisteredProjects.js would post rows with no id.
 import RegisteredProjects from "./RegisteredProjects.js?v=0.0.6";

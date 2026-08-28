@@ -1,9 +1,6 @@
 <?php $this->layout('layout/login', ['title' => $pageTitle ?? 'Magic Link Login']) ?>
 <h1>Login za delegate</h1>
 
-<?php if ($sent ?? false): ?>
-    <div class="alert alert-success">Link za prijavu je poslat na vašu email adresu.</div>
-<?php endif; ?>
 
 <a href="/login/user/magicLinkForm/">Login za admine</a>
 <form id="loginForm"  action="/login/<?=$data['entityType']?>/requestMagicLink/" method="post">

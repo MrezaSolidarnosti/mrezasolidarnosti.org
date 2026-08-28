@@ -1,4 +1,5 @@
-import CrudPage from "https://skeletor.greenfriends.systems/skeletorjs/src/Page/CrudPage.js";
+import CrudPage from "../../../../vendor/skeletorjs/src/Page/CrudPage.js";
+
 
 export default class SchoolType extends CrudPage {
     // preload() {

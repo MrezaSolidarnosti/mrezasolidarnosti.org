@@ -1,16 +1,20 @@
 import MediaLibrary from "../../../../vendor/skeletorjs/src/MediaLibrary/MediaLibrary.js";
-import ContentEditor from "../../../../vendor/skeletorjs/src/ContentEditor/ContentEditor.js";
+import ContentEditor from "../../../../vendor/skeletorjs/src/ContentEditor/ContentEditor.js?v=2.0.1";
 import FailedValidation from "../../../../vendor/skeletorjs/src/ContentEditor/SaveValidation/FailedValidation.js";
 import SaveResponse from "../../../../vendor/skeletorjs/src/ContentEditor/SaveResponse.js";
 import {config} from "./config.js";
 import {events} from "../../../../vendor/skeletorjs/src/ContentEditor/events.js";
 import LanguageCode from "./Modules/LanguageCode.js";
 import LoginProtected from "./Modules/LoginProtected.js";
+import Back from "../../../../vendor/skeletorjs/src/ContentEditor/Back/Back.js";
 
 window.mediaLibrary = new MediaLibrary();
 window.mediaLibrary.init();
 
 let slug = initialContent.slug ?? '';
+
+
+Back.registerBackUrl('/page/view');
 
 ContentEditor.registerModule('languageCode', {
     class: LanguageCode

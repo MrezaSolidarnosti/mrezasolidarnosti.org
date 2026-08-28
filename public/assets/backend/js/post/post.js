@@ -1,17 +1,19 @@
 import { config } from "./config.js";
 import Excerpt from "./Modules/Excerpt.js";
 import {configLocal} from "../config/config-local.js?v=2.0.2";
-import ContentEditor from "../../../../vendor/skeletorjs/src/ContentEditor/ContentEditor.js";
+import ContentEditor from "../../../../vendor/skeletorjs/src/ContentEditor/ContentEditor.js?v=2.0.1";
 import MediaLibrary from "../../../../vendor/skeletorjs/src/MediaLibrary/MediaLibrary.js";
 import SaveResponse from "../../../../vendor/skeletorjs/src/ContentEditor/SaveResponse.js";
 import {events} from "../../../../vendor/skeletorjs/src/ContentEditor/events.js";
 import CommandPalette from "../../../../vendor/skeletorjs/src/ContentEditor/CommandPalette/CommandPalette.js";
 import Translator from "../../../../vendor/skeletorjs/src/Translator/Translator.js";
 import Message from "../../../../vendor/skeletorjs/src/Message/Message.js";
+import Back from "../../../../vendor/skeletorjs/src/ContentEditor/Back/Back.js";
 
 window.mediaLibrary = new MediaLibrary();
 window.mediaLibrary.init();
 
+Back.registerBackUrl('/post/view');
 ContentEditor.registerModule('excerpt', {
     class: Excerpt
 });

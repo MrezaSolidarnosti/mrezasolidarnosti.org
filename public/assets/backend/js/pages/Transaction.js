@@ -1,6 +1,5 @@
-import CrudPage from "https://skeletor.greenfriends.systems/skeletorjs/src/Page/CrudPage.js";
-import Loader from "https://skeletor.greenfriends.systems/skeletorjs/src/Loader/Loader.js";
-import Message from "https://skeletor.greenfriends.systems/skeletorjs/src/Message/Message.js";
+import CrudPage from "../../../../vendor/skeletorjs/src/Page/CrudPage.js";
+import Message from "../../../../vendor/skeletorjs/src/Message/Message.js";
 
 
 export default class Educator extends CrudPage {

@@ -1,5 +1,5 @@
-import CrudPage from "https://skeletor.greenfriends.systems/skeletorjs/src/Page/CrudPage.js";
 import PaymentMethods from "./PaymentMethods.js";
+import CrudPage from "../../../../../vendor/skeletorjs/src/Page/CrudPage.js";
 
 export default class Donor extends CrudPage {
     paymentMethods;

@@ -1,8 +1,8 @@
-import Modal from "https://skeletor.greenfriends.systems/skeletorjs/src/Modal/Modal.js";
-import Translator from "https://skeletor.greenfriends.systems/skeletorjs/src/Translator/Translator.js";
-import Message from "https://skeletor.greenfriends.systems/skeletorjs/src/Message/Message.js";
-import DNDI from "https://skeletor.greenfriends.systems/skeletorjs/src/DNDI/DNDI.js";
-import Loader from "https://skeletor.greenfriends.systems/skeletorjs/src/Loader/Loader.js";
+import Loader from "../../../../vendor/skeletorjs/src/Loader/Loader.js";
+import Translator from "../../../../vendor/skeletorjs/src/Translator/Translator.js";
+import Message from "../../../../vendor/skeletorjs/src/Message/Message.js";
+import DNDI from "../../../../vendor/skeletorjs/src/DNDI/DNDI.js";
+
 
 export default class Navigation {
 
