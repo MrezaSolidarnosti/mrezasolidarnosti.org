@@ -404,14 +404,18 @@ $container->set(Engine::class, function() use ($container) {
         $plates->registerFunction('t', function ($string) { return $string; });
     }
 
-    $plates->registerFunction('getVersionString', function() use($container) {
+    $plates->registerFunction('getVersionPathPrefix', function() use($container) {
         /*
          * @ is used so that browser requests a new folder path for the assets when the version string bumps but the
          * web server returns the correct asset, so when the version string is bumped to 0.0.2, the url that the
          * browser fetches will be /@0.0.2/assets/some-asset.... while the webserver is configured to resolve the asset
          * without the version, in hand busting the cache as the browser thinks it's a new resource
          * */
-        return '@' . $container->get(Config::class)->offsetGet('versionString');
+        $versionString = $container->get(Config::class)->offsetGet('versionString');
+        if($versionString) {
+            return '/@' . $versionString;
+        }
+        return '';
     });
     return $plates;
 });
