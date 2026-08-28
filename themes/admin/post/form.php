@@ -321,6 +321,6 @@
 <div id="editorOverlay"></div>
 <!-- Media Library end -->
 <script src="<?=ADMIN_ASSET_URL .'/js/global.js?v=2.0.3'?>" type="module"></script>
-<script src="<?=ADMIN_ASSET_URL .'/js/post/post.js'?>" type="module"></script>
+<script src="<?=ADMIN_ASSET_URL .'/js/post/post.js?v=1.0.0'?>" type="module"></script>
 </body>
 </html>
