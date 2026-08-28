@@ -1,5 +1,5 @@
 import MediaLibrary from "../../../../vendor/skeletorjs/src/MediaLibrary/MediaLibrary.js";
-import ContentEditor from "../../../../vendor/skeletorjs/src/ContentEditor/ContentEditor.js?v=3.0.0";
+import ContentEditor from "../../../../vendor/skeletorjs/src/ContentEditor/ContentEditor.js";
 import FailedValidation from "../../../../vendor/skeletorjs/src/ContentEditor/SaveValidation/FailedValidation.js";
 import SaveResponse from "../../../../vendor/skeletorjs/src/ContentEditor/SaveResponse.js";
 import {config} from "./config.js";
