@@ -1,4 +1,5 @@
-import Config from "https://skeletor.greenfriends.systems/skeletorjs/src/Config/Config.js";
+import Config from "../../../../vendor/skeletorjs/src/Config/Config.js";
+
 export const config = Object.freeze({
     contentEditor: {
         appBlocksPath: Config.get('appBlocksPath'),

@@ -1,6 +1,6 @@
 import Config from "../../../vendor/skeletorjs/src/Config/Config.js";
-import Translator from "https://skeletor.greenfriends.systems/skeletorjs/src/Translator/Translator.js";
 import {translations} from "./config/translations.js?v=1.0.0";
+import Translator from "../../../vendor/skeletorjs/src/Translator/Translator.js";
 
 const configDirectory = './config';
 import(`${configDirectory}/config-local.js?v=2.0.3`).then(({configLocal: configLocal}) => {

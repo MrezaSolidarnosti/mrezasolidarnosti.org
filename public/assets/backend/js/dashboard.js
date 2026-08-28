@@ -1,8 +1,8 @@
-import ToTop from "https://skeletor.greenfriends.systems/skeletorjs/src/ToTop/ToTop.js";
-import Navigation from "https://skeletor.greenfriends.systems/skeletorjs/src/Navigation/Navigation.js";
-import MediaLibrary from "https://skeletor.greenfriends.systems/skeletorjs/src/MediaLibrary/MediaLibrary.js";
 import {theme as themeConfig} from "./theme.js";
-import {modes} from "https://skeletor.greenfriends.systems/skeletorjs/src/Theme/modes.js";
+import {modes} from "../../../vendor/skeletorjs/src/Theme/modes.js";
+import MediaLibrary from "../../../vendor/skeletorjs/src/MediaLibrary/MediaLibrary.js";
+import Navigation from "../../../vendor/skeletorjs/src/Navigation/Navigation.js";
+import ToTop from "../../../vendor/skeletorjs/src/ToTop/ToTop.js";
 
 const navigation = new Navigation({theme:themeConfig, defaultTheme: modes.dark, isOpenOnInit: true});
 navigation.init();

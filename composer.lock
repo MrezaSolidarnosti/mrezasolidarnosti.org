@@ -514,7 +514,7 @@
             "source": {
                 "type": "git",
                 "url": "https://bitbucket.org/dj_avolak/skeletor",
-                "reference": "db6304f8d1776869061ee4abf99f8e2b46e5d124"
+                "reference": "d576e08f05466c519d5aa5f6b9b3148d769ea40a"
             },
             "require": {
                 "beberlei/doctrineextensions": "^1",
@@ -561,7 +561,7 @@
             "license": [
                 "MIT"
             ],
-            "time": "2026-08-27T08:25:38+00:00"
+            "time": "2026-08-28T10:32:32+00:00"
         },
         {
             "name": "dj_avolak/skeletor-asset-installer",
@@ -1345,18 +1345,18 @@
         },
         {
             "name": "greenfriends/skeletorjs",
-            "version": "3.0.2",
+            "version": "3.0.3",
             "source": {
                 "type": "git",
                 "url": "https://bitbucket.org/greenfriends/skeletorjs",
-                "reference": "ac6b83e0fec9150d511f43be39e3183fabd9b0f4"
+                "reference": "9c944098e09be15516bbbe9f9608bb7699e87e4b"
             },
             "type": "skeletor-asset",
             "license": [
                 "MIT"
             ],
             "description": "Core JavaScript library for the Skeletor PHP framework",
-            "time": "2026-08-27T08:03:45+00:00"
+            "time": "2026-08-28T10:24:49+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",

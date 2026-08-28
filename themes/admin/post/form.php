@@ -6,7 +6,7 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><?=$this->e($pageTitle)?></title>
-    <link rel="stylesheet" href="/vendor/skeletorjs/css/style.css?v=0.0.1">
+    <link rel="stylesheet" href="/vendor/skeletorjs/css/style.css?v=0.0.2">
     <link rel="stylesheet" href="<?=ADMIN_ASSET_URL . '/css/style.css?v=0.0.9'?>">
     <link rel="shortcut icon" href="<?= ADMIN_ASSET_URL ?>/images/favicon.ico"/>
     <link rel="apple-touch-icon" sizes="180x180" href="<?= ADMIN_ASSET_URL ?>/images/apple-touch-icon.png"/>
@@ -23,6 +23,9 @@
 <div id="contentEditor">
     <div id="topBar">
         <div id="topBarLeft">
+            <div id="backButton" title="Back">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M640-80 240-480l400-400 71 71-329 329 329 329-71 71Z"/></svg>
+            </div>
             <div id="blockInserterButton" title="Add block" data-title-close="Close">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
             </div>
@@ -321,6 +324,6 @@
 <div id="editorOverlay"></div>
 <!-- Media Library end -->
 <script src="<?=ADMIN_ASSET_URL .'/js/global.js?v=2.0.3'?>" type="module"></script>
-<script src="<?=ADMIN_ASSET_URL .'/js/post/post.js?v=1.0.0'?>" type="module"></script>
+<script src="<?=ADMIN_ASSET_URL .'/js/post/post.js?v=1.0.1'?>" type="module"></script>
 </body>
 </html>
