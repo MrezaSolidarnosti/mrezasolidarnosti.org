@@ -1,0 +1,68 @@
+#mainTable {
+  #crudTable {
+    tbody {
+      tr {
+        &:not(.additionalDataRow):not(.active) {
+          &:has(.inPlaceEditable) {
+            &:hover {
+              td {
+                &:not(.countDataElement):not(.countDataTitle) {
+                  background: inherit;
+                }
+              }
+            }
+          }
+        }
+        .inPlaceEditable {
+          input, select {
+            width: 100%;
+            border: 1px solid var(--colorSurface-400);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            color: var(--colorSurface-600);
+            outline:none;
+            &:focus {
+              border:1px solid var(--colorPrimary-500);
+              background:var(--colorInfoTransparent);
+              color:var(--colorPrimary-500);
+            }
+          }
+          input {
+            background: transparent;
+          }
+          select {
+            background:var(--colorSurface-100);
+            option {
+              background:var(--colorSurface-100);
+              color:var(--colorSurface-600);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.flashInput {
+  animation: flashInputAnimation 1s alternate;
+}
+
+.flashInputError {
+  animation: flashInputErrorAnimation 1s alternate;
+}
+
+@keyframes flashInputAnimation {
+  50% {
+    border:1px solid var(--colorSuccess);
+    background:var(--colorSuccessTransparent);
+    color:var(--colorSuccess);
+  }
+}
+
+@keyframes flashInputErrorAnimation {
+  50% {
+    border:1px solid var(--colorError);
+    background:var(--colorErrorTransparent);
+    color:var(--colorError);
+  }
+}
