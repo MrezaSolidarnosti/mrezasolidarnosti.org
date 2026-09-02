@@ -644,4 +644,54 @@ form:has(.selectedService) .fullWidth:has(#totalWithoutVAT) .inputContainer {
   display: none;
 }
 
+#mainTable #crudTable tbody tr:not(.additionalDataRow):not(.active):has(.inPlaceEditable):hover td:not(.countDataElement):not(.countDataTitle) {
+  background: inherit;
+}
+#mainTable #crudTable tbody tr .inPlaceEditable input, #mainTable #crudTable tbody tr .inPlaceEditable select {
+  width: 100%;
+  border: 1px solid var(--colorSurface-400);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  color: var(--colorSurface-600);
+  outline: none;
+}
+#mainTable #crudTable tbody tr .inPlaceEditable input:focus, #mainTable #crudTable tbody tr .inPlaceEditable select:focus {
+  border: 1px solid var(--colorPrimary-500);
+  background: var(--colorInfoTransparent);
+  color: var(--colorPrimary-500);
+}
+#mainTable #crudTable tbody tr .inPlaceEditable input {
+  background: transparent;
+}
+#mainTable #crudTable tbody tr .inPlaceEditable select {
+  background: var(--colorSurface-100);
+}
+#mainTable #crudTable tbody tr .inPlaceEditable select option {
+  background: var(--colorSurface-100);
+  color: var(--colorSurface-600);
+}
+
+.flashInput {
+  animation: flashInputAnimation 1s alternate;
+}
+
+.flashInputError {
+  animation: flashInputErrorAnimation 1s alternate;
+}
+
+@keyframes flashInputAnimation {
+  50% {
+    border: 1px solid var(--colorSuccess);
+    background: var(--colorSuccessTransparent);
+    color: var(--colorSuccess);
+  }
+}
+@keyframes flashInputErrorAnimation {
+  50% {
+    border: 1px solid var(--colorError);
+    background: var(--colorErrorTransparent);
+    color: var(--colorError);
+  }
+}
+
 /*# sourceMappingURL=style.css.map */
