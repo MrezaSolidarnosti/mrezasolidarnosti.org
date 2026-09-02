@@ -9,10 +9,17 @@ define('APP_PATH', dirname(__DIR__));
 
 include(APP_PATH . "/config/constants.php");
 include(APP_PATH . "/vendor/autoload.php");
-if (!\Solidarity\Core\Environment::isProduction()) {
-    \Tracy\Debugger::enable(false);
-}
 
+$tracyLogDir = DATA_PATH . '/logs/tracy';
+if (!is_dir($tracyLogDir)) {
+    @mkdir($tracyLogDir, 0775, true);
+}
+$debugEnabled = \Solidarity\Core\Environment::isBackend() ? DEBUG_BACKEND : DEBUG_FRONTEND;
+if (\Solidarity\Core\Environment::isProduction()) {
+    \Tracy\Debugger::enable(\Tracy\Debugger::Production, $tracyLogDir);
+} elseif ($debugEnabled) {
+    \Tracy\Debugger::enable(\Tracy\Debugger::Development, $tracyLogDir);
+}
 
 try {
     /* @var \DI\Container $container */
