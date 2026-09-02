@@ -514,7 +514,7 @@
             "source": {
                 "type": "git",
                 "url": "https://bitbucket.org/dj_avolak/skeletor",
-                "reference": "7c31cf5cccb973248e1075fc53a4f18cacc33ce4"
+                "reference": "d576e08f05466c519d5aa5f6b9b3148d769ea40a"
             },
             "require": {
                 "beberlei/doctrineextensions": "^1",
@@ -527,7 +527,7 @@
                 "ext-json": "*",
                 "ext-pdo": "*",
                 "ext-redis": "*",
-                "greenfriends/skeletorjs": "^2.0",
+                "greenfriends/skeletorjs": "^3.0",
                 "guzzlehttp/guzzle": "^8",
                 "guzzlehttp/psr7": "^3",
                 "laminas/laminas-session": "*",
@@ -536,7 +536,7 @@
                 "monolog/monolog": "^3",
                 "nesbot/carbon": "^3",
                 "nikic/fast-route": "^1",
-                "php": ">=8.3",
+                "php": ">=8.4",
                 "php-di/php-di": "^7",
                 "phpmailer/phpmailer": "^7",
                 "symfony/cache": "^7",
@@ -561,7 +561,7 @@
             "license": [
                 "MIT"
             ],
-            "time": "2026-08-26T10:09:52+00:00"
+            "time": "2026-08-28T10:32:32+00:00"
         },
         {
             "name": "dj_avolak/skeletor-asset-installer",
@@ -1345,18 +1345,18 @@
         },
         {
             "name": "greenfriends/skeletorjs",
-            "version": "2.0.6",
+            "version": "3.0.3",
             "source": {
                 "type": "git",
                 "url": "https://bitbucket.org/greenfriends/skeletorjs",
-                "reference": "a6129861f2add18b8c7ff249fdc3d60a61403e83"
+                "reference": "9c944098e09be15516bbbe9f9608bb7699e87e4b"
             },
             "type": "skeletor-asset",
             "license": [
                 "MIT"
             ],
             "description": "Core JavaScript library for the Skeletor PHP framework",
-            "time": "2026-08-21T11:42:56+00:00"
+            "time": "2026-08-28T10:24:49+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",

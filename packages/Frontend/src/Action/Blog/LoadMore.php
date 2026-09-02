@@ -7,7 +7,7 @@ use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\ThemeSettings\Navigation\Service\Navigation;
 use Skeletor\ThemeSettings\SocialLinks\Service\SocialLinks;
-use Solidarity\Backend\Blocks\Blog\BlogViewFilter;
+use Solidarity\Backend\Blocks\BlockViewFilters\Blog as BlogViewFilter;
 use Solidarity\Frontend\Action\BaseAction;
 use Solidarity\Post\Service\Post;
 

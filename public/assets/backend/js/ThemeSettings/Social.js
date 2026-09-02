@@ -1,5 +1,6 @@
-import Loader from "https://skeletor.greenfriends.systems/skeletorjs/src/Loader/Loader.js";
-import Message from "https://skeletor.greenfriends.systems/skeletorjs/src/Message/Message.js";
+import Message from "../../../../vendor/skeletorjs/src/Message/Message.js";
+import Loader from "../../../../vendor/skeletorjs/src/Loader/Loader.js";
+
 
 export default class Social {
 

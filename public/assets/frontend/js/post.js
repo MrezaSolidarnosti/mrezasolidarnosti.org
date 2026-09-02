@@ -1,7 +1,8 @@
-import Gallery from "/assets/backend/vendor/skeletorJS/src/Gallery/Gallery.js";
+
 import Faq from "./faq/faq.js";
-import TabbedContent from "/assets/backend/vendor/skeletorJS/src/TabbedContent/TabbedContent.js";
-import Chart from "/assets/backend/vendor/skeletorJS/src/Chart/Chart.js";
+import Gallery from "../../../vendor/skeletorjs/src/Gallery/Gallery.js";
+import TabbedContent from "../../../vendor/skeletorjs/src/TabbedContent/TabbedContent.js";
+import Chart from "../../../vendor/skeletorjs/src/Chart/Chart.js";
 
 // The block saves the type the editor's picker uses; the Chart component only knows its own
 // types plus the stacked flag, so the picker keys map onto those here (same table as

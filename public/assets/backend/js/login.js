@@ -1,9 +1,9 @@
-import FormValidator from "https://skeletor.greenfriends.systems/skeletorjs/src/FormValidator/FormValidator.js";
-import ToTop from "https://skeletor.greenfriends.systems/skeletorjs/src/ToTop/ToTop.js";
-import Translator from "https://skeletor.greenfriends.systems/skeletorjs/src/Translator/Translator.js";
+import FormValidator from "../../../vendor/skeletorjs/src/FormValidator/FormValidator.js";
+import ToTop from "../../../vendor/skeletorjs/src/ToTop/ToTop.js";
+import Translator from "../../../vendor/skeletorjs/src/Translator/Translator.js";
 import {theme as themeConfig} from "./theme.js";
-import ModeSelection from "https://skeletor.greenfriends.systems/skeletorjs/src/Theme/ModeSelection.js";
-import {modes} from "https://skeletor.greenfriends.systems/skeletorjs/src/Theme/modes.js";
+import ModeSelection from "../../../vendor/skeletorjs/src/Theme/ModeSelection.js";
+import {modes} from "../../../vendor/skeletorjs/src/Theme/modes.js";
 
 const modeSelection = new ModeSelection({
     modeToggleInput: null,

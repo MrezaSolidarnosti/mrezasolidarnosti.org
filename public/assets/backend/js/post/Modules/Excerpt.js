@@ -1,4 +1,5 @@
-import BaseModule from "../../../vendor/skeletorJS/src/ContentEditor/BaseModule.js";
+import BaseModule from "../../../../../vendor/skeletorjs/src/ContentEditor/BaseModule.js";
+
 export default class Excerpt extends BaseModule {
 
     #setupComplete = false;
