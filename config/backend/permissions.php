@@ -96,6 +96,13 @@ return [
         'file.edit' => [User::ROLE_ADMIN],
         'file.delete' => [User::ROLE_ADMIN],
 
+        'translator.view_list' => [User::ROLE_ADMIN],
+        'translator.view' => [User::ROLE_ADMIN],
+        'translator.create' => [User::ROLE_ADMIN],
+        'translator.edit' => [User::ROLE_ADMIN],
+        'translator.delete' => [User::ROLE_ADMIN],
+        'translator.deleteBulk' => [User::ROLE_ADMIN],
+
         // Theme settings permissions
         'theme.all' => [User::ROLE_ADMIN],
 
@@ -234,6 +241,16 @@ return [
         '/file/form/*' => 'page.edit',
         '/file/update/*' => 'page.edit',
         '/file/delete/*' => 'page.delete',
+
+        // translator routes
+        '/translator/view/' => 'translator.view_list',
+        '/translator/tableHandler/' => 'translator.view_list',
+        '/translator/form/' => 'translator.create',
+        '/translator/create/' => 'translator.create',
+        '/translator/form/*' => 'translator.edit',
+        '/translator/update/*' => 'translator.edit',
+        '/translator/delete/*' => 'translator.delete',
+        '/translator/deleteBulk/' => 'translator.deleteBulk',
 
         // Theme settings routes
         '/theme/*' => 'theme.all',
