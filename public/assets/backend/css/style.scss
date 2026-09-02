@@ -5,6 +5,5 @@
 @use 'invoice/invoice';
 @use 'page/beneficiary';
 @use 'page/donor';
-@use 'blocks/blocks';
-@use 'blocks/find';
-@use 'blocks/threePillars';
+@use 'form/page';
+@use 'page/translator';

@@ -1,5 +1,5 @@
-import CrudPage from "https://skeletor.greenfriends.systems/skeletorjs/src/Page/CrudPage.js";
-import Loader from "https://skeletor.greenfriends.systems/skeletorjs/src/Loader/Loader.js";
+import CrudPage from "../../../../vendor/skeletorjs/src/Page/CrudPage.js";
+
 
 export default class TransactionImport extends CrudPage {
     #data;

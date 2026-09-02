@@ -1,5 +1,5 @@
-import CrudPage from "https://skeletor.greenfriends.systems/skeletorjs/src/Page/CrudPage.js";
-import Translator from "https://skeletor.greenfriends.systems/skeletorjs/src/Translator/Translator.js";
+import CrudPage from "../../../../vendor/skeletorjs/src/Page/CrudPage.js";
+import Translator from "../../../../vendor/skeletorjs/src/Translator/Translator.js";
 
 
 export default class Post extends CrudPage {

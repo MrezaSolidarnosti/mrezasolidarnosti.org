@@ -1,0 +1,348 @@
+[data-module="loginProtected"] label {
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/*
+ * Page section blocks (app/*).
+ *
+ * These are configuration rather than prose - a set of named fields the frontend template
+ * reads - so each renders as a card: a header naming the section, then its fields.
+ *
+ * Everything is scoped to #content because that canvas is light (--colorBeige) while the
+ * editor chrome around it is dark, and the surface ramp is used the other way up inside it:
+ * -700 is the light border tint, -500/-600 muted text, -300 body text. Same values the core
+ * blocks use on this canvas - a table's borders are -700, its text -500, the paragraph text
+ * -300 - so these cards sit in the same palette rather than punching a dark hole in the page.
+ */
+#contentEditor #content {
+  .pageBlock {
+    border: 1px solid var(--colorSurface-700);
+    border-radius: 6px;
+    background: var(--colorBeige);
+    overflow: hidden;
+    outline: none;
+    transition: 0.3s ease border-color;
+    scrollbar-gutter: auto;
+
+    &:focus-within {
+      border-color: var(--colorSurface-600);
+    }
+  }
+
+  .pageBlockHeading {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--colorSurface-700);
+    background: var(--colorSurface-300);
+    color: var(--colorSurface-700);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /*
+   * Short fields pair up; anything tall takes the full width. auto-fit rather than a fixed two
+   * columns so a block in a narrowed canvas collapses to one on its own.
+   */
+  .pageBlockBody {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.75rem 1rem;
+    padding: 1rem;
+
+    > .pageBlockTabs,
+    > .pageBlockGroup,
+    > .pageBlockNote,
+    > .inputContainer:has(textarea),
+    > .inputContainer:has([contenteditable="true"]) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .pageBlockBody,
+  .pageBlockTabPanel,
+  .pageBlockGroupItem {
+    .inputContainer {
+      min-height: 0;
+    }
+
+    label {
+      color: var(--colorSurface-500);
+      font-size: 0.85rem;
+    }
+
+    // The shared .input is written for the dark sidebar: its text and border are too light to
+    // read on this canvas.
+    .input {
+      border-color: var(--colorSurface-700);
+      color: var(--colorSurface-300);
+      background: var(--colorBeige);
+
+      &:focus {
+        border-color: var(--colorSurface-500);
+      }
+    }
+
+    textarea.input {
+      resize: vertical;
+      min-height: 4.5rem;
+    }
+
+    // Rich text: same box as a textarea, but it grows with its content.
+    .input[contenteditable="true"] {
+      min-height: 4.5rem;
+      cursor: text;
+    }
+  }
+
+  .pageBlockNote {
+    margin: 0;
+    color: var(--colorSurface-500);
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+
+  /* Repeating entries as tabs, plus the fixed groups that stayed lists. */
+  .pageBlockTabs,
+  .pageBlockGroup,
+  .pageBlockList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    > label {
+      color: var(--colorSurface-500);
+      font-size: 0.85rem;
+    }
+  }
+
+  /* Bullet points: one row per entry, the value wide and the remove tucked at its end. */
+  .pageBlockListRows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .pageBlockListRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    // A marker in front of the value, so a stack of inputs reads as the list it becomes.
+    &:before {
+      content: '';
+      flex-shrink: 0;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--colorSurface-600);
+      transition: 0.3s ease background;
+    }
+
+    &:focus-within:before {
+      background: var(--colorPrimary-500);
+    }
+
+    .input {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  // Square, quiet until you reach for it: one of these sits on every row, and a row of red
+  // buttons would read as an error state rather than a control.
+  .pageBlockListRemove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--colorSurface-500);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: 0.3s ease all;
+
+    &:hover {
+      border-color: var(--colorError);
+      background: var(--colorErrorTransparent);
+      color: var(--colorError);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--colorPrimary-500);
+      outline-offset: 1px;
+    }
+  }
+
+  .pageBlockListAdd {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    align-self: flex-start;
+    padding: 0.35rem 0.8rem 0.35rem 0.5rem;
+    border: 1px dashed var(--colorSurface-600);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--colorSurface-500);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.3s ease all;
+
+    // The + is a chip of its own so the button reads as "add" before the label is read.
+    span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      background: var(--colorSurface-700);
+      color: var(--colorSurface-200);
+      font-size: 0.95rem;
+      line-height: 1;
+      transition: 0.3s ease all;
+    }
+
+    &:hover {
+      border-style: solid;
+      border-color: var(--colorPrimary-500);
+      color: var(--colorPrimary-500);
+
+      span {
+        background: var(--colorPrimary-500);
+        color: var(--colorSurface-0);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--colorPrimary-500);
+      outline-offset: 1px;
+    }
+  }
+
+  /*
+   * The shared tab strip is drawn for the dark chrome - its borders are --colorSurface-200,
+   * which is nearly black against this canvas. Same shapes, lighter lines.
+   */
+  .pageBlockTabsContainer {
+    .tabs {
+      margin-bottom: 0.75rem;
+      border-bottom-color: var(--colorSurface-700);
+
+      .tab {
+        border-color: var(--colorSurface-700);
+        border-bottom-color: transparent;
+        color: var(--colorSurface-500);
+        font-size: 0.85rem;
+
+        &:has(.removeTabButton) {
+          gap: 1rem;
+        }
+
+        .removeTabButton svg {
+          fill: var(--colorSurface-500);
+        }
+
+        &.active {
+          background: var(--colorSurface-300);
+          color: var(--colorSurface-0);
+          border-color: var(--colorSurface-300);
+
+          .removeTabButton svg {
+            fill: var(--colorSurface-0);
+          }
+        }
+      }
+
+      .addTabButton svg {
+        fill: var(--colorSurface-500);
+      }
+    }
+  }
+
+  .pageBlockTabPanel,
+  .pageBlockGroupItem {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem 1rem;
+    padding: 0.75rem;
+    border: 1px solid var(--colorSurface-700);
+    border-radius: 4px;
+    background: var(--colorBeige);
+
+    > .pageBlockGroupItemLabel,
+    > .inputContainer:has(textarea),
+    > .inputContainer:has([contenteditable="true"]),
+    > .inputContainer:has(.pageBlockImage) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .pageBlockGroupItemLabel {
+    color: var(--colorSurface-500);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* Media library picker - a drop zone until an image is chosen, then the image itself. */
+  .pageBlockImage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 92px;
+    padding: 0.75rem;
+    border: 1px dashed var(--colorSurface-600);
+    border-radius: 4px;
+    background: var(--colorBeige);
+    cursor: pointer;
+    transition: 0.3s ease all;
+
+    &:hover {
+      border-color: var(--colorPrimary-500);
+
+      span {
+        background: var(--colorSurface-500);
+      }
+    }
+
+    span {
+      padding: 0.3rem 1rem;
+      border-radius: 4px;
+      background: var(--colorSurface-600);
+      color: var(--colorBeige);
+      font-size: 0.8rem;
+      transition: 0.3s ease all;
+    }
+
+    img {
+      max-width: 100%;
+      max-height: 160px;
+      border-radius: 4px;
+    }
+
+    // Once there is an image, it is the control - the prompt would just be noise.
+    &:has(img) {
+      border-style: solid;
+      border-color: var(--colorSurface-700);
+      padding: 0.4rem;
+
+      span {
+        display: none;
+      }
+    }
+  }
+}

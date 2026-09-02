@@ -2,14 +2,13 @@
 
 namespace Solidarity\Frontend\Action;
 
+use Skeletor\ContentEditor\Exceptions\TemplateNotFoundException;
 use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Mapper\NotFoundException;
 use Skeletor\ThemeSettings\Navigation\Service\Navigation;
 use Skeletor\ThemeSettings\SocialLinks\Service\SocialLinks;
-use Solidarity\ContentEditor\Contracts\BlockViewInterface;
-use Solidarity\ContentEditor\Exceptions\TemplateNotFoundException;
 use Solidarity\Frontend\Service\Locale;
 use Solidarity\Post\Service\Post;
 
@@ -30,7 +29,7 @@ class PostAction extends BaseAction
         SocialLinks $socialLinks,
         \Solidarity\Frontend\Service\Session $session,
         protected Post $postService,
-        protected BlockViewInterface $blockView,
+        protected \Skeletor\ContentEditor\Contracts\BlockViewInterface $blockView,
         protected Locale $locale
     ) {
         parent::__construct($logger, $config, $template, $navigationService, $socialLinks, $session);

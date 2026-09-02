@@ -1,17 +1,19 @@
-import ContentEditor from "../../vendor/skeletorJS/src/ContentEditor/ContentEditor.js";
 import { config } from "./config.js";
-import MediaLibrary from "../../vendor/skeletorJS/src/MediaLibrary/MediaLibrary.js";
-import SaveResponse from "../../vendor/skeletorJS/src/ContentEditor/SaveResponse.js";
-import {events} from "../../vendor/skeletorJS/src/ContentEditor/events.js";
 import Excerpt from "./Modules/Excerpt.js";
-import CommandPalette from "../../vendor/skeletorJS/src/ContentEditor/CommandPalette/CommandPalette.js";
-import Translator from "https://skeletor.greenfriends.systems/skeletorjs/src/Translator/Translator.js";
-import {configLocal} from "../config/config-local.js?v=2.0.2";
-import Message from "../../vendor/skeletorJS/src/Message/Message.js";
+import {configLocal} from "../config/config-local.js";
+import ContentEditor from "../../../../vendor/skeletorjs/src/ContentEditor/ContentEditor.js?";
+import MediaLibrary from "../../../../vendor/skeletorjs/src/MediaLibrary/MediaLibrary.js";
+import SaveResponse from "../../../../vendor/skeletorjs/src/ContentEditor/SaveResponse.js";
+import {events} from "../../../../vendor/skeletorjs/src/ContentEditor/events.js";
+import CommandPalette from "../../../../vendor/skeletorjs/src/ContentEditor/CommandPalette/CommandPalette.js";
+import Translator from "../../../../vendor/skeletorjs/src/Translator/Translator.js";
+import Message from "../../../../vendor/skeletorjs/src/Message/Message.js";
+import Back from "../../../../vendor/skeletorjs/src/ContentEditor/Back/Back.js";
 
 window.mediaLibrary = new MediaLibrary();
 window.mediaLibrary.init();
 
+Back.registerBackUrl('/post/view');
 ContentEditor.registerModule('excerpt', {
     class: Excerpt
 });

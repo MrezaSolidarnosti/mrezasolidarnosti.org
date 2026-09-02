@@ -1,19 +1,19 @@
-import CrudPage from "https://skeletor.greenfriends.systems/skeletorjs/src/Page/CrudPage.js";
+import CrudPage from "../../../vendor/skeletorjs/src/Page/CrudPage.js";
+
 
 const pagesDirectory = './pages';
 const pageIdentifier = document.getElementById('main').getAttribute('data-page');
 
 const configDirectory = './config';
 window.pageConfig = {};
-import(`${configDirectory}/config.js?v=0.0.6`).then(({config: pageConfig}) => {
+import(`${configDirectory}/config.js`).then(({config: pageConfig}) => {
     window.pageConfig = pageConfig;
 }).catch((e) => {
     console.error(e);
     console.error('No page config found.');
 });
 if(pageIdentifier) {
-    const version = '0.0.6';
-    import(`${pagesDirectory}/${pageIdentifier}.js?v=${version}`).then(({default: Page}) => {
+    import(`${pagesDirectory}/${pageIdentifier}.js`).then(({default: Page}) => {
         try {
             const page = new Page();
             page.init();

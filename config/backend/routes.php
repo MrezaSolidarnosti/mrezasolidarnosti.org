@@ -43,6 +43,7 @@ return [
     [['GET', 'POST'], '/period/{action}[/{id}]', \Solidarity\Backend\Controller\PeriodController::class],
     [['GET', 'POST'], '/beneficiary/{action}[/{id}]', \Solidarity\Backend\Controller\BeneficiaryController::class],
     [['GET', 'POST'], '/transaction/{action}[/{id}]', \Solidarity\Backend\Controller\TransactionController::class],
+    [['GET', 'POST'], '/translator/{action}[/{id}]', \Skeletor\Translator\Controller\TranslatorController::class],
     [['GET', 'POST'], '/school/{action}[/{id}]', \Solidarity\Backend\Controller\SchoolController::class],
     [['GET', 'POST'], '/schoolType/{action}[/{id}]', \Solidarity\Backend\Controller\SchoolTypeController::class],
     [['GET', 'POST'], '/city/{action}[/{id}]', \Solidarity\Backend\Controller\CityController::class],

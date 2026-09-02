@@ -82,6 +82,9 @@ sudo bash -c "echo 'server {
     root /vagrant/public;
     index index.php;
     server_name solidarityadmin.local;
+
+    rewrite ^/@[^/]+/(.*)$ /\$1 last;
+
     location / {
          try_files \$uri \$uri/ /index.php?\$args;
     }

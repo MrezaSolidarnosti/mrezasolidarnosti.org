@@ -334,25 +334,364 @@ form:has(.selectedService) .fullWidth:has(#totalWithoutVAT) .inputContainer {
   padding: 0.57rem 0.7rem;
 }
 
-.tabs .tab span {
+[data-module=loginProtected] label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/*
+ * Page section blocks (app/*).
+ *
+ * These are configuration rather than prose - a set of named fields the frontend template
+ * reads - so each renders as a card: a header naming the section, then its fields.
+ *
+ * Everything is scoped to #content because that canvas is light (--colorBeige) while the
+ * editor chrome around it is dark, and the surface ramp is used the other way up inside it:
+ * -700 is the light border tint, -500/-600 muted text, -300 body text. Same values the core
+ * blocks use on this canvas - a table's borders are -700, its text -500, the paragraph text
+ * -300 - so these cards sit in the same palette rather than punching a dark hole in the page.
+ */
+#contentEditor #content {
+  /*
+   * Short fields pair up; anything tall takes the full width. auto-fit rather than a fixed two
+   * columns so a block in a narrowed canvas collapses to one on its own.
+   */
+  /* Repeating entries as tabs, plus the fixed groups that stayed lists. */
+  /* Bullet points: one row per entry, the value wide and the remove tucked at its end. */
+  /*
+   * The shared tab strip is drawn for the dark chrome - its borders are --colorSurface-200,
+   * which is nearly black against this canvas. Same shapes, lighter lines.
+   */
+  /* Media library picker - a drop zone until an image is chosen, then the image itself. */
+}
+#contentEditor #content .pageBlock {
+  border: 1px solid var(--colorSurface-700);
+  border-radius: 6px;
+  background: var(--colorBeige);
+  overflow: hidden;
+  outline: none;
+  transition: 0.3s ease border-color;
+  scrollbar-gutter: auto;
+}
+#contentEditor #content .pageBlock:focus-within {
+  border-color: var(--colorSurface-600);
+}
+#contentEditor #content .pageBlockHeading {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--colorSurface-700);
+  background: var(--colorSurface-300);
+  color: var(--colorSurface-700);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+#contentEditor #content .pageBlockBody {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem 1rem;
+  padding: 1rem;
+}
+#contentEditor #content .pageBlockBody > .pageBlockTabs,
+#contentEditor #content .pageBlockBody > .pageBlockGroup,
+#contentEditor #content .pageBlockBody > .pageBlockNote,
+#contentEditor #content .pageBlockBody > .inputContainer:has(textarea),
+#contentEditor #content .pageBlockBody > .inputContainer:has([contenteditable=true]) {
+  grid-column: 1/-1;
+}
+#contentEditor #content .pageBlockBody .inputContainer,
+#contentEditor #content .pageBlockTabPanel .inputContainer,
+#contentEditor #content .pageBlockGroupItem .inputContainer {
+  min-height: 0;
+}
+#contentEditor #content .pageBlockBody label,
+#contentEditor #content .pageBlockTabPanel label,
+#contentEditor #content .pageBlockGroupItem label {
+  color: var(--colorSurface-500);
+  font-size: 0.85rem;
+}
+#contentEditor #content .pageBlockBody .input,
+#contentEditor #content .pageBlockTabPanel .input,
+#contentEditor #content .pageBlockGroupItem .input {
+  border-color: var(--colorSurface-700);
+  color: var(--colorSurface-300);
+  background: var(--colorBeige);
+}
+#contentEditor #content .pageBlockBody .input:focus,
+#contentEditor #content .pageBlockTabPanel .input:focus,
+#contentEditor #content .pageBlockGroupItem .input:focus {
+  border-color: var(--colorSurface-500);
+}
+#contentEditor #content .pageBlockBody textarea.input,
+#contentEditor #content .pageBlockTabPanel textarea.input,
+#contentEditor #content .pageBlockGroupItem textarea.input {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+#contentEditor #content .pageBlockBody .input[contenteditable=true],
+#contentEditor #content .pageBlockTabPanel .input[contenteditable=true],
+#contentEditor #content .pageBlockGroupItem .input[contenteditable=true] {
+  min-height: 4.5rem;
+  cursor: text;
+}
+#contentEditor #content .pageBlockNote {
+  margin: 0;
+  color: var(--colorSurface-500);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+#contentEditor #content .pageBlockTabs,
+#contentEditor #content .pageBlockGroup,
+#contentEditor #content .pageBlockList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+#contentEditor #content .pageBlockTabs > label,
+#contentEditor #content .pageBlockGroup > label,
+#contentEditor #content .pageBlockList > label {
+  color: var(--colorSurface-500);
+  font-size: 0.85rem;
+}
+#contentEditor #content .pageBlockListRows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+#contentEditor #content .pageBlockListRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+#contentEditor #content .pageBlockListRow:before {
+  content: "";
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--colorSurface-600);
+  transition: 0.3s ease background;
+}
+#contentEditor #content .pageBlockListRow:focus-within:before {
+  background: var(--colorPrimary-500);
+}
+#contentEditor #content .pageBlockListRow .input {
+  flex: 1;
+  min-width: 0;
+}
+#contentEditor #content .pageBlockListRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--colorSurface-500);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: 0.3s ease all;
+}
+#contentEditor #content .pageBlockListRemove:hover {
+  border-color: var(--colorError);
+  background: var(--colorErrorTransparent);
+  color: var(--colorError);
+}
+#contentEditor #content .pageBlockListRemove:focus-visible {
+  outline: 2px solid var(--colorPrimary-500);
+  outline-offset: 1px;
+}
+#contentEditor #content .pageBlockListAdd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  padding: 0.35rem 0.8rem 0.35rem 0.5rem;
+  border: 1px dashed var(--colorSurface-600);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--colorSurface-500);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: 0.3s ease all;
+}
+#contentEditor #content .pageBlockListAdd span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background: var(--colorSurface-700);
+  color: var(--colorSurface-200);
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: 0.3s ease all;
+}
+#contentEditor #content .pageBlockListAdd:hover {
+  border-style: solid;
+  border-color: var(--colorPrimary-500);
+  color: var(--colorPrimary-500);
+}
+#contentEditor #content .pageBlockListAdd:hover span {
+  background: var(--colorPrimary-500);
   color: var(--colorSurface-0);
 }
-
-.ql-container {
-  height: auto !important;
+#contentEditor #content .pageBlockListAdd:focus-visible {
+  outline: 2px solid var(--colorPrimary-500);
+  outline-offset: 1px;
+}
+#contentEditor #content .pageBlockTabsContainer .tabs {
+  margin-bottom: 0.75rem;
+  border-bottom-color: var(--colorSurface-700);
+}
+#contentEditor #content .pageBlockTabsContainer .tabs .tab {
+  border-color: var(--colorSurface-700);
+  border-bottom-color: transparent;
+  color: var(--colorSurface-500);
+  font-size: 0.85rem;
+}
+#contentEditor #content .pageBlockTabsContainer .tabs .tab:has(.removeTabButton) {
+  gap: 1rem;
+}
+#contentEditor #content .pageBlockTabsContainer .tabs .tab .removeTabButton svg {
+  fill: var(--colorSurface-500);
+}
+#contentEditor #content .pageBlockTabsContainer .tabs .tab.active {
+  background: var(--colorSurface-300);
+  color: var(--colorSurface-0);
+  border-color: var(--colorSurface-300);
+}
+#contentEditor #content .pageBlockTabsContainer .tabs .tab.active .removeTabButton svg {
+  fill: var(--colorSurface-0);
+}
+#contentEditor #content .pageBlockTabsContainer .tabs .addTabButton svg {
+  fill: var(--colorSurface-500);
+}
+#contentEditor #content .pageBlockTabPanel,
+#contentEditor #content .pageBlockGroupItem {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--colorSurface-700);
+  border-radius: 4px;
+  background: var(--colorBeige);
+}
+#contentEditor #content .pageBlockTabPanel > .pageBlockGroupItemLabel,
+#contentEditor #content .pageBlockTabPanel > .inputContainer:has(textarea),
+#contentEditor #content .pageBlockTabPanel > .inputContainer:has([contenteditable=true]),
+#contentEditor #content .pageBlockTabPanel > .inputContainer:has(.pageBlockImage),
+#contentEditor #content .pageBlockGroupItem > .pageBlockGroupItemLabel,
+#contentEditor #content .pageBlockGroupItem > .inputContainer:has(textarea),
+#contentEditor #content .pageBlockGroupItem > .inputContainer:has([contenteditable=true]),
+#contentEditor #content .pageBlockGroupItem > .inputContainer:has(.pageBlockImage) {
+  grid-column: 1/-1;
+}
+#contentEditor #content .pageBlockGroupItemLabel {
+  color: var(--colorSurface-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+#contentEditor #content .pageBlockImage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 92px;
+  padding: 0.75rem;
+  border: 1px dashed var(--colorSurface-600);
+  border-radius: 4px;
+  background: var(--colorBeige);
+  cursor: pointer;
+  transition: 0.3s ease all;
+}
+#contentEditor #content .pageBlockImage:hover {
+  border-color: var(--colorPrimary-500);
+}
+#contentEditor #content .pageBlockImage:hover span {
+  background: var(--colorSurface-500);
+}
+#contentEditor #content .pageBlockImage span {
+  padding: 0.3rem 1rem;
+  border-radius: 4px;
+  background: var(--colorSurface-600);
+  color: var(--colorBeige);
+  font-size: 0.8rem;
+  transition: 0.3s ease all;
+}
+#contentEditor #content .pageBlockImage img {
+  max-width: 100%;
+  max-height: 160px;
+  border-radius: 4px;
+}
+#contentEditor #content .pageBlockImage:has(img) {
+  border-style: solid;
+  border-color: var(--colorSurface-700);
+  padding: 0.4rem;
+}
+#contentEditor #content .pageBlockImage:has(img) span {
+  display: none;
 }
 
-div[block-name=Find] .findSectionLabel {
-  margin: 1rem 0;
-  display: block;
-  font-size: 1.2rem;
+#mainTable #crudTable tbody tr:not(.additionalDataRow):not(.active):has(.inPlaceEditable):hover td:not(.countDataElement):not(.countDataTitle) {
+  background: inherit;
+}
+#mainTable #crudTable tbody tr .inPlaceEditable input, #mainTable #crudTable tbody tr .inPlaceEditable select {
+  width: 100%;
+  border: 1px solid var(--colorSurface-400);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  color: var(--colorSurface-600);
+  outline: none;
+}
+#mainTable #crudTable tbody tr .inPlaceEditable input:focus, #mainTable #crudTable tbody tr .inPlaceEditable select:focus {
+  border: 1px solid var(--colorPrimary-500);
+  background: var(--colorInfoTransparent);
+  color: var(--colorPrimary-500);
+}
+#mainTable #crudTable tbody tr .inPlaceEditable input {
+  background: transparent;
+}
+#mainTable #crudTable tbody tr .inPlaceEditable select {
+  background: var(--colorSurface-100);
+}
+#mainTable #crudTable tbody tr .inPlaceEditable select option {
+  background: var(--colorSurface-100);
+  color: var(--colorSurface-600);
 }
 
-.pillarLabel {
-  margin: 1rem 0;
-  display: block;
-  font-size: 1.2rem;
-  font-weight: bold;
+.flashInput {
+  animation: flashInputAnimation 1s alternate;
+}
+
+.flashInputError {
+  animation: flashInputErrorAnimation 1s alternate;
+}
+
+@keyframes flashInputAnimation {
+  50% {
+    border: 1px solid var(--colorSuccess);
+    background: var(--colorSuccessTransparent);
+    color: var(--colorSuccess);
+  }
+}
+@keyframes flashInputErrorAnimation {
+  50% {
+    border: 1px solid var(--colorError);
+    background: var(--colorErrorTransparent);
+    color: var(--colorError);
+  }
 }
 
 /*# sourceMappingURL=style.css.map */
