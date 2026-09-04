@@ -10,6 +10,7 @@ use Solidarity\Donor\Entity\Donor;
 use Solidarity\Period\Entity\Period;
 
 #[ORM\Entity]
+#[ORM\Index(name: 'idx_created_at', columns: ['createdAt'])]
 #[ORM\Table(name: 'transaction')]
 class Transaction
 {
