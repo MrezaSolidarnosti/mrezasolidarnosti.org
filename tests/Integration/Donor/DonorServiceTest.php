@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Psr\Log\NullLogger;
 use Skeletor\User\Service\Session;
 use Solidarity\Donor\Entity\Donor;
-use Skeletor\Login\Service\MagicLinkService;
+use Skeletor\Core\Login\Service\MagicLinkService;
 use Solidarity\Donor\Filter\Donor as DonorFilter;
 use Solidarity\Donor\Filter\DonorDonationData as DonorDonationDataFilter;
 use Solidarity\Donor\Filter\DonorProfileData as DonorProfileDataFilter;

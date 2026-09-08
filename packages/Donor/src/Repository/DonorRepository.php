@@ -2,7 +2,7 @@
 namespace Solidarity\Donor\Repository;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Skeletor\Login\Repository\LoginRepositoryInterface;
+use Skeletor\Core\Login\Repository\LoginRepositoryInterface;
 use Solidarity\Donor\Entity\Donor;
 use Solidarity\Donor\Entity\PaymentMethod;
 use Solidarity\Donor\Factory\DonorFactory;

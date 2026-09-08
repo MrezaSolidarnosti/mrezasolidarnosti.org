@@ -11,6 +11,7 @@ use Skeletor\Core\Validator\ValidatorException;
 use Solidarity\Page\Service\Page;
 use Tamtamchik\SimpleFlash\Flash;
 use Skeletor\Core\Controller\AjaxCrudController;
+use Psr\Log\LoggerInterface as Logger;
 
 
 class PageController extends AjaxCrudController
@@ -29,8 +30,8 @@ class PageController extends AjaxCrudController
     const FORM_TITLE_ENTITY_IDENTIFIER = 'title';
 
     public function __construct(
-        Page $pageService, Session $session, Config $config, Flash $flash, Engine $template) {
-        parent::__construct($pageService, $session, $config, $flash, $template);
+        Page $pageService, Session $session, Config $config, Flash $flash, Engine $template, Logger $logger) {
+        parent::__construct($pageService, $session, $config, $flash, $template, $logger);
     }
 
     public function form(): Response

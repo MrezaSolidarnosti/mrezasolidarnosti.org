@@ -28,7 +28,7 @@ return [
     // backend
     [['GET'], '/', \Solidarity\Backend\Action\Index::class],
     // Straight to the framework controller: it reads the entity type from the session and
-    // returns the visitor to the door they came in through (config: loginUrls).
+    // returns the visitor to the door they came in through, derived from config auth.default.
     [['GET'], '/login/logout', [\Solidarity\Backend\Controller\LoginController::class, 'logOut']],
     [['GET'], '/createTransactions', \Solidarity\Backend\Action\CreateTransaction::class],
     [['GET'], '/statistics', \Solidarity\Backend\Action\Statistics::class],

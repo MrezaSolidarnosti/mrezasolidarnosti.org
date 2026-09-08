@@ -64,7 +64,7 @@ abstract class IntegrationTestCase extends TestCase
                 // table surfaces as a caught exception rather than a clear error.
                 $root . '/vendor/dj_avolak/skeletor/src/Translator',
                 $root . '/vendor/dj_avolak/skeletor/src/Image',
-                $root . '/vendor/dj_avolak/skeletor/src/Login',
+                $root . '/vendor/dj_avolak/skeletor/src/Core/Login',
                 $root . '/vendor/dj_avolak/skeletor/src/ThemeSettings',
             ],
             isDevMode: true,

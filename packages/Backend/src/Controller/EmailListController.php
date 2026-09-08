@@ -7,6 +7,7 @@ use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\EmailList\Service\EmailList;
 use Tamtamchik\SimpleFlash\Flash;
+use Psr\Log\LoggerInterface as Logger;
 
 class EmailListController extends AjaxCrudController
 {
@@ -26,8 +27,8 @@ class EmailListController extends AjaxCrudController
      * @param Engine $template
      */
     public function __construct(
-        EmailList $service, Session $session, Config $config, Flash $flash, Engine $template
+        EmailList $service, Session $session, Config $config, Flash $flash, Engine $template, Logger $logger
     ) {
-        parent::__construct($service, $session, $config, $flash, $template);
+        parent::__construct($service, $session, $config, $flash, $template, $logger);
     }
 }

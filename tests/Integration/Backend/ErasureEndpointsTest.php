@@ -30,6 +30,7 @@ use Solidarity\Transaction\Service\Project as ProjectService;
 use Solidarity\Transaction\Service\Transaction as TransactionService;
 use Solidarity\User\Entity\User;
 use Tamtamchik\SimpleFlash\Flash;
+use Psr\Log\NullLogger;
 
 /**
  * The delete buttons on the donor and beneficiary tables.
@@ -335,6 +336,7 @@ final class ErasureEndpointsTest extends IntegrationTestCase
             new Config(['adminPath' => '']),
             new Flash(),
             $this->engine(),
+            new NullLogger(),
             $this->createStub(ProjectService::class),
             new Redaction($this->em()),
         );
@@ -349,6 +351,7 @@ final class ErasureEndpointsTest extends IntegrationTestCase
             new Config(['adminPath' => '']),
             new Flash(),
             $this->engine(),
+            new NullLogger(),
             $this->createStub(SchoolService::class),
             $this->createStub(PeriodService::class),
             $this->createStub(ProjectService::class),

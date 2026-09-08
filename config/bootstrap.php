@@ -458,6 +458,7 @@ if (\Solidarity\Core\Environment::isBackend()) {
             $container->get(Acl::class),
             $container->get(\Skeletor\Core\Security\EntityRegistry::class),
             $container->get(AuthorizationService::class),
+            $container->get(\Skeletor\Core\Security\AuthPolicy::class),
             true  // Enable voter-based authorization
         );
     });
@@ -590,19 +591,19 @@ if (\Solidarity\Core\Environment::isBackend()) {
 // used to be wired here ran against a User whose getPassword() could only ever return null.
 // The framework treats the provider as optional and throws a named LogicException if a
 // password operation is ever attempted, which is a better failure than that was.
-$container->set(\Skeletor\Login\Service\Login::class, function() use ($container) {
-    return new \Skeletor\Login\Service\Login(
+$container->set(\Skeletor\Core\Login\Service\Login::class, function() use ($container) {
+    return new \Skeletor\Core\Login\Service\Login(
         null,
         $container->get(ManagerInterface::class),
         $container->get(\Skeletor\Core\Mailer\Service\MailerInterface::class),
-        $container->get(\Skeletor\Login\Repository\ForgotPasswordRepository::class),
+        $container->get(\Skeletor\Core\Login\Repository\ForgotPasswordRepository::class),
         null,
         $container->get(\Skeletor\Core\Security\EntityRegistry::class),
     );
 });
 
-$container->set(\Skeletor\Login\Validator\ResetPasswordInterface::class, function() use ($container) {
-    return $container->get(\Skeletor\Login\Validator\ResetPasswordLoose::class);
+$container->set(\Skeletor\Core\Login\Validator\ResetPasswordInterface::class, function() use ($container) {
+    return $container->get(\Skeletor\Core\Login\Validator\ResetPasswordLoose::class);
 });
 
 // The authenticator registry takes an optional social authenticator; this app has no OAuth
@@ -610,6 +611,7 @@ $container->set(\Skeletor\Login\Validator\ResetPasswordInterface::class, functio
 // Needed by both apps: the frontend authenticates donors through it on the verify-email leg.
 $container->set(\Skeletor\Core\Security\Authenticator\AuthenticatorRegistry::class, function() use ($container) {
     return new \Skeletor\Core\Security\Authenticator\AuthenticatorRegistry(
+        $container->get(\Skeletor\Core\Security\AuthPolicy::class),
         $container->get(\Skeletor\Core\Security\Authenticator\PasswordAuthenticator::class),
         $container->get(\Skeletor\Core\Security\Authenticator\MagicLinkAuthenticator::class),
     );
@@ -625,18 +627,20 @@ if (\Solidarity\Core\Environment::isBackend()) {
     // and the list of entity types that owe a second factor) and passing it instead.
     $container->set(\Solidarity\Backend\Controller\LoginController::class, function() use ($container) {
         return new \Solidarity\Backend\Controller\LoginController(
-            $container->get(\Skeletor\Login\Service\Login::class),
+            $container->get(\Skeletor\Core\Login\Service\Login::class),
             $container->get(ManagerInterface::class),
             $container->get(Config::class),
             $container->get(Flash::class),
             $container->get(\League\Plates\Engine::class),
-            $container->get(\Skeletor\Login\Filter\ForgotPassword::class),
+            $container->get(Logger::class),
+            $container->get(\Skeletor\Core\Login\Filter\ForgotPassword::class),
             $container->get(\Skeletor\User\Filter\Login::class),
-            $container->get(\Skeletor\Login\Filter\ResetPassword::class),
-            $container->get(\Skeletor\Login\Repository\ForgotPasswordRepository::class),
-            $container->get(\Skeletor\Login\Service\MagicLinkService::class),
+            $container->get(\Skeletor\Core\Login\Filter\ResetPassword::class),
+            $container->get(\Skeletor\Core\Login\Repository\ForgotPasswordRepository::class),
+            $container->get(\Skeletor\Core\Login\Service\MagicLinkService::class),
             $container->get(\Skeletor\Core\Security\Authenticator\AuthenticatorRegistry::class),
             $container->get(\Skeletor\Core\Security\EntityRegistry::class),
+            $container->get(\Skeletor\Core\Security\AuthPolicy::class),
             $container->get(\Skeletor\Core\Security\Authentication\PendingAuthentication::class),
             null,
         );

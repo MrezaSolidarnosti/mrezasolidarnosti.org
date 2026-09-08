@@ -2,7 +2,7 @@
 namespace Solidarity\Donor\Service;
 
 use Skeletor\Core\Validator\ValidatorException;
-use Skeletor\Login\Service\MagicLinkService;
+use Skeletor\Core\Login\Service\MagicLinkService;
 use Skeletor\Translator\Service\Translator;
 use Solidarity\Donor\Filter\DonorProfileData;
 use Solidarity\Donor\Repository\DonorRepository;
@@ -79,7 +79,7 @@ class Donor extends TableView
 
         try {
             $token = $this->magicLinkService->requestMagicLink($email, 'donor', false);
-        } catch (\Skeletor\Login\Exception\MagicLinkThrottled | \Skeletor\Login\Exception\InvalidCredentials) {
+        } catch (\Skeletor\Core\Login\Exception\MagicLinkThrottled | \Skeletor\Core\Login\Exception\InvalidCredentials) {
             return;
         }
 

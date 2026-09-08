@@ -9,12 +9,12 @@ use GuzzleHttp\Psr7\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 use Skeletor\Core\Security\Authenticator\AuthenticatorRegistry;
 use Skeletor\Core\Security\EntityRegistry;
-use Skeletor\Login\Service\Login as LoginService;
+use Skeletor\Core\Login\Service\Login as LoginService;
 use Solidarity\Delegate\Service\Delegate as DelegateService;
 use Solidarity\Donor\Entity\Donor;
 use Solidarity\Donor\Repository\DonorRepository;
 use Solidarity\Frontend\Action\Donor\VerifyEmail;
-use Skeletor\Login\Repository\MagicLinkTokenRepository;
+use Skeletor\Core\Login\Repository\MagicLinkTokenRepository;
 use Solidarity\Frontend\Service\Locale;
 
 /**

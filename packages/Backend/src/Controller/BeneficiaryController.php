@@ -14,6 +14,7 @@ use Solidarity\School\Service\School;
 use Solidarity\Transaction\Service\Project;
 use Solidarity\Transaction\Service\Transaction;
 use Tamtamchik\SimpleFlash\Flash;
+use Psr\Log\LoggerInterface as Logger;
 
 class BeneficiaryController extends AjaxCrudController
 {
@@ -33,11 +34,11 @@ class BeneficiaryController extends AjaxCrudController
      * @param Engine $template
      */
     public function __construct(
-        Beneficiary $service, Session $session, Config $config, Flash $flash, Engine $template, private School $school,
+        Beneficiary $service, Session $session, Config $config, Flash $flash, Engine $template, Logger $logger, private School $school,
         private Period $period, private Project $project, private Delegate $delegate,
         private Transaction $transaction, private \Solidarity\Backend\Service\Redaction $redaction
     ) {
-        parent::__construct($service, $session, $config, $flash, $template);
+        parent::__construct($service, $session, $config, $flash, $template, $logger);
     }
 
     public function delete(): Response

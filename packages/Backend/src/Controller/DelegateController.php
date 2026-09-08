@@ -11,6 +11,7 @@ use League\Plates\Engine;
 use Solidarity\School\Service\School;
 use Solidarity\Transaction\Service\Project;
 use Tamtamchik\SimpleFlash\Flash;
+use Psr\Log\LoggerInterface as Logger;
 
 class DelegateController extends AjaxCrudController
 {
@@ -31,10 +32,10 @@ class DelegateController extends AjaxCrudController
      * @param Engine $template
      */
     public function __construct(
-        Delegate       $service, Session $session, Config $config, Flash $flash, Engine $template,
+        Delegate       $service, Session $session, Config $config, Flash $flash, Engine $template, Logger $logger,
         private School $school, private Project $project
     ) {
-        parent::__construct($service, $session, $config, $flash, $template);
+        parent::__construct($service, $session, $config, $flash, $template, $logger);
         if ($this->getSession()->getStorage()->offsetGet('loggedInRole') !== User::ROLE_ADMIN) {
             $this->tableViewConfig['createButton'] = false;
         }

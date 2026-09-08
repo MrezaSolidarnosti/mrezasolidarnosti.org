@@ -321,6 +321,7 @@ final class SchoolControllerTest extends IntegrationTestCase
             new Config(['adminPath' => '']),
             new Flash(),
             new Engine(),
+            new NullLogger(),
             $this->createStub(CityService::class),
             $this->createStub(SchoolTypeService::class),
             // The stats are the point, so the EntityManager is the one real collaborator.

@@ -10,6 +10,7 @@ use Laminas\Session\Storage\ArrayStorage;
 use League\Plates\Engine;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\NullLogger;
 use Skeletor\Core\Config\Config;
 use Skeletor\Core\Security\Authentication\PendingAuthentication;
 use Skeletor\Core\Security\Authenticator\AuthenticatorRegistry;
@@ -17,15 +18,16 @@ use Skeletor\Core\Security\Authenticator\MagicLinkAuthenticator;
 use Skeletor\Core\Security\Authenticator\PasswordAuthenticator;
 use Skeletor\Core\Security\Csrf;
 use Skeletor\Core\Security\EntityRegistry;
-use Skeletor\Login\Repository\ForgotPasswordRepository;
-use Skeletor\Login\Repository\MagicLinkTokenRepository;
-use Skeletor\Login\Service\Login;
-use Skeletor\Login\Service\MagicLinkService;
-use Skeletor\Login\Service\TokenGenerator;
-use Skeletor\Login\Filter\ForgotPassword as ForgotPasswordFilter;
-use Skeletor\Login\Filter\ResetPassword;
-use Skeletor\Login\Validator\ForgotPassword as ForgotPasswordValidator;
-use Skeletor\Login\Validator\ResetPasswordLoose;
+use Skeletor\Core\Security\AuthPolicy;
+use Skeletor\Core\Login\Repository\ForgotPasswordRepository;
+use Skeletor\Core\Login\Repository\MagicLinkTokenRepository;
+use Skeletor\Core\Login\Service\Login;
+use Skeletor\Core\Login\Service\MagicLinkService;
+use Skeletor\Core\Login\Service\TokenGenerator;
+use Skeletor\Core\Login\Filter\ForgotPassword as ForgotPasswordFilter;
+use Skeletor\Core\Login\Filter\ResetPassword;
+use Skeletor\Core\Login\Validator\ForgotPassword as ForgotPasswordValidator;
+use Skeletor\Core\Login\Validator\ResetPasswordLoose;
 use Skeletor\User\Filter\Login as LoginFilter;
 use Skeletor\User\Validator\Login as LoginValidator;
 use Solidarity\Backend\Controller\LoginController;
@@ -278,8 +280,8 @@ final class DelegateLoginTest extends IntegrationTestCase
 
     public function testLoggingOutReturnsADelegateToTheDelegateDoor(): void
     {
-        // config.php maps loginUrls.delegate to the magic-link form; the framework default
-        // would be a password form this app does not have.
+        // The door is derived from config auth.default, which is magic_link here -- the
+        // framework's own default is a password form this app does not have.
         $this->storage->offsetSet('loggedIn', 7);
         $this->storage->offsetSet('loggedInEntityType', 'delegate');
 
@@ -290,6 +292,24 @@ final class DelegateLoginTest extends IntegrationTestCase
 
         self::assertNull($this->storage->offsetGet('loggedIn'));
         self::assertStringEndsWith(self::FORM_PATH, $response->getHeaderLine('Location'));
+    }
+
+    public function testLoggingOutWithNoEntityTypeFallsBackToTheStaffDoor(): void
+    {
+        // Inherited from Unit\Backend\LogoutTest, which covered Backend\Action\Logout until
+        // that action was replaced by the framework's logOut(). The case worth keeping is the
+        // fallback: a session with no entity type recorded still has to land on a magic-link
+        // form, because auth.methods does not include the password form it would otherwise
+        // default to. The delegate case above and this one bracket the whole method.
+        $this->storage->offsetSet('loggedIn', 7);
+
+        $controller = $this->controller();
+        $controller->setRequest(new ServerRequest('GET', '/login/logout'));
+
+        $response = $controller->logOut();
+
+        self::assertNull($this->storage->offsetGet('loggedIn'));
+        self::assertStringEndsWith('/login/user/magicLinkForm/', $response->getHeaderLine('Location'));
     }
 
     // ---- driving the endpoints ---------------------------------------------------------
@@ -396,22 +416,30 @@ final class DelegateLoginTest extends IntegrationTestCase
 
         $forgotPasswords = new ForgotPasswordRepository($this->em());
 
+        // The same node config/config.php carries: magic link only, no second factor. Built
+        // from the merged test config rather than stubbed, so a change to the app's auth
+        // settings shows up here as a failing test rather than as a silently divergent stack.
+        $policy = new AuthPolicy($config);
+
         return new LoginController(
             new Login(null, $this->session, $mailer, $forgotPasswords, null, $this->registry),
             $this->session,
             $config,
             new Flash(),
             $this->templateEngine(),
+            new NullLogger(),
             new ForgotPasswordFilter(new ForgotPasswordValidator($forgotPasswords, $csrf)),
             new LoginFilter(new LoginValidator($csrf)),
             new ResetPassword(new ResetPasswordLoose($forgotPasswords, $csrf)),
             $forgotPasswords,
             $magicLinks,
             new AuthenticatorRegistry(
-                new PasswordAuthenticator($this->registry),
-                new MagicLinkAuthenticator($this->registry, $this->tokens),
+                $policy,
+                new PasswordAuthenticator($this->registry, $policy),
+                new MagicLinkAuthenticator($this->registry, $policy, $this->tokens),
             ),
             $this->registry,
+            $policy,
             new PendingAuthentication($this->session),
             null,
         );

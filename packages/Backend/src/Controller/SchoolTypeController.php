@@ -8,6 +8,7 @@ use Laminas\Session\SessionManager as Session;
 use League\Plates\Engine;
 use Solidarity\School\Service\SchoolType;
 use Tamtamchik\SimpleFlash\Flash;
+use Psr\Log\LoggerInterface as Logger;
 
 class SchoolTypeController extends AjaxCrudController
 {
@@ -27,9 +28,9 @@ class SchoolTypeController extends AjaxCrudController
      * @param Engine $template
      */
     public function __construct(
-        SchoolType $service, Session $session, Config $config, Flash $flash, Engine $template
+        SchoolType $service, Session $session, Config $config, Flash $flash, Engine $template, Logger $logger
     ) {
-        parent::__construct($service, $session, $config, $flash, $template);
+        parent::__construct($service, $session, $config, $flash, $template, $logger);
     }
 
 }

@@ -20,14 +20,13 @@ namespace Solidarity\Backend\Controller;
  * Note the class name has to end in "LoginController": Controller::respond() derives the
  * template folder from it, and both this and the framework class resolve to themes/admin/login.
  */
-class LoginController extends \Skeletor\Login\Controller\LoginController
+class LoginController extends \Skeletor\Core\Login\Controller\LoginController
 {
     const LOGGED_OUT = 'Uspešno ste se odjavili.';
 
     const LOGIN_ERROR_INVALID = 'Pogrešni podaci za prijavu.';
     const LOGIN_ERROR_NO_EMAIL = 'Email nije pronađen u sistemu.';
     const LOGIN_ERROR_INACTIVE = 'Vaš nalog nije aktivan. Kontaktirajte administratora.';
-    const LOGIN_ERROR_UNKNOWN_TYPE = 'Nepoznat tip prijave.';
     const LOGIN_SUCCESS = 'Uspešno ste se prijavili.';
     const LOGIN_ERROR_TOKEN = 'Forma je istekla. Osvežite stranicu i pokušajte ponovo.';
 
