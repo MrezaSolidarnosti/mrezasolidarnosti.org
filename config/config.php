@@ -41,6 +41,28 @@ return array(
         'default' => 'sr',
         'available' => ['sr', 'en'],
     ],
+    // Where AuthMiddleware sends someone who has to log in. There is no password anywhere
+    // in this app, so both doors are magic-link forms; a delegate bounced to the staff form
+    // would land on a page they can never get past.
+    'loginUrl' => '/login/user/magicLinkForm/',
+    'loginUrls' => [
+        'user' => '/login/user/magicLinkForm/',
+        'delegate' => '/login/delegate/magicLinkForm/',
+    ],
+    'magicLink' => [
+        'expiryMinutes' => 15,
+        // Each request invalidates the previous link, so without a cooldown anyone can keep
+        // a real user's link permanently broken while filling their inbox.
+        'cooldownSeconds' => 60,
+        'subject' => 'Vaš link za prijavu na Mrežu solidarnosti',
+        // Per entity type, because the destination is not always the admin: a donor follows
+        // their link into the public site. {adminUrl}, {baseUrl} and {token} are substituted.
+        'urls' => [
+            'user' => '{adminUrl}/login/user/verifyMagicLink/{token}/',
+            'delegate' => '{adminUrl}/login/delegate/verifyMagicLink/{token}/',
+            'donor' => '{baseUrl}/donor/verifyEmail?token={token}',
+        ],
+    ],
     'mailer' => [
         'from' => 'noreply@mrezasolidarnosti.org',
         'fromName' => 'Mreža Solidarnosti',
@@ -130,6 +152,14 @@ return array(
         // preview that skipped them would be wrong. Flag is "dry", not "commit", because the
         // crontab already passes "run" and must keep meaning a real round.
         'createTransactions' => \Solidarity\Backend\Action\CreateTransaction::class,
+        // Same round, different donor order: most-recently-active first instead of
+        // least-recently-tried. For when a specific sum has to be raised quickly and the
+        // normal sweep — which spends most of its effort probing dormant pledges — is too
+        // slow. Swap it into deploy/crontab in place of createTransactions while the need
+        // lasts, then swap it back; nothing schedules it on its own.
+        // Run: php public/cli.php createTransactionsUrgent run [target=4000000]
+        //      ("dry" to preview; run check/donor-activity.sql first to pick the target)
+        'createTransactionsUrgent' => \Solidarity\Backend\Action\CreateTransactionUrgent::class,
         // Expire unpaid instructions past 72h. MUST run immediately before createTransactions
         // so the freed budget is reallocated in the same cycle.
         // Run: php public/cli.php expireInstructions run   (use "dry" to preview)

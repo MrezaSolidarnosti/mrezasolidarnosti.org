@@ -583,17 +583,66 @@ if (\Solidarity\Core\Environment::isBackend()) {
     });
 }
 
-// Login-service dependencies — needed by BOTH apps (the frontend resolves Login
-// for the donor magic-link / email-verification flow).
-$container->set(\Skeletor\Login\Provider\ProviderInterface::class, function() use ($container) {
-    return new \Skeletor\Login\Provider\DbProvider(
-        $container->get(\Skeletor\User\Repository\UserRepositoryInterface::class)
+// Login service — needed by BOTH apps (the frontend resolves it for the donor magic-link
+// and email-verification flow).
+//
+// No password provider. Nothing in this app has a password column, and the DbProvider that
+// used to be wired here ran against a User whose getPassword() could only ever return null.
+// The framework treats the provider as optional and throws a named LogicException if a
+// password operation is ever attempted, which is a better failure than that was.
+$container->set(\Skeletor\Login\Service\Login::class, function() use ($container) {
+    return new \Skeletor\Login\Service\Login(
+        null,
+        $container->get(ManagerInterface::class),
+        $container->get(\Skeletor\Core\Mailer\Service\MailerInterface::class),
+        $container->get(\Skeletor\Login\Repository\ForgotPasswordRepository::class),
+        null,
+        $container->get(\Skeletor\Core\Security\EntityRegistry::class),
     );
 });
 
 $container->set(\Skeletor\Login\Validator\ResetPasswordInterface::class, function() use ($container) {
     return $container->get(\Skeletor\Login\Validator\ResetPasswordLoose::class);
 });
+
+// The authenticator registry takes an optional social authenticator; this app has no OAuth
+// login, so it is left out rather than autowired into an OAuth provider that does not exist.
+// Needed by both apps: the frontend authenticates donors through it on the verify-email leg.
+$container->set(\Skeletor\Core\Security\Authenticator\AuthenticatorRegistry::class, function() use ($container) {
+    return new \Skeletor\Core\Security\Authenticator\AuthenticatorRegistry(
+        $container->get(\Skeletor\Core\Security\Authenticator\PasswordAuthenticator::class),
+        $container->get(\Skeletor\Core\Security\Authenticator\MagicLinkAuthenticator::class),
+    );
+});
+
+if (\Solidarity\Core\Environment::isBackend()) {
+    // One controller for every entity type, routed by /login/{entityType}/{action}.
+    //
+    // Defined by hand for one reason: the last constructor argument is an optional
+    // TwoFactorService, and autowiring would try to build one — this app does not use two
+    // factor, so it is passed as null deliberately rather than by accident. Switching it on
+    // later means building a TwoFactorService here (it needs an encryption key, an issuer
+    // and the list of entity types that owe a second factor) and passing it instead.
+    $container->set(\Solidarity\Backend\Controller\LoginController::class, function() use ($container) {
+        return new \Solidarity\Backend\Controller\LoginController(
+            $container->get(\Skeletor\Login\Service\Login::class),
+            $container->get(ManagerInterface::class),
+            $container->get(Config::class),
+            $container->get(Flash::class),
+            $container->get(\League\Plates\Engine::class),
+            $container->get(\Skeletor\Login\Filter\ForgotPassword::class),
+            $container->get(\Skeletor\User\Filter\Login::class),
+            $container->get(\Skeletor\Login\Filter\ResetPassword::class),
+            $container->get(\Skeletor\Login\Repository\ForgotPasswordRepository::class),
+            $container->get(\Skeletor\Login\Service\MagicLinkService::class),
+            $container->get(\Skeletor\Core\Security\Authenticator\AuthenticatorRegistry::class),
+            $container->get(\Skeletor\Core\Security\EntityRegistry::class),
+            $container->get(\Skeletor\Core\Security\Authentication\PendingAuthentication::class),
+            null,
+        );
+    });
+
+}
 $container->set(TagAwareAdapter::class, function() use ($container) {
     $config = $container->get(Config::class);
 

@@ -2,6 +2,7 @@
 
 namespace Solidarity\Backend\Action;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Config\Config;
@@ -87,6 +88,8 @@ class Statistics extends Html
             'delegateCount' => $this->getDelegateCount($project),
             'totalPledged' => $this->getTotalPledged($project),
             'monthlyPledged' => $this->getMonthlyPledged($project),
+            'remainingMonthlyPledged' => $this->getRemainingPledged(true, $project),
+            'remainingOneTimePledged' => $this->getRemainingPledged(false, $project),
             'confirmedAmount' => $confirmedAmount,
             'confirmedCount' => $confirmedCount,
             'paidAmount' => $paidAmount,
@@ -246,6 +249,97 @@ class Statistics extends Html
         $eurTotal = (int) $qbEur->getQuery()->getSingleScalarResult();
 
         return $rsdTotal + Transaction::eurToRsd($eurTotal);
+    }
+
+    /**
+     * Pledged money that has not been allocated yet, in RSD.
+     *
+     * This is the same arithmetic the allocation cron runs per pledge in
+     * Transaction::createBalancedForDonor() — pledge converted to RSD, minus what has already
+     * been allocated for that donor + project + payment type — so the card answers "how much
+     * can still be spent" with the cron's own definition rather than a second one.
+     *
+     * The counting window is what the `monthly` flag actually selects, and the two halves
+     * therefore mean different things:
+     *
+     *   monthly = 1  spend over the last 30 days. A standing pledge replenishes, so this is
+     *                "left to allocate this month" and is expected to refill each cycle.
+     *   monthly = 0  spend over all time. A lump sum drains once, so this is "still owed",
+     *                and it only ever goes down.
+     *
+     * Because of that, the two are not addends of one quantity — do not sum them.
+     *
+     * Floored at zero per pledge, not per total: a donor who was allocated more than they
+     * pledged (a manual one-time instruction on top of a standing pledge does this) would
+     * otherwise subtract from somebody else's healthy remainder.
+     *
+     * Pledges are grouped by donor + project + type before the subtraction because the spend
+     * figure is keyed on exactly that triple; summing the pledges first means a donor holding
+     * two rows for the same triple has their spend subtracted once instead of twice.
+     *
+     * Native SQL rather than DQL: the per-pledge floor needs GREATEST() over a correlated
+     * aggregate, and the DQL alternative is a query per payment method — 18k+ of them.
+     * The same query, with both halves side by side, is in references/statistics.md.
+     *
+     * @param bool $monthly true for the monthly half, false for everything else
+     */
+    private function getRemainingPledged(bool $monthly, ?Project $project = null): int
+    {
+        $params = [
+            'rate' => Transaction::EUR_TO_RSD_RATE,
+            'bankType' => DonorPaymentMethod::TYPE_BANK_TRANSFER,
+            'deletedDonor' => Donor::STATUS_DELETED,
+            'monthly' => $monthly ? 1 : 0,
+            'allocated' => [
+                Transaction::STATUS_NEW,
+                Transaction::STATUS_WAITING_CONFIRMATION,
+                Transaction::STATUS_CONFIRMED,
+                Transaction::STATUS_PAID,
+            ],
+        ];
+        $types = ['allocated' => ArrayParameterType::INTEGER];
+
+        $projectFilter = '';
+        if ($project) {
+            $projectFilter = ' AND pm.project_id = :projectId';
+            $params['projectId'] = $project->id;
+        }
+
+        // The 30-day window is the monthly half's whole definition, so it is added as a clause
+        // rather than switched on inside the SQL — an always-present `OR :monthly = 0` would
+        // stop the createdAt index being usable for the half that needs it.
+        $windowFilter = '';
+        if ($monthly) {
+            $windowFilter = ' AND t.createdAt >= :since';
+            $params['since'] = (new \DateTimeImmutable('-30 days'))->format('Y-m-d H:i:s');
+        }
+
+        $sql = sprintf(
+            'SELECT COALESCE(SUM(GREATEST(p.pledgedRsd - COALESCE(s.spent, 0), 0)), 0)
+               FROM (
+                    SELECT pm.donor_id, pm.project_id, pm.type,
+                           SUM(CASE WHEN pm.type = :bankType
+                                    THEN pm.amount
+                                    ELSE ROUND(pm.amount * :rate) END) AS pledgedRsd
+                      FROM `donorPaymentMethod` pm
+                      JOIN `donor` d ON d.id = pm.donor_id
+                     WHERE d.status <> :deletedDonor
+                       AND pm.monthly = :monthly%s
+                     GROUP BY pm.donor_id, pm.project_id, pm.type
+               ) p
+               LEFT JOIN (
+                    SELECT t.donorId, t.projectId, t.paymentType, SUM(t.amount) AS spent
+                      FROM `transaction` t
+                     WHERE t.status IN (:allocated)%s
+                     GROUP BY t.donorId, t.projectId, t.paymentType
+               ) s ON s.donorId = p.donor_id
+                  AND s.projectId = p.project_id
+                  AND s.paymentType = p.type',
+            $projectFilter,
+            $windowFilter
+        );
+
+        return (int) $this->em->getConnection()->fetchOne($sql, $params, $types);
     }
 
     /**

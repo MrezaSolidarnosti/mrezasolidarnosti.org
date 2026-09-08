@@ -99,22 +99,6 @@ class Mailer extends \Skeletor\Core\Mailer\Service\MailerSendMailer
         $this->send($recipients, $subject, $body);
     }
 
-    public function sendDashboardMagicLinkMail(string $email, string $magicLinkUrl, string $displayName): void
-    {
-        $recipients = [
-            new Recipient($email, $email),
-        ];
-
-        $body = $this->render('magicLink', [
-            'displayName' => $displayName,
-            'magicLinkUrl' => $magicLinkUrl,
-            'baseUrl' => $this->config->offsetGet('baseUrl')
-        ]);
-        $subject = "Vaš link za prijavu na Mrežu solidarnosti";
-
-        $this->send($recipients, $subject, $body);
-    }
-
     public function sendDonorLoginMail(string $email, string $displayName, string $token): void
     {
         $baseUrl = $this->config->offsetGet('baseUrl');

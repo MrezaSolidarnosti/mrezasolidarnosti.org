@@ -1,8 +1,24 @@
-<?php $this->layout('layout/login', ['title' => $pageTitle ?? 'Magic Link Login']) ?>
-<h1>Dashboard Login</h1>
+<?php
+/**
+ * One form for every kind of account.
+ *
+ * The entity type comes from the route and is only echoed back into the action URL — the
+ * controller reads it from the route, never from this form, so a hidden field naming it
+ * would be decoration at best and a way to ask for a staff link at worst.
+ */
+$entityType = $data['entityType'] ?? 'user';
+$isDelegate = $entityType === 'delegate';
+?>
+<?php $this->layout('layout/login', ['title' => $pageTitle ?? 'Login']) ?>
+<h1><?= $isDelegate ? 'Login za delegate' : 'Dashboard Login' ?></h1>
 
-<a href="/login/delegate/magicLinkForm/">Pređi na Login za delegate</a>
-<form id="loginForm"  action="/login/<?=$data['entityType']?>/requestMagicLink/" method="post">
+<?php if ($isDelegate): ?>
+    <a href="/login/user/magicLinkForm/">Login za admine</a>
+<?php else: ?>
+    <a href="/login/delegate/magicLinkForm/">Pređi na Login za delegate</a>
+<?php endif; ?>
+
+<form id="loginForm" action="/login/<?=$this->e($entityType)?>/requestMagicLink/" method="post">
     <?php if(isset($messages) && $messages !== ''):?>
         <div id="messageContainer">
             <?=$messages?>
@@ -13,7 +29,6 @@
             <path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"/>
         </svg>
         <input class="input" data-required="true" data-required-text="Email je obavezno polje." data-validation-strategy="email" data-validation-strategy-message="Invalid email provided" aria-label="Email" type="text" name="email" autofocus placeholder="Email">
-        <input type="hidden" name="entityType" value="<?=$data['entityType']?>" />
     </div>
 
     <div id="loginActions">
@@ -22,5 +37,6 @@
             Zapamti me
         </label>
     </div>
+    <?=$this->formToken()?>
     <button class="btn primary fullWidth" type="submit">Uloguj se</button>
 </form>

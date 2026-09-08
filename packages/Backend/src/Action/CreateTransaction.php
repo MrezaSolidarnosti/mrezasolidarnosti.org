@@ -32,7 +32,7 @@ class CreateTransaction extends Html
         public readonly Project $project,
         public readonly Donor $donor,
         private Mailer $mailer,
-        private EntityManagerInterface $em
+        protected EntityManagerInterface $em
     ) {
         parent::__construct($logger, $config, $template);
     }
@@ -75,12 +75,7 @@ class CreateTransaction extends Html
 
         // Unique active donors across all projects. Each donor is then balanced across the
         // projects they pledged to (round-robin), with every project keeping its own pledge.
-        $donors = [];
-        foreach ($projects as $project) {
-            foreach ($this->donor->getDonorsByProject($project) as $donor) {
-                $donors[$donor->id] = $donor;
-            }
-        }
+        $donors = $this->selectDonors($projects, $params);
 
         // A dry run does the real work and then throws it away, rather than skipping the
         // writes. That is not belt-and-braces: allocateToBeneficiary() re-reads
@@ -195,6 +190,46 @@ class CreateTransaction extends Html
     }
 
     /**
+     * The donors this round processes, and the order it processes them in.
+     *
+     * This is the ONE seam a variant round is expected to move, and the reason it is a method
+     * rather than four lines inline: everything after it — the per-donor try/catch, the mail,
+     * the dry-run rollback, the report — is behaviour that must not fork, because a variant
+     * that quietly diverges there is a variant nobody can reason about at 3am. A subclass
+     * overrides this and inherits the rest verbatim.
+     *
+     * Keyed by donor id so a donor pledged to several projects is processed once;
+     * createBalancedForDonor() already balances them across every project they pledged to.
+     * Insertion order IS the processing order — do not sort the result downstream.
+     *
+     * @param \Solidarity\Transaction\Entity\Project[] $projects
+     * @param array<int|string, mixed> $params the argv tail, for variants that take arguments
+     * @return array<int, \Solidarity\Donor\Entity\Donor> donor id => donor, in processing order
+     */
+    protected function selectDonors(array $projects, array $params): array
+    {
+        $donors = [];
+        foreach ($projects as $project) {
+            foreach ($this->donor->getDonorsByProject($project) as $donor) {
+                $donors[$donor->id] = $donor;
+            }
+        }
+
+        return $donors;
+    }
+
+    /**
+     * What this round calls itself in the report header and the log.
+     *
+     * Variants share a log directory and a report format, so without this a manually switched
+     * round is indistinguishable from the scheduled one after the fact.
+     */
+    protected function roundName(): string
+    {
+        return 'CREATE TRANSACTIONS';
+    }
+
+    /**
      * The transactions this run created, newest id first seen.
      *
      * Reading them back from the database rather than having createBalancedForDonor() report
@@ -239,7 +274,7 @@ class CreateTransaction extends Html
     private function report(array $allocations, bool $dry, int $donorCount): void
     {
         $mode = $dry ? 'DRY-RUN' : 'RUN';
-        echo sprintf('=== CREATE TRANSACTIONS %s — %s ===', $mode, date('Y-m-d H:i:s')) . PHP_EOL;
+        echo sprintf('=== %s %s — %s ===', $this->roundName(), $mode, date('Y-m-d H:i:s')) . PHP_EOL;
         echo sprintf('Donors processed: %d', $donorCount) . PHP_EOL . PHP_EOL;
 
         if (!$allocations) {

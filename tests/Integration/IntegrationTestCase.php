@@ -478,4 +478,17 @@ abstract class IntegrationTestCase extends TestCase
             ['dt' => $datetime, 'id' => $transaction->getId()],
         );
     }
+
+    /**
+     * Same reason as backdateTransaction(): Donor::createdAt is insertable:false, so a test
+     * about registration age has to write it directly. Needed by anything ranking donors by
+     * how recently they registered.
+     */
+    protected function backdateDonor(Donor $donor, string $datetime): void
+    {
+        self::$em->getConnection()->executeStatement(
+            'UPDATE `donor` SET createdAt = :dt WHERE id = :id',
+            ['dt' => $datetime, 'id' => $donor->getId()],
+        );
+    }
 }
