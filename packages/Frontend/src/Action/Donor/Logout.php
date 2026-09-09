@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface as Logger;
 use Skeletor\Core\Action\Web\Html;
-use Skeletor\Login\Service\Login;
+use Skeletor\Core\Login\Service\Login;
 use Tamtamchik\SimpleFlash\Flash;
 
 /**

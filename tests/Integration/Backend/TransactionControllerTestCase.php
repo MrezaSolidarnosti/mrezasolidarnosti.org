@@ -111,6 +111,7 @@ abstract class TransactionControllerTestCase extends IntegrationTestCase
             new Config(['adminPath' => '']),
             new Flash(),
             $this->engine(),
+            new NullLogger(),
             $this->lookup(DonorService::class, $donor),
             $this->lookup(ProjectService::class, $project),
             $this->createStub(Mailer::class),

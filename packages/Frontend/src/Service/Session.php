@@ -2,92 +2,60 @@
 namespace Solidarity\Frontend\Service;
 
 use Laminas\Session\ManagerInterface as SessionManager;
-use Skeletor\Core\Security\Authentication\AuthenticatableInterface;
 use Skeletor\Core\Security\EntityRegistry;
+use Skeletor\Core\Security\SessionContext;
 
 /**
- * Frontend session reader — the public-site analog of Skeletor\User\Service\Session.
+ * Frontend session reader.
  *
- * The framework's LoginService::login($model, $entityType) writes the standard
- * keys (loggedIn, loggedInEntityType, loggedInRole, loggedInEmail, name...) for
- * every authenticatable, donors included. This wraps those keys with
- * donor/beneficiary-aware accessors so actions and templates don't poke at raw
- * session storage. The cheap getters never touch the DB; getUser() lazily
- * reloads the full entity through EntityRegistry only when a page needs it.
- *
- * Entity types live here so adding beneficiary later is a one-line change.
+ * Everything generic — is anyone logged in, which entity type, the cheap name/email getters,
+ * the lazy getUser() through the entity registry — now lives in Skeletor\Core\Security\
+ * SessionContext, where the backend and any other app can use it too. What is left here is
+ * the part that is genuinely about this site: which entity types the public pages care
+ * about, the visitor's chosen locale, and the donor visit stamp.
  */
-class Session
+class Session extends SessionContext
 {
     public const TYPE_DONOR = 'donor';
     public const TYPE_BENEFICIARY = 'beneficiary';
 
-    private ?AuthenticatableInterface $user = null;
-    private bool $userLoaded = false;
-
-    public function __construct(
-        private SessionManager $session,
-        private EntityRegistry $entityRegistry,
-    ) {}
-
-    private function get(string $key)
+    public function __construct(SessionManager $session, EntityRegistry $entityRegistry)
     {
-        return $this->session->getStorage()->offsetGet($key);
+        parent::__construct($session, $entityRegistry);
     }
 
-    public function isLoggedIn(): bool
-    {
-        return (bool) $this->get('loggedIn');
-    }
-
+    /**
+     * Narrowed to int, which is what every caller here passes straight into a query or an id
+     * column. The base class returns int|string because an entity id need not be numeric.
+     */
     public function getId(): ?int
     {
-        $id = $this->get('loggedIn');
+        $id = parent::getId();
+
         return $id !== null ? (int) $id : null;
     }
 
-    public function getEntityType(): ?string
+    public function isDonor(): bool
     {
-        return $this->get('loggedInEntityType');
+        return $this->is(self::TYPE_DONOR);
     }
 
-    public function getRole(): ?int
+    public function isBeneficiary(): bool
     {
-        $role = $this->get('loggedInRole');
-        return $role !== null ? (int) $role : null;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->get('loggedInEmail');
-    }
-
-    public function getDisplayName(): ?string
-    {
-        $name = trim(sprintf('%s %s', (string) $this->get('loggedInFirstName'), (string) $this->get('loggedInLastName')));
-        return $name !== '' ? $name : $this->getEmail();
+        return $this->is(self::TYPE_BENEFICIARY);
     }
 
     /** The locale the visitor explicitly chose via the language switcher, if any. */
     public function getPreferredLocale(): ?string
     {
         $locale = $this->get('preferredLocale');
+
         return is_string($locale) && $locale !== '' ? $locale : null;
     }
 
     public function setPreferredLocale(string $locale): void
     {
         $this->session->getStorage()->offsetSet('preferredLocale', $locale);
-    }
-
-    public function isDonor(): bool
-    {
-        return $this->isLoggedIn() && $this->getEntityType() === self::TYPE_DONOR;
-    }
-
-    public function isBeneficiary(): bool
-    {
-        return $this->isLoggedIn() && $this->getEntityType() === self::TYPE_BENEFICIARY;
     }
 
     /**
@@ -114,37 +82,9 @@ class Session
         }
 
         try {
-            $repository->touchLastVisit($id);
+            $repository->touchLastVisit((int) $id);
         } catch (\Throwable $e) {
             // swallowed on purpose — see docblock
         }
-    }
-
-    /**
-     * Lazily reload the logged-in entity (DB hit, cached per request).
-     * Returns null when nobody is logged in or the record no longer exists.
-     */
-    public function getUser(): ?AuthenticatableInterface
-    {
-        if ($this->userLoaded) {
-            return $this->user;
-        }
-        $this->userLoaded = true;
-
-        $type = $this->getEntityType();
-        $id = $this->getId();
-        if (!$type || !$id || !$this->entityRegistry->has($type)) {
-            return $this->user;
-        }
-
-        $repository = $this->entityRegistry->getRepository($type);
-        if (method_exists($repository, 'getById')) {
-            $entity = $repository->getById(['id' => $id]);
-            if ($entity instanceof AuthenticatableInterface) {
-                $this->user = $entity;
-            }
-        }
-
-        return $this->user;
     }
 }

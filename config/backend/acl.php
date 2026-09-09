@@ -2,10 +2,12 @@
 
 $guest = [
     '/',
-    '/login/loginForm/',
+    // Every public step of the login flow, for every entity type. The wildcard is the
+    // entity-type segment: /login/user/..., /login/delegate/..., and whatever is registered
+    // next. Two-factor is not listed because this app does not use it — the pending-login
+    // state lives in the session, so those paths would need to be added here to switch it on.
     '/login/*/magicLinkForm/',
     '/login/*/requestMagicLink/',
-    '/login/*/verifyMagicLink/',
     '/login/*/verifyMagicLink/',
     '/cron/*',
 ];

@@ -16,6 +16,7 @@ use Solidarity\School\Entity\SchoolType as SchoolTypeEntity;
 use Solidarity\School\Service\SchoolType;
 use Solidarity\Transaction\Entity\Transaction;
 use Tamtamchik\SimpleFlash\Flash;
+use Psr\Log\LoggerInterface as Logger;
 
 class SchoolController extends AjaxCrudController
 {
@@ -35,10 +36,10 @@ class SchoolController extends AjaxCrudController
      * @param Engine $template
      */
     public function __construct(
-        School $service, Session $session, Config $config, Flash $flash, Engine $template, private City $city,
+        School $service, Session $session, Config $config, Flash $flash, Engine $template, Logger $logger, private City $city,
         private SchoolType $schoolType, private EntityManagerInterface $em, private Delegate $delegate
     ) {
-        parent::__construct($service, $session, $config, $flash, $template);
+        parent::__construct($service, $session, $config, $flash, $template, $logger);
 
         if ($this->getSession()->getStorage()->offsetGet('loggedInEntityType') === 'delegate') {
             $this->tableViewConfig['createButton'] = false;

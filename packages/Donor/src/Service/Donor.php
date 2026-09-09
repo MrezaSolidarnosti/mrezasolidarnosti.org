@@ -2,7 +2,7 @@
 namespace Solidarity\Donor\Service;
 
 use Skeletor\Core\Validator\ValidatorException;
-use Skeletor\Login\Service\MagicLinkService;
+use Skeletor\Core\Login\Service\MagicLinkService;
 use Skeletor\Translator\Service\Translator;
 use Solidarity\Donor\Filter\DonorProfileData;
 use Solidarity\Donor\Repository\DonorRepository;
@@ -60,8 +60,15 @@ class Donor extends TableView
     }
 
     /**
-     * Send a magic-link login email to an existing donor. Silent if the email
-     * isn't registered, so the form can't be used to enumerate accounts.
+     * Send a magic-link login email to an existing donor.
+     *
+     * Silent whatever the answer — unregistered, barred, or asked again within the cooldown
+     * — so the public form cannot be used to enumerate donors or to probe their status. The
+     * page it posts to says "check your inbox" either way.
+     *
+     * The framework refusals are caught rather than avoided: MagicLinkService is where the
+     * is-this-account-allowed-in question is answered, and duplicating that check here is
+     * how the two entry points drifted apart in the first place.
      */
     public function requestLoginLink(string $email): void
     {
@@ -70,7 +77,12 @@ class Donor extends TableView
             return;
         }
 
-        $token = $this->magicLinkService->requestMagicLink($email, 'donor', false);
+        try {
+            $token = $this->magicLinkService->requestMagicLink($email, 'donor', false);
+        } catch (\Skeletor\Core\Login\Exception\MagicLinkThrottled | \Skeletor\Core\Login\Exception\InvalidCredentials) {
+            return;
+        }
+
         $this->mailer->sendDonorLoginMail($email, $donor->getDisplayName(), $token);
     }
 

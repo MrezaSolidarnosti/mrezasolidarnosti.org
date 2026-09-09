@@ -18,6 +18,7 @@ use League\Plates\Engine;
 use Solidarity\User\Entity\User;
 use Tamtamchik\SimpleFlash\Flash;
 use Turanjanin\SerbianTransliterator\Transliterator;
+use Psr\Log\LoggerInterface as Logger;
 
 class TransactionController extends AjaxCrudController
 {
@@ -40,11 +41,11 @@ class TransactionController extends AjaxCrudController
      * @param Engine $template
      */
     public function __construct(
-        Transaction    $service, Session $session, Config $config, Flash $flash, Engine $template,
+        Transaction    $service, Session $session, Config $config, Flash $flash, Engine $template, Logger $logger,
         private Donor  $donor, private Project $project, private Mailer $mailer, private Period $period,
         private Delegate $delegate, private BeneficiaryService $beneficiaryService
     ) {
-        parent::__construct($service, $session, $config, $flash, $template);
+        parent::__construct($service, $session, $config, $flash, $template, $logger);
         if ($this->getSession()->getStorage()->offsetGet('loggedInRole') !== User::ROLE_ADMIN) {
             $this->tableViewConfig['createButton'] = false;
         }

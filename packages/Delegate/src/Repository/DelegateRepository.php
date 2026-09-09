@@ -3,7 +3,7 @@ namespace Solidarity\Delegate\Repository;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Skeletor\Core\Mapper\NotFoundException;
-use Skeletor\Login\Repository\LoginRepositoryInterface;
+use Skeletor\Core\Login\Repository\LoginRepositoryInterface;
 use Solidarity\Delegate\Entity\Delegate;
 use Solidarity\Delegate\Factory\DelegateFactory;
 use Skeletor\Core\TableView\Repository\TableViewRepository;

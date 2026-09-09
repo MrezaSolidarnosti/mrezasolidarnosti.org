@@ -12,6 +12,7 @@ use Skeletor\Core\Validator\ValidatorException;
 use Solidarity\ContentEditor\Exceptions\BlockFilterNotFoundException;
 use Solidarity\Post\Service\Post;
 use Tamtamchik\SimpleFlash\Flash;
+use Psr\Log\LoggerInterface as Logger;
 
 class PostController extends AjaxCrudController
 {
@@ -24,9 +25,9 @@ class PostController extends AjaxCrudController
     const string PATH = 'Post';
 
     public function __construct(
-        Post $service, Session $session, Config $config, Flash $flash, Engine $template,
+        Post $service, Session $session, Config $config, Flash $flash, Engine $template, Logger $logger,
     ) {
-        parent::__construct($service, $session, $config, $flash, $template);
+        parent::__construct($service, $session, $config, $flash, $template, $logger);
     }
 
     public function create(): Response

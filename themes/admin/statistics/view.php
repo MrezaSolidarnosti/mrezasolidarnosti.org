@@ -151,6 +151,24 @@ $formatNumber = function(int $amount): string {
                     <span class="statLabel">Mesecne donacije</span>
                     <span class="statValue"><?= $formatNumber($s['monthlyPledged']) ?> <span class="statUnit">RSD</span></span>
                 </div>
+                <?php // Not a slice of the two cards above. These subtract what the allocation cron
+                      // has already spent, each over the window its pledge type is counted in:
+                      // the monthly one over the last 30 days (so it refills every cycle), the
+                      // one-time one over all time (so it only ever falls). Do not add them up. ?>
+                <div class="statCard">
+                    <span class="statLabel">Preostalo mesecnih donacija</span>
+                    <span class="statValue"><?= $formatNumber($s['remainingMonthlyPledged']) ?> <span class="statUnit">RSD</span></span>
+                    <span class="statNote" style="display:block;margin-top:6px;font-size:12px;opacity:.7;">
+                        Obecano minus dodeljeno u poslednjih 30 dana.
+                    </span>
+                </div>
+                <div class="statCard">
+                    <span class="statLabel">Preostalo jednokratnih donacija</span>
+                    <span class="statValue"><?= $formatNumber($s['remainingOneTimePledged']) ?> <span class="statUnit">RSD</span></span>
+                    <span class="statNote" style="display:block;margin-top:6px;font-size:12px;opacity:.7;">
+                        Obecano minus ukupno dodeljeno, za nemesecne uplate.
+                    </span>
+                </div>
             </div>
         </div>
         <div class="statsSection">
@@ -231,6 +249,24 @@ $formatNumber = function(int $amount): string {
                     <div class="statCard">
                         <span class="statLabel">Mesecne donacije</span>
                         <span class="statValue"><?= $formatNumber($s['monthlyPledged']) ?> <span class="statUnit">RSD</span></span>
+                    </div>
+                    <?php // Not a slice of the two cards above. These subtract what the allocation cron
+                          // has already spent, each over the window its pledge type is counted in:
+                          // the monthly one over the last 30 days (so it refills every cycle), the
+                          // one-time one over all time (so it only ever falls). Do not add them up. ?>
+                    <div class="statCard">
+                        <span class="statLabel">Preostalo mesecnih donacija</span>
+                        <span class="statValue"><?= $formatNumber($s['remainingMonthlyPledged']) ?> <span class="statUnit">RSD</span></span>
+                        <span class="statNote" style="display:block;margin-top:6px;font-size:12px;opacity:.7;">
+                            Obecano minus dodeljeno u poslednjih 30 dana.
+                        </span>
+                    </div>
+                    <div class="statCard">
+                        <span class="statLabel">Preostalo jednokratnih donacija</span>
+                        <span class="statValue"><?= $formatNumber($s['remainingOneTimePledged']) ?> <span class="statUnit">RSD</span></span>
+                        <span class="statNote" style="display:block;margin-top:6px;font-size:12px;opacity:.7;">
+                            Obecano minus ukupno dodeljeno, za nemesecne uplate.
+                        </span>
                     </div>
                 </div>
             </div>

@@ -144,7 +144,7 @@ final class SessionTest extends TestCase
         $repository = $this->createMock(DonorRepository::class);
         // expects() is required alongside with(): from PHPUnit 14 the argument constraint
         // is silently ignored without it, so the id would never actually be asserted.
-        $repository->expects(self::once())->method('getById')->with(['id' => 7])->willReturn($donor);
+        $repository->expects(self::once())->method('getById')->with(7)->willReturn($donor);
 
         self::assertSame($donor, $this->session([
             'loggedIn' => 7,

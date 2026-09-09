@@ -15,6 +15,7 @@ use Solidarity\Backend\Controller\DonorController;
 use Solidarity\Donor\Service\Donor as DonorService;
 use Solidarity\Transaction\Service\Project as ProjectService;
 use Tamtamchik\SimpleFlash\Flash;
+use Psr\Log\NullLogger;
 
 #[CoversClass(DonorController::class)]
 final class DonorControllerTest extends TestCase
@@ -51,6 +52,7 @@ final class DonorControllerTest extends TestCase
             new Config(['adminPath' => '']),
             $this->createStub(Flash::class),
             new Engine(),
+            new NullLogger(),
             $this->createStub(ProjectService::class),
             $this->createStub(\Solidarity\Backend\Service\Redaction::class),
         );

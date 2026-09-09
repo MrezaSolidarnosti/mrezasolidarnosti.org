@@ -307,6 +307,7 @@ final class BeneficiaryFormTest extends IntegrationTestCase
             new Config(['adminPath' => '']),
             new Flash(),
             new \League\Plates\Engine(),
+            new NullLogger(),
             new SchoolService(new SchoolRepository($em), $this->createStub(SkeletorSession::class), new NullLogger(), $this->createStub(\Skeletor\Core\Activity\Service\Activity::class)),
             new PeriodService(
                 new PeriodRepository($em),

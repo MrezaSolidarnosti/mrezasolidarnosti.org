@@ -7,7 +7,7 @@ namespace Solidarity\Tests\Integration\Donor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Psr\Log\NullLogger;
 use Skeletor\Core\Validator\ValidatorException;
-use Skeletor\Login\Service\MagicLinkService;
+use Skeletor\Core\Login\Service\MagicLinkService;
 use Skeletor\Translator\Service\Translator;
 use Skeletor\User\Service\Session;
 use Solidarity\Donor\Entity\Donor;

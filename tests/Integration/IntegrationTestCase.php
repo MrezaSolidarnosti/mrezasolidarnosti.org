@@ -64,7 +64,7 @@ abstract class IntegrationTestCase extends TestCase
                 // table surfaces as a caught exception rather than a clear error.
                 $root . '/vendor/dj_avolak/skeletor/src/Translator',
                 $root . '/vendor/dj_avolak/skeletor/src/Image',
-                $root . '/vendor/dj_avolak/skeletor/src/Login',
+                $root . '/vendor/dj_avolak/skeletor/src/Core/Login',
                 $root . '/vendor/dj_avolak/skeletor/src/ThemeSettings',
             ],
             isDevMode: true,
@@ -476,6 +476,19 @@ abstract class IntegrationTestCase extends TestCase
         self::$em->getConnection()->executeStatement(
             'UPDATE `transaction` SET createdAt = :dt WHERE id = :id',
             ['dt' => $datetime, 'id' => $transaction->getId()],
+        );
+    }
+
+    /**
+     * Same reason as backdateTransaction(): Donor::createdAt is insertable:false, so a test
+     * about registration age has to write it directly. Needed by anything ranking donors by
+     * how recently they registered.
+     */
+    protected function backdateDonor(Donor $donor, string $datetime): void
+    {
+        self::$em->getConnection()->executeStatement(
+            'UPDATE `donor` SET createdAt = :dt WHERE id = :id',
+            ['dt' => $datetime, 'id' => $donor->getId()],
         );
     }
 }

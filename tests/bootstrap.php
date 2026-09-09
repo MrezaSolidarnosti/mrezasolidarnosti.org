@@ -20,5 +20,6 @@ require __DIR__ . '/../vendor/autoload.php';
  */
 defined('APP_PATH') || define('APP_PATH', dirname(__DIR__));
 defined('DATA_PATH') || define('DATA_PATH', dirname(__DIR__) . '/data');
+defined('IMAGES_PATH') || define('IMAGES_PATH', dirname(__DIR__) . '/public/images');
 defined('FRONT_ASSET_URL') || define('FRONT_ASSET_URL', '/assets/frontend');
 defined('ADMIN_ASSET_URL') || define('ADMIN_ASSET_URL', '/assets/backend');

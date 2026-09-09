@@ -27,11 +27,15 @@ use Solidarity\Backend\Controller\PageController;
 return [
     // backend
     [['GET'], '/', \Solidarity\Backend\Action\Index::class],
-    [['GET'], '/login/logout', \Solidarity\Backend\Action\Logout::class],
+    // Straight to the framework controller: it reads the entity type from the session and
+    // returns the visitor to the door they came in through, derived from config auth.default.
+    [['GET'], '/login/logout', [\Solidarity\Backend\Controller\LoginController::class, 'logOut']],
     [['GET'], '/createTransactions', \Solidarity\Backend\Action\CreateTransaction::class],
     [['GET'], '/statistics', \Solidarity\Backend\Action\Statistics::class],
-    [['GET', 'POST'], '/login/user/{action}[/{token}]', \Skeletor\Login\Controller\LoginController::class],
-    [['GET', 'POST'], '/login/delegate/{action}[/{token}]', \Solidarity\Backend\Controller\DelegateLoginController::class],
+    // One route for every kind of account. The framework controller checks {entityType}
+    // against the entity registry, so an unregistered type is refused rather than quietly
+    // treated as a staff login. Adding an entity type is a registry entry, not a controller.
+    [['GET', 'POST'], '/login/{entityType}/{action}[/{token}]', \Solidarity\Backend\Controller\LoginController::class],
     [['GET', 'POST'], '/image/{action}[/{id}]', \Skeletor\Image\Controller\ImageController::class],
     [['GET', 'POST'], '/theme/{action}', ThemeSettingsController::class],
     [['POST', 'GET'], '/navigation/{action}[/{id}]', NavigationController::class],

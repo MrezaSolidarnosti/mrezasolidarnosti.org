@@ -28,9 +28,9 @@ class UserController extends \Skeletor\User\Controller\UserController
     const PATH = 'User';
 
     public function __construct(
-        UserService $userService, Session $session, Config $config, Flash $flash, Engine $template//, private Tenant $tenant
+        UserService $userService, Session $session, Config $config, Flash $flash, Engine $template, LoggerInterface $logger//, private Tenant $tenant
     ) {
-        parent::__construct($userService, $session, $config, $flash, $template);
+        parent::__construct($userService, $session, $config, $flash, $template, $logger);
     }
 
 //    public function form(): Response

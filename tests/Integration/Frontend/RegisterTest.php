@@ -6,7 +6,7 @@ namespace Solidarity\Tests\Integration\Frontend;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use Psr\Log\NullLogger;
-use Skeletor\Login\Service\MagicLinkService;
+use Skeletor\Core\Login\Service\MagicLinkService;
 use Skeletor\Translator\Service\Translator;
 use Skeletor\User\Service\Session as UserSession;
 use Solidarity\Donor\Entity\Donor;

@@ -9,6 +9,7 @@ use League\Plates\Engine;
 use Solidarity\Period\Service\Period;
 use Solidarity\Transaction\Service\Project;
 use Tamtamchik\SimpleFlash\Flash;
+use Psr\Log\LoggerInterface as Logger;
 
 class PeriodController extends AjaxCrudController
 {
@@ -28,9 +29,9 @@ class PeriodController extends AjaxCrudController
      * @param Engine $template
      */
     public function __construct(
-        Period $service, Session $session, Config $config, Flash $flash, Engine $template, private Project $project
+        Period $service, Session $session, Config $config, Flash $flash, Engine $template, Logger $logger, private Project $project
     ) {
-        parent::__construct($service, $session, $config, $flash, $template);
+        parent::__construct($service, $session, $config, $flash, $template, $logger);
     }
 
     public function form(): Response

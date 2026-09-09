@@ -2,27 +2,31 @@
 
 date_default_timezone_set('Europe/Belgrade');
 
-const PORTRAIT_600x820 = 'portrait_600x820';
+// define() rather than const: this file is required for its return value, and anything that
+// reads the config a second time in one process -- a test that wants the real settings after
+// bootstrap already loaded them -- redefines these. const cannot be guarded; define() can.
 
-const THUMBNAIL_250x500 = 'portrait_250x500';
+defined('PORTRAIT_600x820') || define('PORTRAIT_600x820', 'portrait_600x820');
 
-const SINGLE_350x150 = 'landscape_350x150';
+defined('THUMBNAIL_250x500') || define('THUMBNAIL_250x500', 'portrait_250x500');
 
-const SINGLE_350x700 = 'portrait_350x700';
+defined('SINGLE_350x150') || define('SINGLE_350x150', 'landscape_350x150');
 
-const LANDSCAPE_1200x800 = 'landscape_1200x800';
+defined('SINGLE_350x700') || define('SINGLE_350x700', 'portrait_350x700');
 
-const LANDSCAPE_1000x667 = 'landscape_1000x667';
+defined('LANDSCAPE_1200x800') || define('LANDSCAPE_1200x800', 'landscape_1200x800');
 
-const LANDSCAPE_800x533 = 'landscape_800x533';
+defined('LANDSCAPE_1000x667') || define('LANDSCAPE_1000x667', 'landscape_1000x667');
 
-const LANDSCAPE_600x400 = 'landscape_600x400';
+defined('LANDSCAPE_800x533') || define('LANDSCAPE_800x533', 'landscape_800x533');
 
-const LANDSCAPE_400x267 = 'landscape_400x267';
+defined('LANDSCAPE_600x400') || define('LANDSCAPE_600x400', 'landscape_600x400');
 
-const LANDSCAPE_300x200 = 'landscape_300x200';
+defined('LANDSCAPE_400x267') || define('LANDSCAPE_400x267', 'landscape_400x267');
 
-const LANDSCAPE_250x167 = 'landscape_250x167';
+defined('LANDSCAPE_300x200') || define('LANDSCAPE_300x200', 'landscape_300x200');
+
+defined('LANDSCAPE_250x167') || define('LANDSCAPE_250x167', 'landscape_250x167');
 
 return array(
     'baseUrl' => 'https://solid.djavolak.info',
@@ -40,6 +44,33 @@ return array(
     'locales' => [
         'default' => 'sr',
         'available' => ['sr', 'en'],
+    ],
+    // Which ways in this application has. Magic link only: nothing here has a password
+    // column, so the password form is switched off rather than left to render a page nobody
+    // can get past -- LoginController 404s a disabled method, and AuthenticatorRegistry
+    // refuses it a second time if anything reaches it another way.
+    //
+    // This replaces loginUrl/loginUrls. AuthMiddleware now derives where to send someone
+    // from the default method: /login/{entityType}/magicLinkForm/, which is exactly what
+    // those two keys used to spell out, so there is no second list to keep in step.
+    'auth' => [
+        'methods' => ['magic_link'],
+        'default' => 'magic_link',
+        'twoFactor' => false,
+    ],
+    'magicLink' => [
+        'expiryMinutes' => 15,
+        // Each request invalidates the previous link, so without a cooldown anyone can keep
+        // a real user's link permanently broken while filling their inbox.
+        'cooldownSeconds' => 60,
+        'subject' => 'Vaš link za prijavu na Mrežu solidarnosti',
+        // Per entity type, because the destination is not always the admin: a donor follows
+        // their link into the public site. {adminUrl}, {baseUrl} and {token} are substituted.
+        'urls' => [
+            'user' => '{adminUrl}/login/user/verifyMagicLink/{token}/',
+            'delegate' => '{adminUrl}/login/delegate/verifyMagicLink/{token}/',
+            'donor' => '{baseUrl}/donor/verifyEmail?token={token}',
+        ],
     ],
     'mailer' => [
         'from' => 'noreply@mrezasolidarnosti.org',
@@ -130,6 +161,14 @@ return array(
         // preview that skipped them would be wrong. Flag is "dry", not "commit", because the
         // crontab already passes "run" and must keep meaning a real round.
         'createTransactions' => \Solidarity\Backend\Action\CreateTransaction::class,
+        // Same round, different donor order: most-recently-active first instead of
+        // least-recently-tried. For when a specific sum has to be raised quickly and the
+        // normal sweep — which spends most of its effort probing dormant pledges — is too
+        // slow. Swap it into deploy/crontab in place of createTransactions while the need
+        // lasts, then swap it back; nothing schedules it on its own.
+        // Run: php public/cli.php createTransactionsUrgent run [target=4000000]
+        //      ("dry" to preview; run check/donor-activity.sql first to pick the target)
+        'createTransactionsUrgent' => \Solidarity\Backend\Action\CreateTransactionUrgent::class,
         // Expire unpaid instructions past 72h. MUST run immediately before createTransactions
         // so the freed budget is reallocated in the same cycle.
         // Run: php public/cli.php expireInstructions run   (use "dry" to preview)

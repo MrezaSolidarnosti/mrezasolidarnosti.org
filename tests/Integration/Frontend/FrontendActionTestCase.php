@@ -10,7 +10,7 @@ use Skeletor\Core\Config\Config;
 use League\Plates\Engine;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\NullLogger;
-use Skeletor\Login\Service\MagicLinkService;
+use Skeletor\Core\Login\Service\MagicLinkService;
 use Skeletor\ThemeSettings\Navigation\Service\Navigation;
 use Skeletor\ThemeSettings\SocialLinks\Service\SocialLinks;
 use Skeletor\Translator\Service\Translator;

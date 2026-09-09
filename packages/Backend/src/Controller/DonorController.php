@@ -11,6 +11,7 @@ use League\Plates\Engine;
 use Solidarity\Transaction\Service\Project;
 use Tamtamchik\SimpleFlash\Flash;
 use Turanjanin\SerbianTransliterator\Transliterator;
+use Psr\Log\LoggerInterface as Logger;
 
 class DonorController extends AjaxCrudController
 {
@@ -30,10 +31,10 @@ class DonorController extends AjaxCrudController
      * @param Engine $template
      */
     public function __construct(
-        Donor $service, Session $session, Config $config, Flash $flash, Engine $template, private Project $project,
+        Donor $service, Session $session, Config $config, Flash $flash, Engine $template, Logger $logger, private Project $project,
         private \Solidarity\Backend\Service\Redaction $redaction,
     ) {
-        parent::__construct($service, $session, $config, $flash, $template);
+        parent::__construct($service, $session, $config, $flash, $template, $logger);
 //        $this->tableViewConfig['createButton'] = false;
     }
 
