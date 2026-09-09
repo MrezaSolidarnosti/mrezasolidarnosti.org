@@ -676,7 +676,7 @@ $container->set(EntityManagerInterface::class, function() use ($container) {
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Image",
             APP_PATH . '/vendor/dj_avolak/skeletor/src/File',
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Image",
-            APP_PATH . "/vendor/dj_avolak/skeletor/src/Login",
+            APP_PATH . "/vendor/dj_avolak/skeletor/src/Core/Login",
             // skeletor 6.x logs entity changes through Core\Activity; without this path the
             // Activity entity is unmapped and every write warns instead of recording.
             APP_PATH . "/vendor/dj_avolak/skeletor/src/Core/Activity/Entity",
