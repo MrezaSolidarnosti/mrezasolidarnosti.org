@@ -69,14 +69,19 @@ class Mailer extends \Skeletor\Core\Mailer\Service\MailerSendMailer
         $mail->send();
     }
 
-    public function sendDonorInstructionsMail($email, $name)
+    public function sendDonorInstructionsMail($email, $displayName, ?string $loginUrl = null)
     {
+        // These keys are the template's contract: donorInstructions.php reads
+        // $data['displayName'] and $data['loginUrl']. This passed 'name' and no URL at all,
+        // so every one of these mails went out with an unaddressed greeting and a button
+        // whose href was the empty string.
         $body = $this->render('donorInstructions', [
-            'name' => $name,
+            'displayName' => $displayName,
+            'loginUrl' => $loginUrl,
             'baseUrl' => $this->config->offsetGet('baseUrl')
         ]);
         $recipients = [
-            new Recipient($email, $name),
+            new Recipient($email, $displayName),
         ];
         $subject = 'Stigle su ti nove instrukcije za uplatu';
 

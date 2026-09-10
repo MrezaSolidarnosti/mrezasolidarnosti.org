@@ -9,6 +9,7 @@ use \League\Plates\Engine;
 use Skeletor\Core\Action\Web\Html;
 use Solidarity\Beneficiary\Entity\PaymentMethod;
 use Solidarity\Donor\Service\Donor;
+use Solidarity\Donor\Service\InstructionsLoginLink;
 use Solidarity\Mailer\Service\Mailer;
 use Solidarity\Transaction\Entity\Transaction as TransactionEntity;
 use Solidarity\Transaction\Service\Transaction as TransactionService;
@@ -32,6 +33,7 @@ class CreateTransaction extends Html
         public readonly Project $project,
         public readonly Donor $donor,
         private Mailer $mailer,
+        private InstructionsLoginLink $instructionsLoginLink,
         protected EntityManagerInterface $em
     ) {
         parent::__construct($logger, $config, $template);
@@ -142,7 +144,22 @@ class CreateTransaction extends Html
                     // an unsent notification is a donor to chase by hand, while letting it
                     // abort would cost every remaining donor their allocation.
                     try {
-                        $this->mailer->sendDonorInstructionsMail($donor->email, $donor->getDisplayName());
+                        // The CTA is a convenience, the instructions are the payload. A donor
+                        // who cannot be issued a link — barred account, or the write refused —
+                        // still needs the mail, so a failure here costs the button and not the
+                        // notification. Logged apart from a send failure because they are
+                        // different problems: this one leaves a donor logging in by hand.
+                        $loginUrl = null;
+                        try {
+                            $loginUrl = $this->instructionsLoginLink->issue($donor);
+                        } catch (\Throwable $linkError) {
+                            $this->getLogger()->error(sprintf(
+                                'Login link failed for donor %d (%s), mailing without CTA: %s',
+                                $donor->id, $donor->email, $linkError->getMessage()
+                            ));
+                        }
+
+                        $this->mailer->sendDonorInstructionsMail($donor->email, $donor->getDisplayName(), $loginUrl);
                     } catch (\Throwable $e) {
                         $mailFailures++;
                         $this->getLogger()->error(sprintf(

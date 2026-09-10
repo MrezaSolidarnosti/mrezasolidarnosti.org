@@ -60,6 +60,10 @@ return array(
     ],
     'magicLink' => [
         'expiryMinutes' => 15,
+        // The payment-instructions mail is a CTA read hours later, not a form someone is
+        // standing in front of, so its token gets its own lifetime matching the 72-hour
+        // instruction window. Read by Solidarity\Donor\Service\InstructionsLoginLink.
+        'instructionsExpiryMinutes' => 4320,
         // Each request invalidates the previous link, so without a cooldown anyone can keep
         // a real user's link permanently broken while filling their inbox.
         'cooldownSeconds' => 60,

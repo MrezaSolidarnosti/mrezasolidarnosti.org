@@ -12,6 +12,7 @@ use Psr\Log\NullLogger;
 use Skeletor\Core\Config\Config;
 use Solidarity\Backend\Action\CreateTransaction;
 use Solidarity\Donor\Service\Donor as DonorService;
+use Solidarity\Donor\Service\InstructionsLoginLink;
 use Solidarity\Mailer\Service\Mailer;
 use Solidarity\Tests\Integration\IntegrationTestCase;
 use Solidarity\Transaction\Entity\Project as ProjectEntity;
@@ -78,13 +79,35 @@ final class CreateTransactionMailTest extends IntegrationTestCase
         self::assertStringContainsString('2 instruction mail(s) failed', $output);
     }
 
+    public function testAFailingLoginLinkStillMailsTheInstructions(): void
+    {
+        // The CTA is a convenience; being told there is something to pay is the point. A donor
+        // no token could be minted for — barred account, or the write refused — must still get
+        // the mail, with the button falling back to the site, rather than the notification
+        // being dropped over a broken button.
+        $loginLinks = $this->createStub(InstructionsLoginLink::class);
+        $loginLinks->method('issue')->willThrowException(new \RuntimeException('no link'));
+
+        $mailer = $this->createMock(Mailer::class);
+        $mailer->expects(self::once())
+            ->method('sendDonorInstructionsMail')
+            ->with(self::anything(), self::anything(), null);
+
+        $this->runRound(allocated: 5000, mailer: $mailer, loginLinks: $loginLinks);
+    }
+
     /**
      * Runs the action against $donorCount donors and one project, with the allocator stubbed
      * to report $allocated. What the allocator does is covered by CreateBalancedForDonorTest;
      * the only thing under test here is what the action does around it.
      */
-    private function runRound(int $allocated, Mailer $mailer, bool $dry = false, int $donorCount = 1): string
-    {
+    private function runRound(
+        int $allocated,
+        Mailer $mailer,
+        bool $dry = false,
+        int $donorCount = 1,
+        ?InstructionsLoginLink $loginLinks = null
+    ): string {
         $project = $this->createProject('MSPR');
         $donorList = [];
         for ($i = 0; $i < $donorCount; $i++) {
@@ -102,12 +125,17 @@ final class CreateTransactionMailTest extends IntegrationTestCase
         $donors = $this->createStub(DonorService::class);
         $donors->method('getDonorsByProject')->willReturn($donorList);
 
+        if ($loginLinks === null) {
+            $loginLinks = $this->createStub(InstructionsLoginLink::class);
+            $loginLinks->method('issue')->willReturn('https://example.test/donor/verifyEmail?token=t');
+        }
+
         // isHoliday() is overridden rather than left to the calendar: the real one reads
         // date('d.m') against a fixed list, so on 1 May the whole class would return early
         // and pass while asserting nothing.
         $action = new class (
             new NullLogger(), new Config([]), new Engine(),
-            $transactions, $projects, $donors, $mailer, $this->em(),
+            $transactions, $projects, $donors, $mailer, $loginLinks, $this->em(),
         ) extends CreateTransaction {
             public function isHoliday(): bool
             {
