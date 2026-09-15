@@ -22,9 +22,11 @@ use Solidarity\Frontend\Service\Locale;
  * verified, logs them in, and sends them somewhere useful.
  *
  * The ordering is what matters. Verification has to be persisted before the login, and a
- * donor whose status is neither NEW nor VERIFIED (problem, deleted) must be bounced
- * without ever reaching the login call — a valid token for a disabled account is exactly
- * the case where a missing guard becomes an account takeover.
+ * donor Donor::isActive() rejects (problem, deleted) must be bounced without ever reaching
+ * the login call — a valid token for a disabled account is exactly the case where a missing
+ * guard becomes an account takeover. The two unpaid-instruction flags are NOT disabled
+ * accounts: they stop allocation, not access, and TRY_TO_CONTACT is lifted by the login
+ * itself, since logging in is the "coming back" the flag says never happened.
  *
  * Only the POST leg is exercised. GET renders a confirmation button and spends nothing —
  * that split exists because mail clients prefetch links and were destroying single-use
@@ -73,6 +75,38 @@ final class VerifyEmailTest extends FrontendActionTestCase
         $login->expects(self::never())->method('login');
 
         self::assertSame('/', $this->redirectPath($this->verify($donor, login: $login)));
+    }
+
+    public function testATryToContactDonorIsLetInAndTheFlagIsLifted(): void
+    {
+        // The flag means "never came back". Logging in is coming back, so the action clears
+        // it on the spot and restarts the streak clock — otherwise the donor stays out of
+        // allocation until the cron happens to notice a moved lastVisit.
+        $donor = $this->createDonor(status: Donor::STATUS_TRY_TO_CONTACT);
+        $donor->statusChangedAt = new \DateTime('-10 days');
+        $this->em()->flush();
+
+        $login = $this->createMock(LoginService::class);
+        $login->expects(self::once())->method('login')->with($donor, 'donor');
+
+        self::assertSame('/instrukcije-za-uplatu', $this->redirectPath($this->verify($donor, login: $login)));
+
+        $reloaded = $this->reload($donor);
+        self::assertSame(Donor::STATUS_VERIFIED, $reloaded->status);
+        self::assertGreaterThan(new \DateTime('-1 minute'), $reloaded->statusChangedAt);
+    }
+
+    public function testAnIgnoringPaymentsDonorIsLetInButKeepsTheFlag(): void
+    {
+        // Shadow ban: they may log in, and only paying an instruction clears it
+        // (ConfirmPayment), not merely showing up.
+        $donor = $this->createDonor(status: Donor::STATUS_IGNORING_PAYMENTS);
+
+        $login = $this->createMock(LoginService::class);
+        $login->expects(self::once())->method('login')->with($donor, 'donor');
+
+        self::assertSame('/instrukcije-za-uplatu', $this->redirectPath($this->verify($donor, login: $login)));
+        self::assertSame(Donor::STATUS_IGNORING_PAYMENTS, $this->reload($donor)->status);
     }
 
     public function testTheRedirectIsLocalized(): void

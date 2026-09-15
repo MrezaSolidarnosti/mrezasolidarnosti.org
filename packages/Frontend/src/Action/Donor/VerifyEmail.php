@@ -70,14 +70,32 @@ class VerifyEmail extends BaseAction
             $donor = $this->authenticatorRegistry->authenticate($credentials);   // validates + consumes the token
             $verifyingAfterRegister = $donor->status === \Solidarity\Donor\Entity\Donor::STATUS_NEW;
 
+            // Who may log in is Donor::isActive()'s call, and the authenticator has already
+            // made it — DELETED / PROBLEM throw before this line. The repeat here is belt and
+            // braces against a valid token for a disabled account, nothing more. It used to
+            // be a stricter test (status === VERIFIED) that bounced everyone else to the home
+            // page with no session and a spent token; that contradicted isActive(), which
+            // admits the two unpaid-instruction flags on purpose, so every donor the
+            // flagDonors cron had flagged was silently locked out: the mail arrived, the
+            // button did nothing, and the link was dead on the second try.
+            if (!$donor->isActive()) {
+                return $this->redirect($this->locale->localizeUrl('/'));
+            }
+
             if ($donor->status === \Solidarity\Donor\Entity\Donor::STATUS_NEW) {        // first click = email verified
                 $donor->status = \Solidarity\Donor\Entity\Donor::STATUS_VERIFIED;
                 $this->entityRegistry->getRepository('donor')->updateLoginInfo($donor); // persist
+            } elseif ($donor->status === \Solidarity\Donor\Entity\Donor::STATUS_TRY_TO_CONTACT) {
+                // The flag means "never came back"; logging in is coming back, so it is lifted
+                // here rather than waiting for the cron to notice a moved lastVisit.
+                // statusChangedAt moves with it so ExpireInstructions restarts the miss streak
+                // from now instead of re-flagging on the old history. IGNORING_PAYMENTS is left
+                // alone: that one is cleared by paying (ConfirmPayment), not by showing up.
+                $donor->status = \Solidarity\Donor\Entity\Donor::STATUS_VERIFIED;
+                $donor->statusChangedAt = new \DateTime();
+                $this->entityRegistry->getRepository('donor')->updateLoginInfo($donor);
             }
 
-            if($donor->status !== \Solidarity\Donor\Entity\Donor::STATUS_VERIFIED) {
-                return $this->redirect($this->locale->localizeUrl('/')); //@TODO redirect to a page displaying a message?
-            }
             $this->loginService->login($donor, 'donor');
             if($verifyingAfterRegister) {
                 return $this->redirect($this->locale->localizeUrl('/registrovani-ste'));
