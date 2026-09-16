@@ -34,3 +34,24 @@
     }
   }
 }
+#donorInstructions {
+  grid-column: 1 / -1;
+  iframe {
+    width: 100%;
+    // The donor modal is full-screen (Donor.js modalConfig); what is subtracted is the
+    // modal chrome, form title, tab strip and the Save row, so the frame fills the rest
+    // without the modal itself having to scroll.
+    height: calc(100vh - 260px);
+    min-height: 400px;
+    border: 1px solid var(--colorOnBorders);
+    border-radius: 7px;
+    background: var(--colorSurface-100);
+  }
+}
+
+// Inside an iframe (?embedded=1) the host page already has a navigation. Hidden, not
+// omitted — the scripts expect #navigation to exist (see crudTableLayout).
+body.embedded {
+  #navigation { display: none !important; }
+  main { max-height: 100vh; }
+}

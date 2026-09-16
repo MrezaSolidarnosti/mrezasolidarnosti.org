@@ -15,7 +15,13 @@
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 </head>
-<body>
+<?php // ?embedded=1: the page is being shown inside an iframe on another admin page (the
+// donor form's "Instrukcije" tab loads /transaction/view/?donor=N&embedded=1). The host
+// page already has a navigation, so this one is hidden — by CSS on body.embedded, NOT by
+// leaving it out: dashboard.js initialises Navigation on #navigation unconditionally, and
+// page classes read its data-role (Transaction.js actionFilter) to decide which row
+// actions to show. Without the element both throw and no rows render. ?>
+<body class="<?= (isset($_GET['embedded']) && $_GET['embedded']) ? 'embedded' : '' ?>">
     <?php if(isset($loggedIn) && $loggedIn):?>
     <?=$this->section('navigation', $this->fetch('partialsGlobal::navigation'))?>
     <?php endif;?>

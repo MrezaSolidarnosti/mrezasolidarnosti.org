@@ -28,6 +28,47 @@ export default class Educator extends CrudPage {
         this.#initPaymentMethodPreview();
     }
 
+    /**
+     * `/transaction/view/?donor=<id>` — the whole list, with its actions, narrowed to one donor.
+     *
+     * The donor form's "Instrukcije" tab iframes this page with `&embedded=1` (the layout
+     * drops the navigation for that). A DataTable cannot live directly in that tab — skeletorjs
+     * binds it to fixed element ids, one per document, and the donor list under the modal
+     * already owns them — so the iframe gives it a document of its own.
+     *
+     * Set before the first load, in onTableInitialized, not onTableFirstTimePopulated — the
+     * latter would cost an unfiltered round trip first. The DataTable only picks URL params up
+     * on its own for the select filters it rendered (status, project, period); `donor` has no
+     * select (there are hundreds), so it goes in as custom filter data, which the server applies
+     * as `a.donor = :id` like any other filter key.
+     */
+    onTableInitialized() {
+        const params = new URLSearchParams(window.location.search);
+        const donorId = params.get('donor');
+        if (!donorId || !/^\d+$/.test(donorId)) {
+            return;
+        }
+        this.dataTable.setCustomFilterData({donor: donorId});
+        // Inside the donor form the frame IS that donor's list; the notice would only offer
+        // links that navigate the iframe somewhere it should not go.
+        if (!params.get('embedded')) {
+            this.#showDonorFilterNotice(donorId);
+        }
+    }
+
+    #showDonorFilterNotice(donorId) {
+        const filters = document.getElementById('tableFilters');
+        if (!filters) {
+            return;
+        }
+        const notice = document.createElement('div');
+        notice.className = 'filterLinks donorFilterNotice';
+        notice.innerHTML = `<span>Prikazane su samo instrukcije donatora #${donorId}.</span>`
+            + ` <a class="small" href="/donor/view/?id=${donorId}">Otvori donatora</a>`
+            + ` <a class="small" href="/transaction/view/">Prikaži sve</a>`;
+        filters.prepend(notice);
+    }
+
     onModalBeforeClose() {
         if (this.#projectPeriodFilterCleanup) {
             this.#projectPeriodFilterCleanup();

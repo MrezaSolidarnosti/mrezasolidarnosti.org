@@ -71,5 +71,15 @@ $paymentMethodsHTML = $this->fetch('/donor/paymentMethodsInForm',
 
 $form->addTab($paymentMethodsTab);
 $formRenderer->setAdditionalTabContent($paymentMethodsTab, $paymentMethodsHTML);
+
+// Only once the donor exists — a new donor has nothing to list, and the tab would just be
+// an empty promise on the create form.
+if ($data['dataAction'] !== 'create') {
+    $instructionsTab = (new Tab('Instrukcije'))
+        ->addInputGroup((new InputGroup(width: InputGroupWidth::FULL_WIDTH)));
+    $instructionsHTML = $this->fetch('/donor/instructionsInForm', ['donorId' => $data['model']->id]);
+    $form->addTab($instructionsTab);
+    $formRenderer->setAdditionalTabContent($instructionsTab, $instructionsHTML);
+}
 ?>
 <?= $formRenderer->render() ?>

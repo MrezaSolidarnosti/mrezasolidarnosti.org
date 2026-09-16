@@ -9,11 +9,12 @@ export default class Donor extends CrudPage {
             enableCheckboxes: true,
             shiftCheckboxModifier: true
         };
-        this.modalOptions = {
-            createModalWidth: '70%',
-            createModalHeight: '70%',
-            editModalWidth: '70%',
-            editModalHeight: '70%'
+        // modalConfig, not modalOptions: the latter was never read by CrudPage, so the modal
+        // sat at the framework default. Full screen because the Instrukcije tab iframes the
+        // whole transaction list, and that needs the room.
+        this.modalConfig = {
+            width: '100%',
+            height: '100%'
         }
     }
 
