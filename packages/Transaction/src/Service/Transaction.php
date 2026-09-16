@@ -20,7 +20,6 @@ use Solidarity\Transaction\Filter\Transaction as TransactionFilter;
 
 class Transaction extends TableView
 {
-    /** Below this RSD amount we stop allocating (too small to be worth an instruction). */
     const MIN_TRANSACTION_DONATION_AMOUNT = 500;
 
     /**
@@ -30,17 +29,13 @@ class Transaction extends TableView
      */
     public function __construct(
         TransactionRepository $repo, Session $user, Logger $logger, TransactionFilter $filter, private ProjectService $project,
-        private BeneficiaryRepository $beneficiaryRepo, private PeriodRepository $periodRepo,
+        private BeneficiaryRepository $beneficiaryRepo, private PeriodRepository $periodRepo, private \Solidarity\Period\Service\Period $period,
         \Skeletor\Core\Activity\Service\Activity $activity) {
         parent::__construct($repo, $user, $logger, $filter, activity: $activity);
     }
 
     /**
      * A delegate sees only transactions belonging to beneficiaries they own.
-     *
-     * This override was missing entirely while Beneficiary and Delegate both had one, so the
-     * transaction list showed a delegate every transaction in the system — every other
-     * delegate's donors and beneficiaries, with names, emails, amounts and account numbers.
      *
      * 'b.createdBy' carries the alias deliberately: TransactionRepository::getJoinableEntities()
      * already joins beneficiary as `b`, and TableViewRepository leaves a dotted key alone
@@ -624,6 +619,7 @@ class Transaction extends TableView
                     : 'N/A',
                 'name' => $beneficiaryName,
                 'project' => $transaction->project->code,
+                'period' => $transaction->period->getLabel(),
                 'createdAt' => $transaction->getCreatedAt()->format('d.m.Y'),
             ];
             $items[] = [
@@ -645,6 +641,7 @@ class Transaction extends TableView
             ['name' => 'amountEur', 'label' => 'Iznos <br /> (EUR)'],
             ['name' => 'status', 'label' => 'Status', 'filterData' => \Solidarity\Transaction\Entity\Transaction::getHrStatuses()],
             ['name' => 'project', 'label' => 'Projekat', 'filterData' => $this->project->getFilterData()],
+            ['name' => 'period', 'label' => 'Period', 'filterData' => $this->period->getFilterData()],
             ['name' => 'createdAt', 'label' => 'Datum'],
         ];
 

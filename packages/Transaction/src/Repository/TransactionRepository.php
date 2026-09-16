@@ -286,7 +286,7 @@ class TransactionRepository extends TableViewRepository
 
     public function getSearchableColumns(): array
     {
-        return ['d.email', 'd.firstName', 'd.lastName', 'a.accountNumber', 'a.instructions', 'b.name', 'a.accountNumber'];
+        return ['d.email', 'a.id', 'd.firstName', 'd.lastName', 'a.accountNumber', 'a.instructions', 'b.name', 'a.accountNumber'];
     }
 
     public function getColumnsToCount(): array

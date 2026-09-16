@@ -334,6 +334,25 @@ form:has(.selectedService) .fullWidth:has(#totalWithoutVAT) .inputContainer {
   padding: 0.57rem 0.7rem;
 }
 
+#donorInstructions {
+  grid-column: 1/-1;
+}
+#donorInstructions iframe {
+  width: 100%;
+  height: calc(100vh - 260px);
+  min-height: 400px;
+  border: 1px solid var(--colorOnBorders);
+  border-radius: 7px;
+  background: var(--colorSurface-100);
+}
+
+body.embedded #navigation {
+  display: none !important;
+}
+body.embedded main {
+  max-height: 100vh;
+}
+
 [data-module=loginProtected] label {
   display: flex;
   align-items: center;
