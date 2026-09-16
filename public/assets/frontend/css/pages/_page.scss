@@ -1,0 +1,61 @@
+@use '../setup/typography';
+main {
+  &:has(> :is(h1, h2, h3, h4, h5, h6, p, ol, ul)) {
+    padding:3rem 4.25rem;
+    @media (max-width: 768px) {
+      padding:2rem 1.25rem;
+    }
+    a {
+      color:var(--colorOrange);
+      text-decoration:underline;
+    }
+  }
+  &>h1,
+  &>h2,
+  &>h3,
+  &>h4,
+  &>h5,
+  &>h6,
+  &>p,
+  &>ul,
+  &>ol,
+  &>a,{
+    color: var(--colorDarkBlue);
+    margin-bottom:0.5rem;
+  }
+  h1 {
+    @include typography.type(h1);
+    margin-bottom:1rem;
+    @media (max-width: 768px) {
+      @include typography.type(h2);
+    }
+  }
+  h2 {
+    @include typography.type(h3);
+  }
+  h3 {
+    @include typography.type(h4);
+  }
+  h4 {
+    @include typography.type(h5);
+  }
+  h5 {
+    @include typography.type(h5);
+  }
+  h6 {
+    @include typography.type(h5);
+  }
+  p {
+    @include typography.type(text);
+  }
+  ul,ol {
+    padding-left:2rem;
+    @include typography.type(text);
+  }
+  ul {
+    list-style:disc;
+  }
+  ol {
+    list-style: decimal;
+  }
+}
