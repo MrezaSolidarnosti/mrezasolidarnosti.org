@@ -70,6 +70,8 @@ class PageAction extends BaseAction
             $content = $this->blockView->getView($page->blockData ?? []);
             $mainClassName = $page->slug === 'homepage' ? '' : 'content';
         } catch (TemplateNotFoundException $e) {
+            var_dump($e->getMessage());
+            die();
             // If the template for a block is missing, we still want to show the page
         }
         return $this->respond('page/page', [

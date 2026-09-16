@@ -5883,6 +5883,78 @@ main.loggedIn #notFound {
   margin-bottom: 1.5rem;
 }
 
+main:has(> :is(h1, h2, h3, h4, h5, h6, p, ol, ul)) {
+  padding: 3rem 4.25rem;
+}
+@media (max-width: 768px) {
+  main:has(> :is(h1, h2, h3, h4, h5, h6, p, ol, ul)) {
+    padding: 2rem 1.25rem;
+  }
+}
+main:has(> :is(h1, h2, h3, h4, h5, h6, p, ol, ul)) a {
+  color: var(--colorOrange);
+  text-decoration: underline;
+}
+main > h1, main > h2, main > h3, main > h4, main > h5, main > h6, main > p, main > ul, main > ol, main > a {
+  color: var(--colorDarkBlue);
+  margin-bottom: 0.5rem;
+}
+main h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+@media (max-width: 768px) {
+  main h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+}
+main h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+main h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+main h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+main h5 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+main h6 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+main p {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+main ul, main ol {
+  padding-left: 2rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+main ul {
+  list-style: disc;
+}
+main ol {
+  list-style: decimal;
+}
+
 /* ============================== Gallery ================================== */
 .gallery {
   --galleryGap: 10px;

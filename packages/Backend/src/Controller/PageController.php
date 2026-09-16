@@ -78,6 +78,9 @@ class PageController extends AjaxCrudController
         } else {
             $formAction = sprintf('/%s/create/', strtolower(static::PATH));
             $dataAction = 'create';
+            $initialContent = [
+                'languageCode' => 'sr'
+            ];
         }
         $path = sprintf('/%s/', static::PATH);
         if (strlen($this->tableViewConfig['adminPath'])) {
