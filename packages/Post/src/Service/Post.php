@@ -50,7 +50,7 @@ class Post extends TableView
             ['name' => 'id', 'label' => 'ID'],
             ['name' => 'title', 'label' => 'Name'],
             ['name' => 'slug', 'label' => 'Slug'],
-            ['name' => 'status', 'label' => 'Status', 'filterData' => \Skeletor\Blog\Entity\Post::getStatuses()],
+            ['name' => 'status', 'label' => 'Status', 'filterData' => \Skeletor\Blog\Entity\Post::getHrStatuses()],
             ['name' => 'publishAt', 'label' => 'Publish at', 'rangeFilter' => ['type' => 'date']],
             ['name' => 'createdAt', 'label' => 'Created', 'rangeFilter' => ['type' => 'date']],
             ['name' => 'updatedAt', 'label' => 'Updated', 'rangeFilter' => ['type' => 'date']]
