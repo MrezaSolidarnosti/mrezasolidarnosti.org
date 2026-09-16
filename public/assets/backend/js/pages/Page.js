@@ -2,6 +2,7 @@ import Translator from "../../../../vendor/skeletorjs/src/Translator/Translator.
 import CrudPage from "../../../../vendor/skeletorjs/src/Page/CrudPage.js";
 import Config from "../../../../vendor/skeletorjs/src/Config/Config.js";
 import Message from "../../../../vendor/skeletorjs/src/Message/Message.js";
+import Response from "../../../../vendor/skeletorjs/src/Response/Response.js";
 
 export default class Page extends CrudPage {
     preload() {
