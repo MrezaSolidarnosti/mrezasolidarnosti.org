@@ -1,4 +1,4 @@
-<?php $this->layout('emailTheme::email') ?>
+<?php $this->layout('emailTheme::email', ['data' => $data]) ?>
 <p><?=$this->t('Zdravo')?> <?=htmlentities($data['displayName'] ?? '')?>,</p>
 <p><?=$this->t('Postoje nove instrukcije za uplatu donacije podržanim građanima.
 Da bi ih video/la, prijavi se na svoj nalog i poseti stranicu Instrukcije za uplatu')?>:</p>

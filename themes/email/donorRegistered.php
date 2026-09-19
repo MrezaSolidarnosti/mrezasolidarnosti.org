@@ -1,4 +1,4 @@
-<?php $this->layout('emailTheme::email') ?>
+<?php $this->layout('emailTheme::email', ['data' => $data]) ?>
 <p style="max-width:600px;padding:20px 20px 0 20px;margin:15px auto;color:#505050;">
 <?=$this->t('Zdravo')?> <?=$data['name']?>,<br><br>
 <?=$this->t('Hvala ti što si se prijavio/la kao donator!')?><br><br>

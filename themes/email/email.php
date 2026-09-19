@@ -8,9 +8,11 @@
 </head>
 <body style="margin: 0; padding: 0;">
 <div style="background: #2700EC; padding: 20px;">
-    <?php // Mailer::render() passes everything as ['data' => …], so the layout sees $data,
-          // never bare variables. The ?? guard keeps a sender that forgets baseUrl from
-          // emitting a warning into cron output on every message it sends.
+    <?php // $data arrives ONLY because every child template hands it over explicitly:
+          // $this->layout('emailTheme::email', ['data' => $data]). Plates does not pass a
+          // child's variables to its layout, so a template that calls layout() bare renders
+          // this <img> with no host, and the ?? guard hides that as a silently broken logo
+          // rather than a warning. Mailer::render() is what wraps everything under 'data'.
           //
           // The asset path is written out rather than using FRONT_ASSET_URL: constants.php
           // is included only by public/index.php, so the constant does not exist when the

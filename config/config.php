@@ -184,6 +184,12 @@ return array(
         // handed one more instruction. Idempotent — safe to run at any time.
         // Run: php public/cli.php flagDonors run   (use "dry" to preview)
         'flagDonors' => \Solidarity\Backend\Action\FlagNonPayingDonors::class,
+        // One-off announcement to every donor (body: themes/email/donorBroadcast.php).
+        // Not scheduled — run by hand, and only once per announcement (there is no resume).
+        // Run: php public/cli.php mailDonors dry              (who would get it)
+        //      php public/cli.php mailDonors test=<email>     (one proof copy to that address)
+        //      php public/cli.php mailDonors run              (send to everyone)
+        'mailDonors' => \Solidarity\Backend\Action\MailDonors::class,
         // Clear the Translator's Redis cache after a manual `translation` table edit/import.
         // Run: `php public/cli.php resetTranslationsCache run`   (the 2nd arg is required but ignored)
         // ---- one-shot migration, delete after cutover -------------------------------

@@ -1,4 +1,4 @@
-<?php $this->layout('emailTheme::email') ?>
+<?php $this->layout('emailTheme::email', ['data' => $data]) ?>
 <p style="max-width:600px;padding:20px 20px 0 20px;margin:15px auto;color:#505050;">
     Poštovani,<br><br>
     U toku su prijave za drugi deo februarskih zarada.<br><br>
