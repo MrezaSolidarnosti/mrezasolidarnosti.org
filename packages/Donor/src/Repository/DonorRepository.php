@@ -115,6 +115,23 @@ class DonorRepository extends TableViewRepository implements LoginRepositoryInte
         return $results;
     }
 
+    /**
+     *
+     * @return Donor[]
+     */
+    public function getBroadcastRecipients(): array
+    {
+        return $this->entityManager->createQueryBuilder()
+            ->select('d')
+            ->from(Donor::class, 'd')
+            ->where('d.status NOT IN (:excluded)')
+            ->andWhere("d.email IS NOT NULL AND d.email <> ''")
+            ->setParameter('excluded', [Donor::STATUS_DELETED, Donor::STATUS_PROBLEM])
+            ->orderBy('d.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function getJoinableEntities(): array
     {
         return [

@@ -118,4 +118,18 @@ class Mailer extends \Skeletor\Core\Mailer\Service\MailerSendMailer
         $this->send([new Recipient($email, $email)], 'Vaš link za prijavu na Mrežu solidarnosti', $body);
     }
 
+    /**
+     * The one-off announcement `mailDonors` sends to the whole donor base.
+     */
+    public function sendDonorBroadcastMail(string $email, string $displayName): void
+    {
+        $body = $this->render('donorBroadcast', [
+            'displayName' => $displayName,
+            'baseUrl' => $this->config->offsetGet('baseUrl'),
+        ]);
+        $subject = 'Od sada solidarnost prelazi granice';
+
+        $this->send([new Recipient($email, $displayName !== '' ? $displayName : $email)], $subject, $body);
+    }
+
 }
