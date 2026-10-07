@@ -204,16 +204,17 @@ private function isDelegateSession(): bool {
 ```
 
 ### Filtering table data
-Use `uncountableFilters` with scalar values (arrays NOT supported):
+Use `uncountableFilters` (scalar, array -> `IN`, `'null'`, `'not_null'`; dotted keys address a joined alias). They feed both the rows and `getTotalCount()`:
 ```php
 public function tableHandler() {
     if ($this->isDelegateSession()) {
-        // Filter by delegate relationship (scalar — works)
-        $this->uncountableFilters['delegate'] = $this->getSession()->getStorage()->offsetGet('loggedIn');
+        // `d` is SchoolRepository's join on School::$delegates
+        $this->uncountableFilters['d.id'] = $this->getSession()->getStorage()->offsetGet('loggedIn');
     }
     return parent::tableHandler();
 }
 ```
+For a condition `field = value` cannot express, override `TableViewRepository::applyCustomFilters(QueryBuilder $qb, array &$filter, array &$uncountableFilter)` in the repository, and **unset the keys you consume** (a leftover key is treated as a column). See `BeneficiaryRepository` / `TransactionRepository` and `DELEGATE_SCOPE`.
 
 ### Readonly forms
 Pass flag from controller: `$this->formData['readOnly'] = $this->isDelegateSession();`
@@ -423,19 +424,17 @@ Backend looseness (not yet enforced): the **single** `/transaction/updateStatus/
 
 ### Delegate Filtering
 Delegates see only their own data throughout the app:
-- **Beneficiaries:** filtered by `createdBy = delegateId` in `BeneficiaryService::fetchTableData()`
-- **Schools:** filtered by `delegate = delegateId` in `SchoolController::tableHandler()`
-- **Transactions:** filtered via `BeneficiaryController` delegate logic
+- **Beneficiaries:** every beneficiary of the delegate's schools (shared with co-delegates) + school-less ones with `createdBy = delegateId` - `DELEGATE_SCOPE` set in `BeneficiaryService::fetchTableData()`/`getTotalCount()`, applied by `BeneficiaryRepository::addDelegateScope()`
+- **Schools:** `d.id = delegateId` in `SchoolController::tableHandler()`
+- **Transactions:** same `DELEGATE_SCOPE`, applied to the `b` join in `TransactionRepository`; writes checked by `belongsToDelegate()`
 - **Delegate list:** sees only own record
 
 ### Service-Level Filtering
-Some services override `fetchTableData()` to apply role-based filters:
+Services that scope by role override **both** `fetchTableData()` and `getTotalCount()` - `AjaxCrudController` counts through `getTotalCount()` with only its own `uncountableFilters`, so scoping just the page leaves the pager counting the whole network:
 ```php
-public function fetchTableData($search, $filter, $offset, $limit, $order = [], $uncountableFilter = []) {
-    if ($this->session->getStorage()->offsetGet('loggedInEntityType') === 'delegate') {
-        $filter['createdBy'] = $this->session->getStorage()->offsetGet('loggedIn');
-    }
-    return parent::fetchTableData($search, $filter, $offset, $limit, $order, $uncountableFilter);
+public function getTotalCount(array $uncountableFilter = [])
+{
+    return parent::getTotalCount($this->scopeToLoggedInDelegate($uncountableFilter));
 }
 ```
 
@@ -448,7 +447,7 @@ public function fetchTableData($search, $filter, $offset, $limit, $order = [], $
 3. **Missing navigation:** Action classes don't auto-set `loggedIn*` template globals. Set them in constructor.
 4. **"content" section reserved:** Don't use `$this->start('content')` in templates. Content is implicit.
 5. **Permission denied on AJAX:** New AJAX endpoints need permission mapping or they get redirected to login (HTML response breaks JSON parsing — the catch block in JS shows a generic error instead of the server message).
-6. **uncountableFilters with arrays:** The uncountableFilter section in `TableViewRepository` doesn't support arrays. Use scalar values only, or filter by a relationship field (e.g., `delegate` instead of `id` array).
+6. **uncountableFilters keys must be real fields** (or `alias.field` on a joined entity). A custom key is fine only if the repository's `applyCustomFilters()` consumes it first - otherwise the query fails on an unknown field.
 7. **Form readonly params:** `Select` and `Text` constructors have `readOnly` as a late parameter. Use named params to avoid position issues.
 8. **Validator blocking factory:** If the factory auto-resolves fields (like `accountNumber` from payment method matching), remove those checks from the validator.
 9. **CLI commands:** Config maps CLI commands to controllers/actions. `CreateTransaction` is a CLI-triggered Action, not user-facing. Check `config.php` `cli` section for available commands.

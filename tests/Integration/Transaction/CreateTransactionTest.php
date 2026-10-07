@@ -331,6 +331,7 @@ final class CreateTransactionTest extends IntegrationTestCase
             $beneficiaryRepo,
             // Unused by allocateAmount, but the constructor requires it.
             $this->createStub(\Solidarity\Period\Repository\PeriodRepository::class),
+            $this->createStub(\Solidarity\Period\Service\Period::class),
             $this->createStub(\Skeletor\Core\Activity\Service\Activity::class),
         );
     }

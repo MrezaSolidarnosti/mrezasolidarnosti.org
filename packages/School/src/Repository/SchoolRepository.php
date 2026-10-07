@@ -17,6 +17,12 @@ class SchoolRepository extends TableViewRepository
         parent::__construct($entityManager);
     }
 
+    /** `d` lets the table filter on delegates: `d.id => <id>` or `d.id => not_null`. */
+    public function getJoinableEntities(): array
+    {
+        return ['delegates' => 'd'];
+    }
+
     public function getSearchableColumns(): array
     {
         return ['a.name'];

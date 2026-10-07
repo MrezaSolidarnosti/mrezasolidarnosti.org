@@ -38,16 +38,60 @@ class Beneficiary extends TableView
     public function fetchTableData(
         $search, $filter, $offset, $limit, $order, $uncountableFilter = null, $idsToInclude = [], $idsToExclude = []
     ) {
-        // delegate can only see beneficiaries added by them
-        if ($this->getUserSession()->getLoggedInEntityType() === 'delegate') {
-            $uncountableFilter['createdBy'] = $this->getUserSession()->getLoggedInUserId();
-        }
+        $uncountableFilter = $this->scopeToLoggedInDelegate($uncountableFilter ?? []);
         $items = $this->repo->fetchTableData($search, $filter, $offset, $limit, $order, $uncountableFilter, $idsToInclude, $idsToExclude);
         return [
             'count' => $items['count'],
             'entities' => $this->prepareEntities($items['items']),
             'countColumnData' => $items['countColumnData']
         ];
+    }
+
+    /** Same scope for the total as for the page, or a delegate's pager counts the whole network. */
+    public function getTotalCount(array $uncountableFilter = [])
+    {
+        return parent::getTotalCount($this->scopeToLoggedInDelegate($uncountableFilter));
+    }
+
+    /** A delegate sees the beneficiaries of their schools - see BeneficiaryRepository::addDelegateScope(). */
+    private function scopeToLoggedInDelegate(array $uncountableFilter): array
+    {
+        if ($this->getUserSession()->getLoggedInEntityType() === 'delegate') {
+            $uncountableFilter[BeneficiaryRepository::DELEGATE_SCOPE] = (int) $this->getUserSession()->getLoggedInUserId();
+        }
+
+        return $uncountableFilter;
+    }
+
+    /**
+     * BeneficiaryRepository::addDelegateScope() for one loaded entity: a school beneficiary
+     * belongs to every delegate of the school, a school-less (MSPR) one to its createdBy.
+     */
+    public function isVisibleToDelegate(?BeneficiaryEntity $beneficiary, int $delegateId): bool
+    {
+        if (!$beneficiary) {
+            return false;
+        }
+        if ($beneficiary->school) {
+            return $beneficiary->school->hasDelegate($delegateId);
+        }
+
+        return $beneficiary->createdBy?->getId() === $delegateId;
+    }
+
+    /**
+     * Who stands behind this beneficiary: every delegate of their school, or for a
+     * school-less (MSPR) beneficiary the one assigned directly.
+     *
+     * @return \Solidarity\Delegate\Entity\Delegate[]
+     */
+    private function delegatesOf(BeneficiaryEntity $beneficiary): array
+    {
+        if ($beneficiary->school) {
+            return $beneficiary->school->delegates->toArray();
+        }
+
+        return $beneficiary->createdBy ? [$beneficiary->createdBy] : [];
     }
 
     public function prepareEntities($entities)
@@ -91,21 +135,18 @@ class Beneficiary extends TableView
                 'school' => $beneficiary->school?->name,
                 'sumAmount' => number_format($totalAmount, 0),
                 'currentAmount' => number_format($confirmedAmount, 0),
-                // The school's delegate, not createdBy. The column asks whether this
-                // beneficiary has a verified delegate behind them, and for MSP that is a
-                // property of the school — reading createdBy reported "Ne" for a school with a
-                // perfectly good verified delegate whenever the beneficiary had been orphaned
-                // (Delegate::update() nullifies createdBy across the delegate whenever any
-                // school leaves their list), which says nothing about whether a delegate exists.
-                //
-                // Falls back to createdBy when there is no school: MSPR has none, and its
-                // beneficiaries carry their delegate directly. Same precedence the save path
-                // uses in Beneficiary\Filter, so the column agrees with what the form stores.
+                // The school's delegates, not createdBy: for MSP whether a verified delegate
+                // stands behind a beneficiary is a property of the school, and createdBy is only
+                // the contact on record. Falls back to createdBy when there is no school - MSPR
+                // has none, and its beneficiaries carry their delegate directly.
                 'delegateVerified' => $this->hasVerifiedDelegate($beneficiary) ? 'Da' : 'Ne',
                 'pm.accountNumber' => $methods,//$beneficiary->accountNumber,
                 's.city' => $beneficiary->school?->city?->name,
                 'status' => \Solidarity\Beneficiary\Entity\Beneficiary::getHrStatus($beneficiary->status),
-                'createdBy' => sprintf('<a href="/delegate/view/id=%d">%s</a>', $beneficiary->createdBy?->id, $beneficiary->createdBy?->name),
+                'createdBy' => implode(', ', array_map(
+                    fn ($d) => sprintf('<a href="/delegate/view/id=%d">%s</a>', $d->id, htmlspecialchars($d->name)),
+                    $this->delegatesOf($beneficiary)
+                )),
                 'createdAt' => $beneficiary->getCreatedAt()->format('d.m.Y'),
             ];
             $items[] = [
@@ -119,15 +160,19 @@ class Beneficiary extends TableView
     /**
      * Is there a verified delegate standing behind this beneficiary?
      *
-     * The school owns the answer when there is one — that is what the MSP delegate structure
-     * means, and it stays true even if the beneficiary's own createdBy has been nulled. Only a
-     * school-less beneficiary (MSPR) falls back to the delegate assigned directly to them.
+     * The school owns the answer when there is one - any one of its delegates being verified
+     * is enough. Only a school-less beneficiary (MSPR) falls back to the delegate assigned
+     * directly to them.
      */
     private function hasVerifiedDelegate(BeneficiaryEntity $beneficiary): bool
     {
-        $delegate = $beneficiary->school?->delegate ?? $beneficiary->createdBy;
+        foreach ($this->delegatesOf($beneficiary) as $delegate) {
+            if ($delegate->status === \Solidarity\Delegate\Entity\Delegate::STATUS_VERIFIED) {
+                return true;
+            }
+        }
 
-        return $delegate?->status === \Solidarity\Delegate\Entity\Delegate::STATUS_VERIFIED;
+        return false;
     }
 
     public function compileTableColumns()

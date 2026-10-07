@@ -115,12 +115,14 @@ When creating a transaction, the amount is `min()` of three constraints:
 - `Beneficiary::getByPeriod($periodId)` — beneficiaries registered for a period
 - `Beneficiary::fetchTableData()` — applies delegate-based filtering (delegates see only their created beneficiaries)
 
-### Delegate Auto-Assignment
-When a delegate is created or updated with school assignments:
-- `assignOrphanedBeneficiariesToDelegate($schoolId, $delegateId)` — beneficiaries in that school with no owner (`createdBy_id IS NULL`) get assigned
-- When any school is removed: `nullifyCreatedByForDelegate($delegateId)` releases **all** of that delegate's beneficiaries — it is scoped to the delegate, not to the school that triggered it
-- Because of that asymmetry, `Delegate::update()` reclaims the **whole new school list** (not just the additions) whenever a removal happened, otherwise removing one school of two silently orphans the other. Without a removal it reclaims only the additions, so an unrelated edit can't sweep up beneficiaries an admin deliberately unassigned. See `DelegateSchoolDiffTest`.
-- `sendRoundStartMail` is a UI checkbox, not a column — `update()` unsets it and sets `formLinkSent = 1` instead
+### Delegates, schools and who sees what
+A school can have **several delegates, all at the same level** (to share the work of a big school). `Delegate::$schools` is the owning `ManyToMany` side (join table `delegate_school`, both FKs cascade); `School::$delegates` is the inverse, plus `School::hasDelegate($id)`. Assignments are edited only on the delegate form; the school form shows its delegates read-only.
+
+**Access follows the school, not `createdBy`.** A delegate sees a beneficiary when it belongs to one of their schools, or - school-less (MSPR) only - when `createdBy` is them. One definition, two forms; change them together:
+- DQL: `BeneficiaryRepository::addDelegateScope($qb, $beneficiaryAlias, $delegateId)` - used by the beneficiary list, the transaction list (on the `b` join) and `TransactionRepository::belongsToDelegate()`. Services pass it as the uncountable key `BeneficiaryRepository::DELEGATE_SCOPE`; the repositories consume it in `applyCustomFilters()`. The staff "Delegat" column filter (`createdBy`) goes through the same rule.
+- PHP: `Beneficiary::isVisibleToDelegate($beneficiary, $delegateId)` - `BeneficiaryController::mayAccess()`.
+
+For a school beneficiary `createdBy` is only the **contact on record**: `Beneficiary\Filter` keeps the posted delegate if they are one of the school's, otherwise takes the school's lowest-id delegate; a school with no delegates leaves it null and the validator refuses. There is no auto-assign/release when a delegate's schools change - the old `assignOrphanedBeneficiariesToDelegate` / `nullifyCreatedByForDelegate` pair is gone, because nothing depends on `createdBy` for school beneficiaries any more. `DelegateScopeTest` pins the whole rule against a real DB.
 - Delegates can only see their own account in the delegate list (`fetchTableData` override)
 
 ### Mailer Service (`packages/Mailer/src/Service/Mailer.php`)
@@ -178,7 +180,7 @@ Delegates have limited access (role 10). When giving delegates access to a resou
 2. Add a view permission (e.g., `'school.view'`) that includes role `10`
 3. Map specific routes to the view permission (before any wildcard catch-all)
 4. In the controller constructor: `$this->tableViewConfig['createButton'] = false` for delegates
-5. Filter data: use `$this->uncountableFilters['delegate'] = $delegateId` (scalar values only — arrays not supported in uncountableFilters)
+5. Filter data: `$this->uncountableFilters['<field or alias.field>'] = $value` (scalar, array -> `IN`, `'null'`/`'not_null'`; dotted keys address a `getJoinableEntities()` alias, e.g. schools use `d.id` for their delegates). Anything the generic `field = value` cannot express (an OR, a subquery) goes in the repository's `applyCustomFilters()` hook - it runs for both the page and `getTotalCount()`, so the pager agrees with the rows
 6. Pass `readOnly` flag to templates, use named params: `new Text(name: 'x', value: $v, label: 'X', readOnly: $readOnly)`
 7. Block form access to non-assigned entities with redirect
 
@@ -265,7 +267,7 @@ Read `references/testing.md` for the full harness, helpers, run commands, the co
 
 The app runs as **two apps off one bootstrap** — `getenv('APPLICATION')` is `frontend` (solidarity.local) or `backend` (solidarityadmin.local), both loading `config/bootstrap.php`. **Donor auth is magic-link** on the frontend (`Donor implements AuthenticatableInterface`, `ROLE_DONOR=20`; actions Register/VerifyEmail/Login). Dev mail is caught by **Mailpit** (http://192.168.25.43:8025) via the `Mailer`'s `APPLICATION_ENV` guard. Cron runs CLI Actions (`deploy/crontab`, `php public/cli.php createTransactions run`). Legacy data comes from the Symfony **solidaritySF** app via `MigrateLegacy` (`php public/cli.php migrateLegacy run|commit`).
 
-Read `references/operations.md` for the details and the load-bearing gotchas: the **backend-only DI block** (auth bindings must be moved out for frontend flows), the **OPcache-needs-FPM-restart** trap after bootstrap edits, the donor magic-link wiring, the Mailpit/MailerSend guard, the cron env requirement, and the legacy entity mapping. It also carries the **open decisions** — questions raised and deliberately left for the user to answer (the one-time path persisting no payment method, `donorConfirmed`, the delegate nullify scoping, `compileXlsxTransactionList` having no caller). Check that list before assuming something half-finished is a bug.
+Read `references/operations.md` for the details and the load-bearing gotchas: the **backend-only DI block** (auth bindings must be moved out for frontend flows), the **OPcache-needs-FPM-restart** trap after bootstrap edits, the donor magic-link wiring, the Mailpit/MailerSend guard, the cron env requirement, and the legacy entity mapping. It also carries the **open decisions** — questions raised and deliberately left for the user to answer (the one-time path persisting no payment method, `donorConfirmed`, `compileXlsxTransactionList` having no caller). Check that list before assuming something half-finished is a bug.
 
 ### The urgent allocation round
 

@@ -153,7 +153,7 @@
 
 ### Relationships
 - `ManyToOne` → **School** (school)
-- `ManyToOne` → **Delegate** (createdBy)
+- `ManyToOne` → **Delegate** (createdBy) - owner only for school-less (MSPR) beneficiaries; for a school beneficiary just the contact (one of the school's delegates)
 - `OneToMany` → **RegisteredPeriods** (registeredPeriods)
 - `OneToMany` → **Transaction** (transactions)
 - `OneToMany` → **PaymentMethod** (paymentMethods)
@@ -228,7 +228,7 @@ Uses same TYPE_ constants as Donor PaymentMethod.
 | verifiedBy | string, nullable | |
 
 ### Relationships
-- `OneToMany` → **School** (schools)
+- `ManyToMany` → **School** (schools) - owning side, join table `delegate_school`
 - `ManyToMany` → **Project** (projects)
 
 ### Status Constants
@@ -243,10 +243,9 @@ Uses same TYPE_ constants as Donor PaymentMethod.
 - Supports magic link login via `DelegateLoginController`
 - Password-less — uses email-based magic links only
 
-### Auto-Assignment Behavior
-When a delegate is saved with schools:
-- Orphaned beneficiaries (no `createdBy`) in those schools are auto-assigned to this delegate
-- When schools are removed from delegate, `createdBy` is nullified for beneficiaries in those schools
+### Visibility
+- A delegate sees every beneficiary (and transaction) of each of their schools, shared with the school's other delegates, plus school-less beneficiaries whose `createdBy` is them - `BeneficiaryRepository::addDelegateScope()`
+- Changing a delegate's schools rewrites nothing on beneficiaries; access simply follows the school list
 - Delegates can only see their own record in the delegate list (service overrides `fetchTableData`)
 
 ---
@@ -260,7 +259,7 @@ When a delegate is saved with schools:
 - `OneToMany` → **Beneficiary** (beneficiaries)
 - `ManyToOne` → **SchoolType** (type)
 - `ManyToOne` → **City** (city)
-- `ManyToOne` → **Delegate** (delegate)
+- `ManyToMany` → **Delegate** (delegates) - inverse side; several delegates per school, all at the same level. `hasDelegate(int $id)`
 
 ---
 

@@ -518,6 +518,7 @@ final class CreateBalancedForDonorTest extends IntegrationTestCase
             new BeneficiaryRepository($em),
             // Unused by createBalancedForDonor, but the constructor requires it.
             $this->createStub(PeriodRepository::class),
+            $this->createStub(\Solidarity\Period\Service\Period::class),
             $this->createStub(\Skeletor\Core\Activity\Service\Activity::class),
         );
     }

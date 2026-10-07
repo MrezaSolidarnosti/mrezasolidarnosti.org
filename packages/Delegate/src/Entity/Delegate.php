@@ -39,7 +39,12 @@ class Delegate implements AuthenticatableInterface
     public ?string $ipv4;
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     public ?\DateTime $lastLogin;
-    #[ORM\OneToMany(targetEntity: School::class, mappedBy: 'delegate')]
+    // Owning side of delegate <-> school. ManyToMany so a big school can be shared by several
+    // delegates; join rows go when either side is deleted (the FKs cascade).
+    #[ORM\ManyToMany(targetEntity: School::class, inversedBy: 'delegates')]
+    #[ORM\JoinTable(name: 'delegate_school')]
+    #[ORM\JoinColumn(name: 'delegate_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'school_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     public Collection $schools;
     #[ORM\ManyToMany(targetEntity: Project::class, inversedBy: 'delegates')]
     #[ORM\JoinTable(name: 'delegate_project')]

@@ -333,6 +333,7 @@ final class BeneficiaryFormTest extends IntegrationTestCase
                 $this->createStub(ProjectService::class),
                 new BeneficiaryRepository($em),
                 new PeriodRepository($em),
+                $this->createStub(\Solidarity\Period\Service\Period::class),
                 $this->createStub(\Skeletor\Core\Activity\Service\Activity::class),
             ),
             new Redaction($em),

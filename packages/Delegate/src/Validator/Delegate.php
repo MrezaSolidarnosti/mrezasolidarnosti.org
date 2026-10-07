@@ -22,8 +22,6 @@ class Delegate implements ValidatorInterface
 
     private $delegateRepository;
 
-    private $schoolRepository;
-
     private $messages = [];
 
     /**
@@ -33,12 +31,10 @@ class Delegate implements ValidatorInterface
      */
     public function __construct(
         Csrf $csrf,
-        \Solidarity\Delegate\Repository\DelegateRepository $delegateRepository,
-        \Solidarity\School\Repository\SchoolRepository $schoolRepository
+        \Solidarity\Delegate\Repository\DelegateRepository $delegateRepository
     ) {
         $this->csrf               = $csrf;
         $this->delegateRepository = $delegateRepository;
-        $this->schoolRepository   = $schoolRepository;
     }
 
     /**
@@ -64,18 +60,8 @@ class Delegate implements ValidatorInterface
                 $valid = false;
             }
 
-            // Check that each school is not already assigned to another delegate
-            $currentDelegateId = isset($data['id']) ? (int) $data['id'] : null;
-            foreach (array_unique($schoolIds) as $schoolId) {
-                $school = $this->schoolRepository->getById($schoolId);
-                if ($school && $school->delegate && $school->delegate->getId() !== $currentDelegateId) {
-                    $this->messages['schools'][] = sprintf(
-                        'Škola "%s" je već dodeljena drugom delegatu.',
-                        $school->name
-                    );
-                    $valid = false;
-                }
-            }
+            // No "already assigned to another delegate" check: a school may have several
+            // delegates, all at the same level.
         }
 
         if (!$this->csrf->validate($data)) {

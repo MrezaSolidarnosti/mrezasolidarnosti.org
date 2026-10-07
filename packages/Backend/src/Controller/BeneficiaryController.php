@@ -128,8 +128,9 @@ class BeneficiaryController extends AjaxCrudController
      * May the logged-in user work on this beneficiary?
      *
      * Staff and admins work across the whole network. A delegate is confined to the
-     * beneficiaries they own — the same rule Beneficiary::fetchTableData() applies to the
-     * list, applied here to a single record fetched by id.
+     * beneficiaries of their schools (plus school-less ones assigned to them) — the same rule
+     * Beneficiary::fetchTableData() applies to the list, applied here to a single record
+     * fetched by id.
      *
      * A missing record answers false: "not yours" and "does not exist" must be
      * indistinguishable, or the form becomes a way to probe for ids.
@@ -140,7 +141,7 @@ class BeneficiaryController extends AjaxCrudController
             return true;
         }
 
-        return $beneficiary?->createdBy?->getId() === (int) $this->getSession()->getStorage()->offsetGet('loggedIn');
+        return $this->service->isVisibleToDelegate($beneficiary, (int) $this->getSession()->getStorage()->offsetGet('loggedIn'));
     }
 
     /**

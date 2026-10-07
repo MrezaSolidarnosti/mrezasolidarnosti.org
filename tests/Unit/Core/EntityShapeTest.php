@@ -87,7 +87,7 @@ final class EntityShapeTest extends TestCase
                 'name',
             ]],
             'School' => [\Solidarity\School\Entity\School::class, [
-                'beneficiaries', 'city', 'delegate', 'havePayoutPriority', 'name', 'processing', 'type',
+                'beneficiaries', 'city', 'delegates', 'havePayoutPriority', 'name', 'processing', 'type',
             ]],
             'School type' => [\Solidarity\School\Entity\SchoolType::class, [
                 'name', 'schools',

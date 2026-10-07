@@ -2,7 +2,9 @@
 namespace Solidarity\Transaction\Repository;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
 use Solidarity\Beneficiary\Entity\Beneficiary;
+use Solidarity\Beneficiary\Repository\BeneficiaryRepository;
 use Solidarity\Donor\Entity\Donor;
 use Solidarity\Period\Entity\Period;
 use Solidarity\Transaction\Entity\Project;
@@ -256,7 +258,7 @@ class TransactionRepository extends TableViewRepository
     }
 
     /**
-     * Does this transaction belong to a beneficiary the given delegate owns?
+     * Does this transaction belong to a beneficiary the given delegate works with?
      *
      * Scoping the table alone is not access control — it only decides what is listed. Every
      * write endpoint takes an id straight off the URL or the request body, so without this the
@@ -269,9 +271,8 @@ class TransactionRepository extends TableViewRepository
             ->from(static::ENTITY, 't')
             ->join('t.beneficiary', 'b')
             ->where('t.id = :transactionId')
-            ->andWhere('b.createdBy = :delegateId')
-            ->setParameter('transactionId', $transactionId)
-            ->setParameter('delegateId', $delegateId);
+            ->setParameter('transactionId', $transactionId);
+        BeneficiaryRepository::addDelegateScope($qb, 'b', $delegateId);
 
         return (int) $qb->getQuery()->getSingleScalarResult() > 0;
     }
@@ -282,6 +283,15 @@ class TransactionRepository extends TableViewRepository
             'donor' => 'd',
             'beneficiary' => 'b',
         ];
+    }
+
+    /** BeneficiaryRepository::DELEGATE_SCOPE, applied to the `b` (beneficiary) join. */
+    protected function applyCustomFilters(QueryBuilder $qb, array &$filter, array &$uncountableFilter): void
+    {
+        if (isset($uncountableFilter[BeneficiaryRepository::DELEGATE_SCOPE])) {
+            BeneficiaryRepository::addDelegateScope($qb, 'b', (int) $uncountableFilter[BeneficiaryRepository::DELEGATE_SCOPE]);
+            unset($uncountableFilter[BeneficiaryRepository::DELEGATE_SCOPE]);
+        }
     }
 
     public function getSearchableColumns(): array

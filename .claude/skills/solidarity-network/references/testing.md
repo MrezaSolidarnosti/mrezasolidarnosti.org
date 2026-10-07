@@ -41,7 +41,7 @@ Extend `IntegrationTestCase`. It:
 
 ### Entity-builder helpers (on the base class)
 
-`createProject`, `createPeriod`, `createDonor`, `createBeneficiary` (optional `school`/`createdBy`), `createTransaction`, `createDelegate`, `createCity`, `createSchool`, `createSchoolType(int $id, ...)`, `createDonorPaymentMethod`, `createBeneficiaryPaymentMethod`, `createRegisteredPeriod`, `createPage`, `linkDonorToProject`, `backdateTransaction`. Each persists + flushes and returns the managed entity.
+`createProject`, `createPeriod`, `createDonor`, `createBeneficiary` (optional `school`/`createdBy`), `createTransaction`, `createDelegate`, `createCity`, `createSchool`, `assignSchool($delegate, $school)` (sets both sides of the ManyToMany), `createSchoolType(int $id, ...)`, `createDonorPaymentMethod`, `createBeneficiaryPaymentMethod`, `createRegisteredPeriod`, `createPage`, `linkDonorToProject`, `backdateTransaction`. Each persists + flushes and returns the managed entity.
 
 **Builders must be idempotent where a UNIQUE constraint exists.** `createCity()` reuses an existing `'Test City'` rather than inserting a second one. This is not a nicety: a duplicate-key error inside a flush **closes the EntityManager**, and every subsequent test in the process dies with "The EntityManager is closed" — one bad fixture produced 114 failures. `setUp()` also rebuilds the EM if it finds it closed, so a failure stays local to the test that caused it.
 
@@ -69,7 +69,7 @@ Base class for the donor-facing AJAX actions. Seeds `$_SESSION`/`$_SERVER`, expo
 - **`CSRF::validate()` regenerates the token whenever it succeeds** (`vendor/volnix/csrf`), so a token is good for exactly one request. Two successful POSTs in one test must carry the token the previous response returned — `FrontendActionTestCase::postWithToken()` — and the same is true of the real dashboard, which has to read the new token out of each response rather than reusing the one rendered into the page.
 - **`createStub` vs `createMock`** is enforced by `failOnWarning`: a `createMock` with no `expects()` raises a "no expectations" notice. Rule of thumb — stub when you're supplying values, mock when you're asserting calls.
 - **`TestCase::run()` is final.** A helper method named `run()` is a fatal error, not a test failure; pick another name.
-- **Ordering across two doubles** can't be expressed with `expects()->after()`. Have both doubles append to one array on the test case and assert the array (see `DelegateSchoolDiffTest`).
+- **Ordering across two doubles** can't be expressed with `expects()->after()`. Have both doubles append to one array on the test case and assert the array.
 - **`tests/bootstrap.php` must define the constants the app expects** — `APP_PATH`, `DATA_PATH`, `FRONT_ASSET_URL`, `ADMIN_ASSET_URL`, each guarded with `defined() ||`. Code paths that build asset URLs or file paths (the email theme, the XLSX writer) fatal without them.
 - **Stubbed `Translator` returns `''`**, so any label built through it vanishes and the assertion fails on an empty string with no clue why. Always `->willReturnArgument(0)`.
 - **`phpunit.xml` has `displayDetailsOnPhpunitDeprecations` and `displayDetailsOnPhpunitNotices` on.** With `failOnWarning="true"` a warning is a failure, so keep the details visible or you get a red suite with no message.

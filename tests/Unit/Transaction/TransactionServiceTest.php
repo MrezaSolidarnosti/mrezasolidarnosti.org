@@ -144,6 +144,7 @@ final class TransactionServiceTest extends TestCase
             $this->createStub(ProjectService::class),
             $beneficiaryRepo,
             $periodRepo,
+            $this->createStub(\Solidarity\Period\Service\Period::class),
             $this->createStub(\Skeletor\Core\Activity\Service\Activity::class),
         );
     }

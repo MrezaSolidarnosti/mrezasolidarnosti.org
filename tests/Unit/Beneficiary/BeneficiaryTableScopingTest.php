@@ -21,17 +21,19 @@ use Solidarity\Transaction\Service\Project;
  *
  * This is a permission boundary, not a convenience filter: delegates share one dashboard
  * with staff, and the only thing stopping a delegate from reading every beneficiary in
- * the country is that fetchTableData() injects createdBy into the query. The assertions
+ * the country is that fetchTableData() injects the delegate scope into the query (what the
+ * scope means - the beneficiaries of the delegate's schools - is pinned against a real
+ * database in DelegateScopeTest). The assertions
  * below are on the arguments handed to the repository, because that is where the boundary
  * actually is — anything that reaches the repository unscoped is already a leak.
  */
 #[CoversClass(BeneficiaryService::class)]
 final class BeneficiaryTableScopingTest extends TestCase
 {
-    public function testADelegateOnlySeesBeneficiariesTheyCreated(): void
+    public function testADelegateIsScopedToThemselves(): void
     {
         $repo = $this->repositoryExpecting(function (?array $uncountableFilter): void {
-            self::assertSame(42, $uncountableFilter['createdBy'] ?? null);
+            self::assertSame(42, $uncountableFilter[BeneficiaryRepository::DELEGATE_SCOPE] ?? null);
         });
 
         $this->service($repo, 'delegate', 42)->fetchTableData(null, [], 0, 10, []);
@@ -40,7 +42,7 @@ final class BeneficiaryTableScopingTest extends TestCase
     public function testStaffSeeEveryBeneficiary(): void
     {
         $repo = $this->repositoryExpecting(function (?array $uncountableFilter): void {
-            self::assertArrayNotHasKey('createdBy', $uncountableFilter ?? []);
+            self::assertArrayNotHasKey(BeneficiaryRepository::DELEGATE_SCOPE, $uncountableFilter ?? []);
         });
 
         $this->service($repo, 'user', 1)->fetchTableData(null, [], 0, 10, []);
@@ -51,22 +53,46 @@ final class BeneficiaryTableScopingTest extends TestCase
         // The scope must survive alongside the caller's own filters rather than replacing
         // them — overwriting the array would widen the result set back out.
         $repo = $this->repositoryExpecting(function (?array $uncountableFilter): void {
-            self::assertSame(42, $uncountableFilter['createdBy'] ?? null);
+            self::assertSame(42, $uncountableFilter[BeneficiaryRepository::DELEGATE_SCOPE] ?? null);
             self::assertSame(7, $uncountableFilter['school'] ?? null);
         });
 
         $this->service($repo, 'delegate', 42)->fetchTableData(null, [], 0, 10, [], ['school' => 7]);
     }
 
-    public function testADelegateCannotWidenTheScopeByPassingTheirOwnCreatedByFilter(): void
+    public function testADelegateCannotWidenTheScopeByPassingTheirOwnScope(): void
     {
         // The injected value wins, so a crafted request asking for another delegate's
         // beneficiaries still comes back scoped to the caller.
         $repo = $this->repositoryExpecting(function (?array $uncountableFilter): void {
-            self::assertSame(42, $uncountableFilter['createdBy'] ?? null);
+            self::assertSame(42, $uncountableFilter[BeneficiaryRepository::DELEGATE_SCOPE] ?? null);
         });
 
-        $this->service($repo, 'delegate', 42)->fetchTableData(null, [], 0, 10, [], ['createdBy' => 999]);
+        $this->service($repo, 'delegate', 42)->fetchTableData(null, [], 0, 10, [], [BeneficiaryRepository::DELEGATE_SCOPE => 999]);
+    }
+
+    public function testTheTotalIsScopedLikeThePage(): void
+    {
+        // AjaxCrudController counts through getTotalCount() with its own filters, not the
+        // service's - unscoped, a delegate's pager reported the size of the whole network.
+        $repo = $this->createMock(BeneficiaryRepository::class);
+        $repo->expects(self::once())
+            ->method('getTotalCount')
+            ->with(self::callback(fn (array $f) => ($f[BeneficiaryRepository::DELEGATE_SCOPE] ?? null) === 42))
+            ->willReturn(3);
+
+        self::assertSame(3, $this->service($repo, 'delegate', 42)->getTotalCount([]));
+    }
+
+    public function testStaffTotalsAreUnscoped(): void
+    {
+        $repo = $this->createMock(BeneficiaryRepository::class);
+        $repo->expects(self::once())
+            ->method('getTotalCount')
+            ->with([])
+            ->willReturn(10);
+
+        self::assertSame(10, $this->service($repo, 'user', 1)->getTotalCount([]));
     }
 
     // ---- helpers ------------------------------------------------------------

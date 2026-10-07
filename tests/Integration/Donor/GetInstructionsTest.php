@@ -262,6 +262,7 @@ final class GetInstructionsTest extends IntegrationTestCase
                 $this->createStub(ProjectService::class),
                 new BeneficiaryRepository($em),
                 new PeriodRepository($em),
+                $this->createStub(\Solidarity\Period\Service\Period::class),
                 $this->createStub(\Skeletor\Core\Activity\Service\Activity::class),
             ),
             // Real: whether a row gets a QR is part of the payload contract.

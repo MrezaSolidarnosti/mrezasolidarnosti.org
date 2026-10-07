@@ -14,11 +14,11 @@ use Solidarity\Tests\Integration\IntegrationTestCase;
  * What survives a delegate being deleted.
  *
  * Delegates leave rows behind them in three places, and each is meant to react differently.
- * Before this was pinned, `school.delegate_id` had no ON DELETE rule at all, so MySQL
- * defaulted to RESTRICT and a delegate holding any school could not be deleted — while
+ * Before this was pinned, the school -> delegate foreign key had no ON DELETE rule at all, so
+ * MySQL defaulted to RESTRICT and a delegate holding any school could not be deleted — while
  * `AjaxCrudController::delete()` swallowed the constraint violation into a generic "could
- * not delete" with its logger call commented out, so nothing said why. Beneficiaries were
- * the natural suspect and never the cause.
+ * not delete" with its logger call commented out, so nothing said why. The link now lives in
+ * `delegate_school`, whose rows cascade with either side.
  *
  * The schema here is built by Doctrine SchemaTool from the mappings, so these exercise the
  * real ON DELETE rules rather than a hand-written test schema.
@@ -31,8 +31,7 @@ final class DelegateDeletionTest extends IntegrationTestCase
         // The case that was impossible. A school outliving its delegate is a normal state.
         $delegate = $this->createDelegate();
         $school = $this->createSchool($this->createCity('Nis'), name: 'Osnovna skola');
-        $school->delegate = $delegate;
-        $this->em()->flush();
+        $this->assignSchool($delegate, $school);
         $schoolId = $school->getId();
 
         $this->em()->remove($delegate);
@@ -41,7 +40,7 @@ final class DelegateDeletionTest extends IntegrationTestCase
 
         $survivor = $this->em()->find(School::class, $schoolId);
         self::assertNotNull($survivor, 'the school must outlive its delegate');
-        self::assertNull($survivor->delegate, 'and be left unassigned rather than dangling');
+        self::assertCount(0, $survivor->delegates, 'and be left unassigned rather than dangling');
     }
 
     public function testTheBeneficiariesADelegateRegisteredOutliveThem(): void
@@ -80,17 +79,16 @@ final class DelegateDeletionTest extends IntegrationTestCase
 
     public function testDeletingOneDelegateLeavesAnothersSchoolAlone(): void
     {
-        // SET NULL is scoped by the foreign key, but a cleanup written as a broad UPDATE
+        // The cascade is scoped by the foreign key, but a cleanup written as a broad DELETE
         // would not be — worth pinning which one is in force.
         $city = $this->createCity('Kragujevac');
         $going = $this->createDelegate();
         $staying = $this->createDelegate();
 
         $theirs = $this->createSchool($city, name: 'Njihova skola');
-        $theirs->delegate = $going;
+        $this->assignSchool($going, $theirs);
         $ours = $this->createSchool($city, name: 'Nasa skola');
-        $ours->delegate = $staying;
-        $this->em()->flush();
+        $this->assignSchool($staying, $ours);
         $oursId = $ours->getId();
         $stayingId = $staying->getId();
 
@@ -99,6 +97,25 @@ final class DelegateDeletionTest extends IntegrationTestCase
         $this->em()->clear();
 
         $untouched = $this->em()->find(School::class, $oursId);
-        self::assertSame($stayingId, $untouched->delegate?->getId());
+        self::assertTrue($untouched->hasDelegate($stayingId));
+    }
+
+    public function testDeletingOneOfASchoolsDelegatesKeepsTheOthers(): void
+    {
+        $shared = $this->createSchool($this->createCity('Subotica'), name: 'Zajednicka skola');
+        $going = $this->createDelegate();
+        $staying = $this->createDelegate();
+        $this->assignSchool($going, $shared);
+        $this->assignSchool($staying, $shared);
+        $sharedId = $shared->getId();
+        $stayingId = $staying->getId();
+
+        $this->em()->remove($going);
+        $this->em()->flush();
+        $this->em()->clear();
+
+        $school = $this->em()->find(School::class, $sharedId);
+        self::assertCount(1, $school->delegates);
+        self::assertTrue($school->hasDelegate($stayingId));
     }
 }

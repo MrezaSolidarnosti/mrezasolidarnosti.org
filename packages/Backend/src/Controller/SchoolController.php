@@ -91,7 +91,8 @@ class SchoolController extends AjaxCrudController
     public function tableHandler()
     {
         if ($this->isDelegateSession()) {
-            $this->uncountableFilters['delegate'] = $this->getSession()->getStorage()->offsetGet('loggedIn');
+            // `d` is SchoolRepository's join on School::$delegates.
+            $this->uncountableFilters['d.id'] = $this->getSession()->getStorage()->offsetGet('loggedIn');
         }
         return parent::tableHandler();
     }

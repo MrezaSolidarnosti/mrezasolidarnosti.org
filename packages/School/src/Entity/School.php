@@ -42,17 +42,27 @@ class School
         // Every other entity initialises its collections here, so `new School()` is safe
         // for factories and fixtures without waiting for Doctrine to hydrate.
         $this->beneficiaries = new ArrayCollection();
+        $this->delegates = new ArrayCollection();
     }
 
-    // SET NULL, not the default RESTRICT: a school outliving its delegate is a normal state
-    // (the column is nullable, and the beneficiary form's school search filters on
-    // delegate => not_null precisely because delegate-less schools exist). Without it, a
-    // delegate holding any school simply could not be deleted, and AjaxCrudController turns
-    // the constraint violation into a generic "could not delete" with the logging commented
-    // out — so the reason never reached anyone.
-    #[ORM\ManyToOne(targetEntity: Delegate::class, inversedBy: 'schools')]
-    #[ORM\JoinColumn(name: 'delegate_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
-    public ?Delegate $delegate = null;
+    public function hasDelegate(int $delegateId): bool
+    {
+        foreach ($this->delegates as $delegate) {
+            if ($delegate->getId() === $delegateId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Several delegates can share a school, all at the same level: the point is to split the
+    // work of a big school, not to rank people. Delegate::$schools is the owning side (the
+    // delegate form is where assignments are edited), so nothing written here is persisted.
+    // A school with no delegates is a normal state - the beneficiary form's school search
+    // filters on `d.id => not_null` precisely because such schools exist.
+    #[ORM\ManyToMany(targetEntity: Delegate::class, mappedBy: 'schools')]
+    public Collection $delegates;
 
     #[ORM\Column(name:'have_payout_priority')]
     private bool $havePayoutPriority = false;
