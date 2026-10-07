@@ -41,7 +41,6 @@ class Beneficiary extends TableView
         $uncountableFilter = $this->scopeToLoggedInDelegate($uncountableFilter ?? []);
         $items = $this->repo->fetchTableData($search, $filter, $offset, $limit, $order, $uncountableFilter, $idsToInclude, $idsToExclude);
         return [
-            'count' => $items['count'],
             'entities' => $this->prepareEntities($items['items']),
             'countColumnData' => $items['countColumnData']
         ];
