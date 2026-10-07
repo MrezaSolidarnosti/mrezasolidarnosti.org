@@ -7,6 +7,7 @@ export default class Educator extends CrudPage {
     #formTabs;
     #formAction;
     #projectPeriodFilterCleanup = null;
+    #beneficiaryPeriodFilterCleanup = null;
     #paymentMethodPreviewCleanup = null;
 
     constructor() {
@@ -25,6 +26,7 @@ export default class Educator extends CrudPage {
 
     onFormReady(data) {
         this.#initProjectPeriodFilter();
+        this.#initBeneficiaryPeriodFilter();
         this.#initPaymentMethodPreview();
     }
 
@@ -74,6 +76,10 @@ export default class Educator extends CrudPage {
             this.#projectPeriodFilterCleanup();
             this.#projectPeriodFilterCleanup = null;
         }
+        if (this.#beneficiaryPeriodFilterCleanup) {
+            this.#beneficiaryPeriodFilterCleanup();
+            this.#beneficiaryPeriodFilterCleanup = null;
+        }
         if (this.#paymentMethodPreviewCleanup) {
             this.#paymentMethodPreviewCleanup();
             this.#paymentMethodPreviewCleanup = null;
@@ -120,6 +126,45 @@ export default class Educator extends CrudPage {
 
         this.#projectPeriodFilterCleanup = () => {
             projectSelect.removeEventListener('change', filterPeriods);
+        };
+    }
+
+    /**
+     * The "Osteceni" search lists only beneficiaries registered for the selected period.
+     *
+     * The search sends its filters as `filter[key]`, and BeneficiaryRepository joins
+     * registeredPeriods as `rp`, so `rp.period = <id>` needs nothing server-side. The filters
+     * are read when the component is built, so changing the data attribute would do nothing:
+     * setConfigProperty() is the component's own way to replace them, and every search opened
+     * afterwards uses the new set. With no period chosen the search stays unfiltered.
+     */
+    #initBeneficiaryPeriodFilter() {
+        const mapEl = document.getElementById('transactionPeriodMap');
+        const context = mapEl ? mapEl.parentElement : document;
+        const periodSelect = context.querySelector('[name="period"]');
+        const beneficiaryInput = context.querySelector('[name="beneficiary"]');
+        if (!periodSelect || !beneficiaryInput) return;
+
+        const container = beneficiaryInput.closest('.ajaxInputSearch');
+        const search = this.getAjaxInputSearches()
+            .find(s => s.getInput()?.closest('.ajaxInputSearch') === container);
+        if (!search) return;
+
+        const applyPeriod = () => {
+            search.setConfigProperty('searchFilters', periodSelect.value ? {'rp.period': periodSelect.value} : {});
+        };
+
+        // A project change can blank the period from code (#initProjectPeriodFilter), which
+        // fires no change event on the period select - so re-read it on project change too.
+        const projectSelect = context.querySelector('[name="project"]');
+
+        periodSelect.addEventListener('change', applyPeriod);
+        projectSelect?.addEventListener('change', applyPeriod);
+        applyPeriod();
+
+        this.#beneficiaryPeriodFilterCleanup = () => {
+            periodSelect.removeEventListener('change', applyPeriod);
+            projectSelect?.removeEventListener('change', applyPeriod);
         };
     }
 
