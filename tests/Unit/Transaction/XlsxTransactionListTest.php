@@ -231,6 +231,7 @@ final class XlsxTransactionListTest extends TestCase
             $this->createStub(ProjectService::class),
             $this->createStub(BeneficiaryRepository::class),
             $this->createStub(PeriodRepository::class),
+            $this->createStub(\Solidarity\Period\Service\Period::class),
             $this->createStub(\Skeletor\Core\Activity\Service\Activity::class),
         );
     }

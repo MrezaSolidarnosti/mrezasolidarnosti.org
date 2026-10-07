@@ -18,18 +18,18 @@ final class BeneficiaryFilterTest extends TestCase
 {
     public function testFilterTrimsFieldsAndResolvesCreatedByFromSchoolDelegate(): void
     {
-        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService(delegateId: 8));
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService([8]));
 
         $result = $filter->filter($this->postData());
 
         self::assertSame('John', $result['name']);          // trimmed
         self::assertSame('note', $result['comment']);        // trimmed
-        self::assertSame(8, $result['createdBy']);           // school->delegate->id
+        self::assertSame(8, $result['createdBy']);           // the school's (only) delegate
     }
 
     public function testFilterParsesRegisteredPeriodsAndPaymentMethods(): void
     {
-        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService(delegateId: 8));
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService([8]));
 
         $result = $filter->filter($this->postData());
 
@@ -46,7 +46,7 @@ final class BeneficiaryFilterTest extends TestCase
 
     public function testAStoredRowKeepsItsIdSoTheSaveCanMatchItUp(): void
     {
-        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService(delegateId: 8));
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService([8]));
 
         $result = $filter->filter($this->postData([
             ['id' => '17', 'project' => '1', 'period' => '2', 'amount' => '1000'],
@@ -61,7 +61,7 @@ final class BeneficiaryFilterTest extends TestCase
         // list: the project <select> has no matching <option> and falls back to its
         // placeholder. Dropping the row here is what used to delete the registration —
         // it has to reach syncRegisteredPeriods(), which falls back to what is stored.
-        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService(delegateId: 8));
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService([8]));
 
         $result = $filter->filter($this->postData([
             ['id' => '17', 'project' => '-1', 'period' => '', 'amount' => '1000'],
@@ -76,7 +76,7 @@ final class BeneficiaryFilterTest extends TestCase
     {
         // No id and no period: a row the user added with + and then left alone. Nothing to
         // preserve, and inserting it would fail on a NOT NULL period.
-        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService(delegateId: 8));
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService([8]));
 
         $result = $filter->filter($this->postData([
             ['project' => '-1', 'period' => '', 'amount' => ''],
@@ -87,7 +87,7 @@ final class BeneficiaryFilterTest extends TestCase
 
     public function testCreatedByIsNullWhenSchoolHasNoDelegate(): void
     {
-        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService(delegateId: null));
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService([]));
 
         $result = $filter->filter($this->postData());
 
@@ -111,29 +111,52 @@ final class BeneficiaryFilterTest extends TestCase
         self::assertSame(12, $result['createdBy']);
     }
 
-    public function testTheSchoolsDelegateStillWinsOverADirectlyChosenOne(): void
+    public function testAPostedDelegateWhoIsNotOneOfTheSchoolsIsReplacedByTheSchoolsDelegate(): void
     {
-        // MSP is unchanged. The school owns the delegate and the form renders it read-only,
-        // so a posted delegate must not be able to talk over it.
-        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService(delegateId: 8));
+        // With a school chosen, createdBy is only the contact and must be one of the school's
+        // delegates - an outsider would be recorded against a school they cannot see.
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService([8]));
 
         $result = $filter->filter(['delegate' => '12'] + $this->postData());
 
         self::assertSame(8, $result['createdBy']);
     }
 
-    public function testADirectDelegateFillsInWhenTheChosenSchoolHasNone(): void
+    public function testAPostedDelegateWhoIsOneOfTheSchoolsIsKeptAsTheContact(): void
     {
-        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService(delegateId: null));
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService([8, 12]));
 
         $result = $filter->filter(['delegate' => '12'] + $this->postData());
 
         self::assertSame(12, $result['createdBy']);
     }
 
+    public function testWithoutAPostedDelegateTheSchoolsFirstDelegateIsTheContact(): void
+    {
+        // "First" by id, not by load order, so the same school always gives the same answer.
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService([15, 8]));
+
+        $result = $filter->filter($this->postData());
+
+        self::assertSame(8, $result['createdBy']);
+    }
+
+    public function testADirectDelegateCannotStandInForASchoolWithNone(): void
+    {
+        // It used to: the posted delegate became createdBy, which was also what made the
+        // beneficiary visible to them. Access now follows the school, so that delegate would
+        // own someone they cannot see - createdBy stays null and the validator asks for a
+        // school that has a delegate (the form's school search only offers those anyway).
+        $filter = new BeneficiaryFilter($this->validator(valid: true), $this->schoolService([]));
+
+        $result = $filter->filter(['delegate' => '12'] + $this->postData());
+
+        self::assertNull($result['createdBy']);
+    }
+
     public function testFilterThrowsWhenValidatorFails(): void
     {
-        $filter = new BeneficiaryFilter($this->validator(valid: false), $this->schoolService(delegateId: 8));
+        $filter = new BeneficiaryFilter($this->validator(valid: false), $this->schoolService([8]));
 
         $this->expectException(ValidatorException::class);
 
@@ -171,15 +194,14 @@ final class BeneficiaryFilterTest extends TestCase
         return $validator;
     }
 
-    private function schoolService(?int $delegateId): SchoolService
+    /** @param int[] $delegateIds the delegates of the school the stub returns */
+    private function schoolService(array $delegateIds): SchoolService
     {
         $school = new School();
-        if ($delegateId !== null) {
+        foreach ($delegateIds as $id) {
             $delegate = new Delegate();
-            $delegate->id = $delegateId;
-            $school->delegate = $delegate;
-        } else {
-            $school->delegate = null;
+            $delegate->id = $id;
+            $school->delegates->add($delegate);
         }
 
         $service = $this->createStub(SchoolService::class);

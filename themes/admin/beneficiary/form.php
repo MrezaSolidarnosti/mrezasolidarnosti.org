@@ -29,7 +29,8 @@ $schoolSelect = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
     $data['model']?->school?->id ?? null,
     $data['model']?->school?->name,
     'Trazi škole...',
-    ['delegate' => 'not_null'],
+    // `d` is SchoolRepository's join on School::$delegates: schools with at least one delegate.
+    ['d.id' => 'not_null'],
 ));
 
 $schoolGroup = (new InputGroup())
@@ -46,10 +47,10 @@ $schoolGroup = (new InputGroup())
 // stored model, but the input it depended on can change in the browser.
 //
 // Precedence still lives in the filter, which is the only place that sees the submitted
-// school and delegate together: a school's delegate wins when a school is chosen, and this
-// field is the fallback when there is none. So for MSP nothing changes on save, and for MSPR
-// (no school) the delegate is chosen here. The tooltip says as much, since a field that can
-// be edited but is sometimes overridden needs to explain itself.
+// school and delegate together. With a school chosen, this is only the contact on record and
+// must be one of the school's delegates (otherwise the school's first is taken); every delegate
+// of the school sees the beneficiary either way. For MSPR (no school) the delegate is chosen
+// here and owns the beneficiary.
 $delegateInput = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
     'delegate',
     '/delegate/tableHandler/',
@@ -59,7 +60,7 @@ $delegateInput = (new \Skeletor\Form\InputTypes\AjaxInputSearch\AjaxInputSearch(
     $data['model']?->createdBy?->id ?? null,
     $data['model']?->createdBy?->name,
     'Traži delegate...',
-    tooltip: 'Ako je izabrana škola, delegat se preuzima sa škole. Bez škole (MSPR), izaberite delegata ovde.',
+    tooltip: 'Ako je izabrana škola, svi delegati škole vide ovu osobu; ovde birate kontakt delegata među njima (inače se uzima prvi). Bez škole (MSPR), izaberite delegata ovde.',
 ));
 $schoolGroup->addInput($delegateInput);
 

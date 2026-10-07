@@ -278,6 +278,7 @@ final class CreateTransactionUrgentSelectionTest extends IntegrationTestCase
             $this->createStub(ProjectService::class),
             $this->createStub(DonorService::class),
             $this->createStub(Mailer::class),
+            $this->createStub(\Solidarity\Donor\Service\InstructionsLoginLink::class),
             $this->em(),
         );
 

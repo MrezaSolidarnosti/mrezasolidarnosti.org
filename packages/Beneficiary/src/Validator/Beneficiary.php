@@ -29,11 +29,9 @@ class Beneficiary implements ValidatorInterface
         if (empty($data['name'])) {
             $this->messages['name'][] = 'Ime je neophodno.';
         }
-        // A delegate is what makes a beneficiary visible to them (Beneficiary::fetchTableData
-        // filters on createdBy), so one is still required — but it may now arrive from either
-        // side: the chosen school's delegate for MSP, or a directly picked delegate for MSPR,
-        // which has no schools. The old message named only the school, which was the one
-        // thing an MSPR beneficiary could never supply.
+        // Every beneficiary needs a delegate behind them. For MSP the filter takes one of the
+        // chosen school's delegates (so a school with none fails here); MSPR has no schools
+        // and the delegate is picked directly.
         if (!$data['createdBy']) {
             $this->messages['createdBy'][] = 'Delegat je obavezan: izaberite školu koja ima delegata ili delegata direktno.';
         }

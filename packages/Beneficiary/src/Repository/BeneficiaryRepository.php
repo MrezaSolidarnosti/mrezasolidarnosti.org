@@ -3,8 +3,10 @@
 namespace Solidarity\Beneficiary\Repository;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
 use Solidarity\Beneficiary\Entity\Beneficiary;
 use Solidarity\Beneficiary\Factory\BeneficiaryFactory;
+use Solidarity\School\Entity\School;
 use Solidarity\Transaction\Entity\Transaction;
 use Skeletor\Core\TableView\Repository\TableViewRepository;
 
@@ -12,6 +14,9 @@ class BeneficiaryRepository extends TableViewRepository
 {
     const ENTITY = Beneficiary::class;
     const FACTORY = BeneficiaryFactory::class;
+
+    /** Uncountable-filter key: limit the table to what this delegate (id) may see. */
+    const DELEGATE_SCOPE = 'delegateScope';
 
     public function __construct(
         protected EntityManagerInterface $entityManager
@@ -24,6 +29,49 @@ class BeneficiaryRepository extends TableViewRepository
         return ['paymentMethods' => 'pm', 'registeredPeriods' => 'rp', 'school' => 's'];
     }
 
+
+    /**
+     * The one definition of "beneficiaries this delegate works with":
+     *  - any beneficiary of a school the delegate is assigned to - shared with every other
+     *    delegate of that school, they are all at the same level, or
+     *  - a school-less (MSPR) beneficiary assigned to the delegate directly via createdBy.
+     *
+     * For a school beneficiary createdBy is deliberately ignored: it is only the contact on
+     * record, and a delegate who leaves the school loses access even if their id is still there.
+     *
+     * Used for the beneficiary list and, through the `b` join, the transaction list and
+     * TransactionRepository::belongsToDelegate(). Beneficiary::isVisibleToDelegate() is the
+     * same rule in PHP, for a single loaded entity - change both together.
+     */
+    public static function addDelegateScope(QueryBuilder $qb, string $beneficiaryAlias, int $delegateId): void
+    {
+        $qb->andWhere(sprintf(
+            '((IDENTITY(%1$s.school) IN (SELECT scope_s.id FROM %2$s scope_s JOIN scope_s.delegates scope_d WHERE scope_d.id = :delegateScope))'
+            . ' OR (%1$s.school IS NULL AND %1$s.createdBy = :delegateScope))',
+            $beneficiaryAlias,
+            School::class
+        ));
+        $qb->setParameter('delegateScope', $delegateId);
+    }
+
+    /**
+     * Two keys mean "by delegate" here and both go through addDelegateScope(), not the
+     * generic `a.createdBy = x`, which would miss every school beneficiary whose contact is a
+     * co-delegate:
+     *  - DELEGATE_SCOPE (uncountable) - set by the service for a logged-in delegate;
+     *  - createdBy (column filter) - the staff "Delegat" column filter.
+     * They never meet: the column is only offered to staff.
+     */
+    protected function applyCustomFilters(QueryBuilder $qb, array &$filter, array &$uncountableFilter): void
+    {
+        if (isset($uncountableFilter[self::DELEGATE_SCOPE])) {
+            static::addDelegateScope($qb, 'a', (int) $uncountableFilter[self::DELEGATE_SCOPE]);
+            unset($uncountableFilter[self::DELEGATE_SCOPE]);
+        } elseif (isset($filter['createdBy']) && is_scalar($filter['createdBy']) && $filter['createdBy'] !== '') {
+            static::addDelegateScope($qb, 'a', (int) trim((string) $filter['createdBy'], '"'));
+        }
+        unset($filter['createdBy']);
+    }
 
     public function getSearchableColumns(): array
     {
@@ -81,38 +129,5 @@ class BeneficiaryRepository extends TableViewRepository
             ->addOrderBy('receivedAmount', 'ASC');
 
         return $qb->getQuery()->getResult();
-    }
-
-    /**
-     * Release the beneficiaries a delegate holds *through a school*, ahead of the reclaim in
-     * Delegate::update().
-     *
-     * The `school_id IS NOT NULL` guard is load-bearing. The reclaim that follows this call is
-     * assignOrphanedBeneficiariesToDelegate(), which matches on school_id — so a beneficiary
-     * with no school can be released here but never restored. MSPR has no schools and assigns
-     * its delegate directly, which made every MSPR beneficiary collateral damage of an
-     * unrelated edit to any of that delegate's MSP schools: createdBy cleared, silently, with
-     * nothing able to put it back.
-     *
-     * School-held beneficiaries are untouched by the guard, so the existing MSP behaviour —
-     * including the delegate-scoped over-release that Delegate::update() compensates for — is
-     * unchanged.
-     */
-    public function nullifyCreatedByForDelegate(int $delegateId): void
-    {
-        $conn = $this->entityManager->getConnection();
-        $conn->executeStatement(
-            'UPDATE beneficiary SET createdBy_id = NULL WHERE createdBy_id = ? AND school_id IS NOT NULL',
-            [$delegateId]
-        );
-    }
-
-    public function assignOrphanedBeneficiariesToDelegate(int $schoolId, int $delegateId): void
-    {
-        $conn = $this->entityManager->getConnection();
-        $conn->executeStatement(
-            'UPDATE beneficiary SET createdBy_id = ? WHERE school_id = ? AND createdBy_id IS NULL',
-            [$delegateId, $schoolId]
-        );
     }
 }

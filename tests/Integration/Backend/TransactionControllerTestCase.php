@@ -84,6 +84,7 @@ abstract class TransactionControllerTestCase extends IntegrationTestCase
             $this->createStub(ProjectService::class),
             new BeneficiaryRepository($this->em()),
             new PeriodRepository($this->em()),
+            $this->createStub(\Solidarity\Period\Service\Period::class),
             $this->createStub(\Skeletor\Core\Activity\Service\Activity::class),
         );
     }

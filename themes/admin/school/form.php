@@ -33,6 +33,16 @@ $typeSelect = (new Select(name: 'type', optionsCollection: $typeCollection, labe
 
 $name = (new Text(name: 'name', value: $data['model']?->name, label: 'Name', readOnly: $readOnly));
 
+// Read-only: assignments are edited on the delegate form (Delegate::$schools owns the
+// relation). Named so it matches no School property - AbstractFactory ignores it on save.
+$delegateNames = array_map(static fn ($d) => $d->name . ' (' . $d->email . ')', $data['model']?->delegates?->toArray() ?? []);
+$delegates = new Text(
+    name: 'delegatesList',
+    value: $delegateNames ? implode(', ', $delegateNames) : '-',
+    label: 'Delegati',
+    readOnly: true,
+);
+
 $inputGroup1 = (new InputGroup())
     ->addInput($name);
 $inputGroup2 = (new InputGroup())
@@ -44,6 +54,7 @@ $form->addTab((new Tab('Basic Info'))
     ->addInputGroup($inputGroup1)
     ->addInputGroup($inputGroup2)
     ->addInputGroup($inputGroup3)
+    ->addInputGroup((new InputGroup())->addInput($delegates))
 );
 
 $formRenderer = new TabbedFormRenderer($form, $data['formTitle']);

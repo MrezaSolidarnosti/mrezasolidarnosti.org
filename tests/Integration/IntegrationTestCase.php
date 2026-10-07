@@ -427,6 +427,17 @@ abstract class IntegrationTestCase extends TestCase
         return $school;
     }
 
+    /**
+     * Put $delegate on $school. Both sides are set so the in-memory graph agrees with the
+     * database without a refresh; only Delegate::$schools (the owning side) is persisted.
+     */
+    protected function assignSchool(Delegate $delegate, School $school): void
+    {
+        $delegate->schools->add($school);
+        $school->delegates->add($delegate);
+        self::$em->flush();
+    }
+
     protected function createBeneficiaryPaymentMethod(
         Beneficiary $beneficiary,
         int $type = 1,

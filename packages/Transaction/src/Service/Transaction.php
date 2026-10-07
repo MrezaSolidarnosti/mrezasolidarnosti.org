@@ -35,20 +35,32 @@ class Transaction extends TableView
     }
 
     /**
-     * A delegate sees only transactions belonging to beneficiaries they own.
-     *
-     * 'b.createdBy' carries the alias deliberately: TransactionRepository::getJoinableEntities()
-     * already joins beneficiary as `b`, and TableViewRepository leaves a dotted key alone
-     * instead of prefixing it with `a.`.
+     * A delegate sees only transactions of beneficiaries they work with - every beneficiary
+     * of their schools, plus school-less ones assigned to them directly. The rule itself
+     * lives in BeneficiaryRepository::addDelegateScope(); TransactionRepository applies it to
+     * its `b` (beneficiary) join.
      */
     public function fetchTableData(
         $search, $filter, $offset, $limit, $order, $uncountableFilter = null, $idsToInclude = [], $idsToExclude = []
     ) {
-        if ($this->getUserSession()->getLoggedInEntityType() === 'delegate') {
-            $uncountableFilter['b.createdBy'] = $this->getUserSession()->getLoggedInUserId();
-        }
+        $uncountableFilter = $this->scopeToLoggedInDelegate($uncountableFilter ?? []);
 
         return parent::fetchTableData($search, $filter, $offset, $limit, $order, $uncountableFilter, $idsToInclude, $idsToExclude);
+    }
+
+    /** Same scope for the total as for the page, or a delegate's pager counts the whole network. */
+    public function getTotalCount(array $uncountableFilter = [])
+    {
+        return parent::getTotalCount($this->scopeToLoggedInDelegate($uncountableFilter));
+    }
+
+    private function scopeToLoggedInDelegate(array $uncountableFilter): array
+    {
+        if ($this->getUserSession()->getLoggedInEntityType() === 'delegate') {
+            $uncountableFilter[BeneficiaryRepository::DELEGATE_SCOPE] = (int) $this->getUserSession()->getLoggedInUserId();
+        }
+
+        return $uncountableFilter;
     }
 
     /**

@@ -57,7 +57,7 @@ class DelegateRepository extends TableViewRepository implements LoginRepositoryI
         $sql = "SELECT d.* FROM delegate d WHERE
 (SELECT count(*) FROM transaction t WHERE t.beneficiaryId IN (
     SELECT b.id FROM beneficiary b WHERE b.school_id IN (
-        SELECT s.id FROM school s WHERE s.delegate_id = d.id
+        SELECT ds.school_id FROM delegate_school ds WHERE ds.delegate_id = d.id
     )
 )) > 0";
 

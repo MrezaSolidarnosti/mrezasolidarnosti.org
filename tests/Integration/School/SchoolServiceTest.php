@@ -16,10 +16,10 @@ use Solidarity\Tests\Integration\IntegrationTestCase;
  * The school dropdown and the school table.
  *
  * getFilterData() is what fills the school `<select>` on the beneficiary form — the field
- * that decides which delegate ends up owning a beneficiary, since
- * `Beneficiary\Filter` resolves `createdBy` from the chosen school's delegate. The label it
- * builds carries the city because school names repeat across towns, and picking the wrong
- * "Osnovna škola Vuk Karadžić" assigns the person to a delegate in another city.
+ * that decides which delegates work with a beneficiary, since every delegate of the chosen
+ * school sees them. The label it builds carries the city because school names repeat across
+ * towns, and picking the wrong "Osnovna škola Vuk Karadžić" hands the person to delegates in
+ * another city.
  */
 #[CoversClass(SchoolService::class)]
 final class SchoolServiceTest extends IntegrationTestCase
@@ -36,7 +36,7 @@ final class SchoolServiceTest extends IntegrationTestCase
     public function testTheDropdownLabelsEachSchoolWithItsCity(): void
     {
         // Without the city these are indistinguishable in the list, and the choice decides
-        // which delegate the beneficiary is assigned to.
+        // which delegates the beneficiary is assigned to.
         $belgrade = $this->createCity('Beograd');
         $school = $this->createSchool($belgrade, null, 'Osnovna škola Vuk Karadžić');
 

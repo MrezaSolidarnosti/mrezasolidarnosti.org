@@ -19,20 +19,22 @@ class Beneficiary implements FilterInterface
     {
         // todo add validation for maxAmount from project if set for registered projects when saving
 
-        // Two routes to a delegate, and the school wins whenever there is one. MSP hangs the
-        // delegate off the school, so choosing a school still stamps its delegate onto
-        // createdBy exactly as before. MSPR has no schools — MigrateLegacyMspr sets
-        // school = null — so there is nothing to derive it from and the form posts a delegate
-        // directly instead.
+        // Two routes to a delegate. MSP hangs delegates off the school - possibly several, all
+        // at the same level - and access follows the school, so createdBy is only the contact
+        // on record: the posted delegate if they are one of the school's, otherwise the
+        // school's first. MSPR has no schools (MigrateLegacyMspr sets school = null), so the
+        // form posts a delegate directly and that one is both contact and owner.
         //
         // Resolving the school unconditionally is what made every school-less beneficiary
-        // unsaveable: getById(null) returned null, ->delegate read off it gave null, and the
-        // validator then refused the save with "School has no delegate assigned". Both keys
-        // are always present so AbstractFactory::formatForWrite clears the relation on a
+        // unsaveable: getById(null) returned null and the validator refused the save. Both
+        // keys are always present so AbstractFactory::formatForWrite clears the relation on a
         // falsy value rather than leaving a stale one behind.
         $schoolId = !empty($postData['school']) ? $postData['school'] : null;
         $school = $schoolId ? $this->school->getById($schoolId) : null;
         $delegateId = !empty($postData['delegate']) ? (int) $postData['delegate'] : null;
+        if ($school) {
+            $delegateId = $this->contactDelegateId($school, $delegateId);
+        }
 
         $data = [
             'id' => (isset($postData['id'])) ? $postData['id'] : null,
@@ -40,7 +42,7 @@ class Beneficiary implements FilterInterface
             'status' => (int) ($postData['status'] ?? \Solidarity\Beneficiary\Entity\Beneficiary::STATUS_NEW),
             'comment' => trim($postData['comment'] ?? ''),
             'school' => $schoolId,
-            'createdBy' => $school?->delegate?->id ?? $delegateId,
+            'createdBy' => $delegateId,
         ];
 
         // Parse registeredPeriods rows from form
@@ -98,6 +100,18 @@ class Beneficiary implements FilterInterface
         }
 
         return $data;
+    }
+
+    /** The posted delegate when they belong to the school, else the school's first; null if it has none. */
+    private function contactDelegateId(\Solidarity\School\Entity\School $school, ?int $postedDelegateId): ?int
+    {
+        if ($postedDelegateId && $school->hasDelegate($postedDelegateId)) {
+            return $postedDelegateId;
+        }
+        $ids = array_map(static fn ($d) => $d->getId(), $school->delegates->toArray());
+        sort($ids);
+
+        return $ids[0] ?? null;
     }
 
     public function getErrors()

@@ -21,16 +21,14 @@ final class DelegateRepositoryTest extends IntegrationTestCase
         // Affected: delegate -> school -> beneficiary -> transaction
         $affected = $this->createDelegate();
         $affectedSchool = $this->createSchool($city, name: 'Affected School');
-        $affectedSchool->delegate = $affected;
-        $this->em()->flush();
+        $this->assignSchool($affected, $affectedSchool);
         $beneficiary = $this->createBeneficiary(school: $affectedSchool);
         $this->createTransaction($donor, $beneficiary, $project, $period, 5000);
 
         // Unaffected: delegate with a school but no transacted beneficiaries
         $unaffected = $this->createDelegate();
         $emptySchool = $this->createSchool($city, name: 'Empty School');
-        $emptySchool->delegate = $unaffected;
-        $this->em()->flush();
+        $this->assignSchool($unaffected, $emptySchool);
 
         $rows = (new DelegateRepository($this->em()))->getAffectedDelegates();
         $ids = array_map('intval', array_column($rows, 'id'));

@@ -1,9 +1,9 @@
-# IT Srbija - Mreža solidarnosti
+# Mreža solidarnosti
 
 Mreža solidarnosti je jednostavna web aplikacija koja omogućava korisnicima da se prijavljuju na istu putem formi ili da upravljaju podacima unutar dash-a.
 
 ## Sadržaj
-- [IT Srbija - Mreža solidarnosti](#it-srbija---mreža-solidarnosti)
+- [Mreža solidarnosti](#it-srbija---mreža-solidarnosti)
   - [Sadržaj](#sadržaj)
   - [Instalacija](#instalacija)
     - [Docker instalacija (Preporučeno)](#docker-instalacija-preporučeno)

@@ -39,8 +39,39 @@ final class DelegateFactoryTest extends IntegrationTestCase
         self::assertSame(Delegate::STATUS_VERIFIED, $delegate->status);
         self::assertCount(1, $delegate->projects);
 
-        // The school's owning side was pointed at the new delegate.
+        // The join row was written from the delegate (owning) side.
         $school = $this->em()->find(School::class, $schoolId);
-        self::assertSame($id, $school->delegate->getId());
+        self::assertTrue($school->hasDelegate($id));
+    }
+
+    public function testASchoolCanBeAssignedToASecondDelegateWithoutLeavingTheFirst(): void
+    {
+        // The old OneToMany write re-pointed school.delegate_id, silently taking the school
+        // away from whoever held it. A shared school must keep both.
+        $school = $this->createSchool($this->createCity());
+        $schoolId = $school->getId();
+        $first = $this->createDelegate();
+        $this->assignSchool($first, $school);
+        $firstId = $first->getId();
+
+        $secondId = DelegateFactory::compileEntityForCreate([
+            'id' => null,
+            'email' => 'second-delegate@example.com',
+            'name' => 'Second Delegate',
+            'status' => Delegate::STATUS_VERIFIED,
+            'phone' => '0601234567',
+            'verifiedBy' => 'Admin',
+            'comment' => null,
+            'adminComment' => null,
+            'projects' => [],
+            'schools' => [$schoolId],
+        ], $this->em());
+
+        $this->em()->clear();
+        $school = $this->em()->find(School::class, $schoolId);
+
+        self::assertCount(2, $school->delegates);
+        self::assertTrue($school->hasDelegate($firstId));
+        self::assertTrue($school->hasDelegate($secondId));
     }
 }
