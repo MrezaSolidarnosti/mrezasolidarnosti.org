@@ -44,16 +44,36 @@ class Donor extends TableView
         return $this->repo->getDonorsByProject($project);
     }
 
+    /**
+     * Register a donor and send them their verification link.
+     *
+     * The mail is inside the transaction because a donor who never receives it has not
+     * registered in any sense that matters: the row would block the address on a retry while
+     * the only way in — the link — was never delivered.
+     */
     public function create(array $data)
     {
         $entity = $this->getEntities(['email' => $data['email']]);
         if (count($entity)) {
             throw new \Exception('Donor already exists');
-        } else {
-            $entity = parent::create($data);
+        }
 
+        $connection = $this->repo->getEntityManager()->getConnection();
+        $connection->beginTransaction();
+
+        try {
+            $entity = parent::create($data);
             $token = $this->magicLinkService->requestMagicLink($entity->email, 'donor', false);
             $this->mailer->sendDonorRegisteredMail($entity->email, $entity->firstName .' '. $entity->lastName, $token);
+            $connection->commit();
+        } catch (ValidatorException $e) {
+            // Carries the per-field errors the form renders, so it travels untouched.
+            $connection->rollBack();
+            throw $e;
+        } catch (\Throwable $e) {
+            $connection->rollBack();
+            $this->logger->error(sprintf('Registration failed for %s: %s', $data['email'], $e->getMessage()));
+            throw new RegistrationFailed('Donor registration could not be completed.', 0, $e);
         }
 
         return $entity;
@@ -74,16 +94,30 @@ class Donor extends TableView
     {
         $donor = $this->repo->findByEmail($email);
         if (!$donor) {
+            $this->logger->info(sprintf('Login link requested for unregistered address %s', $email));
             return;
         }
 
         try {
             $token = $this->magicLinkService->requestMagicLink($email, 'donor', false);
-        } catch (\Skeletor\Core\Login\Exception\MagicLinkThrottled | \Skeletor\Core\Login\Exception\InvalidCredentials) {
+        } catch (\Skeletor\Core\Login\Exception\MagicLinkThrottled) {
+            $this->logger->info(sprintf('Login link for donor %d throttled', $donor->getId()));
+            return;
+        } catch (\Skeletor\Core\Login\Exception\InvalidCredentials $e) {
+            $this->logger->info(sprintf('Login link refused for donor %d: %s', $donor->getId(), $e->getMessage()));
             return;
         }
 
-        $this->mailer->sendDonorLoginMail($email, $donor->getDisplayName(), $token);
+        try {
+            $this->mailer->sendDonorLoginMail($email, $donor->getDisplayName(), $token);
+        } catch (\Throwable $e) {
+            // Error, not info: magic link is the only credential donors have, so a donor who
+            // cannot be mailed cannot get in at all.
+            $this->logger->error(sprintf('Login mail failed for donor %d: %s', $donor->getId(), $e->getMessage()));
+            return;
+        }
+
+        $this->logger->info(sprintf('Login link mailed to donor %d', $donor->getId()));
     }
 
     public function prepareEntities($entities)
@@ -233,6 +267,9 @@ class Donor extends TableView
             $items[] = [
                 'id' => $transaction->id,
                 'beneficiaryName' => $transaction->beneficiary?->name ?? 'N/A',
+                // Through the school: a beneficiary has no city of their own. School-less (MSPR)
+                // beneficiaries, and any school without one, fall back to Beograd.
+                'city' => $transaction->beneficiary?->school?->city?->name ?: 'Beograd',
                 'amount' => number_format($transaction->amount, 0),
                 'referenceCode' => $transaction->getReferenceCode(),
                 'createdAt' => $transaction->getCreatedAt()->format('d.m.Y'),

@@ -253,14 +253,17 @@ final class AccessControlTest extends TestCase
         self::assertFalse($this->acl()->isGuestPath('/statistics'));
     }
 
-    public function testAGuestWildcardMatchesAnywhereInThePathNotJustAtTheStart(): void
+    public function testAGuestWildcardIsAPrefixNotASubstring(): void
     {
-        // isGuestPath() takes the text before the '*' and runs strpos(), so '/login/*/...'
-        // whitelists any path *containing* '/login/'. Harmless today — FastRoute's {id}
-        // placeholder cannot contain a slash, so no real route can smuggle one in — but it
-        // is why '/login/user/loginForm/' and '/login/logout/' are guest paths despite
-        // matching no entry literally. Worth knowing before adding a free-text segment.
-        self::assertTrue($this->acl()->isGuestPath('/anything/login/at-all'));
+        // isGuestPath() takes the text before the '*', so '/login/*/magicLinkForm/' really
+        // whitelists everything under '/login/'. That is why '/login/user/loginForm/' and
+        // '/login/logout/' are guest paths despite matching no entry literally.
+        self::assertTrue($this->acl()->isGuestPath('/login/user/anything'));
+
+        // Anchored since skeletor ddb2f49d. It used to be strpos(), so any path merely
+        // *containing* '/login/' was a guest path — and a guest path returns early from
+        // AuthMiddleware, so permissions.php never ran on it at all.
+        self::assertFalse($this->acl()->isGuestPath('/anything/login/at-all'));
     }
 
     // ---- collaborators -----------------------------------------------------------
