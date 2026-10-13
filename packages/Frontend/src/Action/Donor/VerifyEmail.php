@@ -47,11 +47,12 @@ class VerifyEmail extends BaseAction
         \Psr\Http\Message\ServerRequestInterface $request,
         \Psr\Http\Message\ResponseInterface $response
     ) {
+        $token = null;
         try {
             if (strtoupper($request->getMethod()) !== 'POST') {
                 $token = $request->getQueryParams()['token'] ?? null;
                 if (!$token) {
-                    return $this->respond('donor/invalidVerifyEmailToken');
+                    return $this->rejectToken($token);
                 }
 
                 // Validates without consuming — verifyToken() only reads; it is
@@ -64,7 +65,7 @@ class VerifyEmail extends BaseAction
 
             $token = $request->getParsedBody()['token'] ?? null;
             if (!$token) {
-                return $this->respond('donor/invalidVerifyEmailToken');
+                return $this->rejectToken($token);
             }
             $credentials = new MagicLinkCredentials($token, 'donor');
             $donor = $this->authenticatorRegistry->authenticate($credentials);   // validates + consumes the token
@@ -102,7 +103,39 @@ class VerifyEmail extends BaseAction
             }
             return $this->redirect($this->locale->localizeUrl('/instrukcije-za-uplatu'));
         } catch (InvalidCredentials $e) {
-            return $this->respond('donor/invalidVerifyEmailToken');
+            return $this->rejectToken($token);
         }
+    }
+
+    private function rejectToken(?string $token): \Psr\Http\Message\ResponseInterface
+    {
+        return $this->respond('donor/invalidVerifyEmailToken', ['reason' => $this->tokenFailure($token)]);
+    }
+
+    /**
+     * Why a token was refused, so the page can say so.
+     *
+     * verifyToken() throws the same InvalidCredentials for all of these, which is why every
+     * refusal used to read "istekao" — including links that were merely superseded.
+     */
+    private function tokenFailure(?string $token): string
+    {
+        if (!$token) {
+            return 'unknown';
+        }
+
+        $entity = $this->tokenRepository->findByToken($token);
+        if (!$entity) {
+            return 'unknown';
+        }
+        if ($entity->usedAt !== null) {
+            return 'used';
+        }
+        if ($entity->isExpired()) {
+            return 'expired';
+        }
+
+        // Unused and still in date, so a newer link took its place.
+        return 'superseded';
     }
 }

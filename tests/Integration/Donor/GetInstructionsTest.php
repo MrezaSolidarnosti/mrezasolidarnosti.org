@@ -68,7 +68,7 @@ final class GetInstructionsTest extends IntegrationTestCase
 
         foreach ([
             'id', 'beneficiaryName', 'amount', 'referenceCode', 'createdAt', 'expiresAt',
-            'status', 'projectId', 'paymentType', 'accountNumber', 'qrCode',
+            'status', 'projectId', 'paymentType', 'accountNumber', 'qrCode', 'city',
         ] as $key) {
             self::assertArrayHasKey($key, $item);
         }
@@ -105,6 +105,30 @@ final class GetInstructionsTest extends IntegrationTestCase
 
         self::assertNotSame('', $this->fetch($bankDonor->getId())['items'][0]['qrCode']);
         self::assertSame('', $this->fetch($wireDonor->getId())['items'][0]['qrCode']);
+    }
+
+    public function testTheCityComesFromTheBeneficiarysSchool(): void
+    {
+        $donor = $this->createDonor();
+        $project = $this->createProject('MSP');
+        $period = $this->createPeriod($project);
+        $school = $this->createSchool($this->createCity('Kragujevac'));
+        $beneficiary = $this->createBeneficiary(school: $school);
+        $this->createTransaction($donor, $beneficiary, $project, $period, 1000);
+
+        self::assertSame('Kragujevac', $this->fetch($donor->getId())['items'][0]['city']);
+    }
+
+    public function testWithoutASchoolTheCityFallsBackToBeograd(): void
+    {
+        // MSPR beneficiaries have no school, so there is nothing to read a city from.
+        $donor = $this->createDonor();
+        $project = $this->createProject('MSPR');
+        $period = $this->createPeriod($project);
+        $beneficiary = $this->createBeneficiary(school: null);
+        $this->createTransaction($donor, $beneficiary, $project, $period, 1000);
+
+        self::assertSame('Beograd', $this->fetch($donor->getId())['items'][0]['city']);
     }
 
     public function testInstructionsAreListedNewestFirst(): void

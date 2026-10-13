@@ -53,9 +53,11 @@ class Register extends BaseAction
                 $success = false;
                 $responseData['token'] = $this->csrf->getToken();
                 $statusCode = 400;
-                if ($e->getMessage() === "Donor already exists") {
-                    $responseData['errors'][] = 'A donor with this email address already exists.';
-                }
+                // Always populate errors: register.js reads resData.data.errors.length, so an
+                // empty one throws in the browser and the form silently does nothing.
+                $responseData['errors'][] = $e->getMessage() === 'Donor already exists'
+                    ? 'A donor with this email address already exists.'
+                    : 'Registracija trenutno nije moguća. Pokušajte ponovo za nekoliko minuta.';
             }
         }
 

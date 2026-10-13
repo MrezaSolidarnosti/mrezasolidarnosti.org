@@ -158,6 +158,12 @@ export default class InstructionsTable {
         </div>
         <div class="inputContainer">
            <label>
+                ${Translator.translate('City:')}
+            </label>
+            <input type="text" value="${this.activeInstruction.city ?? 'Beograd'}">
+        </div>
+        <div class="inputContainer">
+           <label>
                 ${Translator.translate('Amount:')}
             </label>
           <input type="text" value="${this.activeInstruction.amount} ${this.activeInstruction.paymentType === 1 ? 'RSD' : 'EUR'}">
@@ -215,7 +221,7 @@ export default class InstructionsTable {
     #renderDesktopItem(instruction, index) {
         const tr = document.createElement('tr');
         Object.keys(instruction).forEach((instructionKey) => {
-            const skipKeys = ['expiresAt', 'projectId', 'id', 'paymentType', 'accountNumber', 'qrCode'];
+            const skipKeys = ['expiresAt', 'projectId', 'id', 'paymentType', 'accountNumber', 'qrCode', 'city'];
             if (skipKeys.includes(instructionKey)) {
                 return;
             }
@@ -364,6 +370,7 @@ export default class InstructionsTable {
             }
             this.paymentDialog.classList.add(className);
             const nameInput =  this.paymentDialog.querySelector('#nameInput');
+            const cityInput = this.paymentDialog.querySelector('#cityInput');
             const accNumInput =  this.paymentDialog.querySelector('#accNumInput');
             const amountInput =  this.paymentDialog.querySelector('#amountInput');
             const paymentInfoLogo =  this.paymentDialog.querySelector('#paymentInfoLogo');
@@ -407,6 +414,9 @@ export default class InstructionsTable {
                     break;
             }
             nameInput.value = instruction.beneficiaryName;
+            if (cityInput) {
+                cityInput.value = instruction.city ?? 'Beograd';
+            }
             amountInput.value = instruction.amount + ` ${currency}`;
             paymentInfoLogo.innerHTML = logo;
 

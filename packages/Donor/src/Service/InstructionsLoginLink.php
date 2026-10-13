@@ -20,12 +20,15 @@ use Solidarity\Donor\Entity\Donor;
  * window on admin and delegate links too, which are the only credential this app has.
  *
  * The two gates that matter are reproduced rather than skipped: the account must be allowed
- * in, and any link already in flight is invalidated so a forwarded older mail cannot be used
- * behind the donor. The cooldown is not — it exists to stop someone hammering the public
+ * in, and the previous instructions link is invalidated so a forwarded older mail cannot be
+ * used behind the donor. The cooldown is not — it exists to stop someone hammering the public
  * login form, and this is a cron mailing a donor who did not ask for anything.
  */
 class InstructionsLoginLink
 {
+    /** Kept apart from login links so neither invalidates the other. */
+    public const PURPOSE = 'instructions';
+
     /** 72 hours, matching Transaction::getExpiryDate() and what the email itself promises. */
     private const DEFAULT_EXPIRY_MINUTES = 4320;
 
@@ -46,10 +49,12 @@ class InstructionsLoginLink
             throw new InvalidCredentials('Donor account is not active.');
         }
 
-        $this->tokenRepository->invalidateAllForEntity('donor', (int) $donor->getId());
+        $this->tokenRepository->invalidateAllForEntity('donor', (int) $donor->getId(), self::PURPOSE);
 
         $token = $this->tokenGenerator->generate(64);
-        $this->tokenRepository->create($token, 'donor', (int) $donor->getId(), $this->expiryMinutes());
+        $this->tokenRepository->create(
+            $token, 'donor', (int) $donor->getId(), $this->expiryMinutes(), purpose: self::PURPOSE
+        );
 
         // Built from magicLink.urls.donor, so the public destination stays in config with
         // every other entity type instead of being concatenated a second time here.
