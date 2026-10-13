@@ -8,6 +8,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Solidarity\Beneficiary\Entity\Beneficiary;
 use Solidarity\Donor\Entity\PaymentMethod;
+use Solidarity\School\Entity\City;
+use Solidarity\School\Entity\School;
 use Solidarity\Transaction\Entity\Project;
 use Solidarity\Transaction\Entity\Transaction;
 use Solidarity\Transaction\Service\QrCode;
@@ -37,6 +39,18 @@ final class QrCodeTest extends TestCase
         $transaction->beneficiary = $beneficiary;
 
         return $transaction;
+    }
+
+    private function school(string $cityName): School
+    {
+        $city = new City();
+        $city->name = $cityName;
+
+        $school = new School();
+        $school->name = 'Osnovna škola';
+        $school->city = $city;
+
+        return $school;
     }
 
     public function testBuildsFullIpsPayloadInTagOrder(): void
@@ -95,6 +109,38 @@ final class QrCodeTest extends TestCase
         // Pull the N tag back out and check its length.
         preg_match('/\|N:([^|]*)\|/', $payload, $m);
         self::assertSame(70, mb_strlen($m[1]));
+    }
+
+    public function testTheBeneficiarysCityIsAddedAsASecondRecipientLine(): void
+    {
+        // Donors reported needing it to complete the transfer; IPS carries it as an LF line
+        // inside the same N field.
+        $transaction = $this->makeTransaction();
+        $transaction->beneficiary->school = $this->school('Novi Sad');
+
+        self::assertStringContainsString(
+            "|N:Petar Petrović\nNovi Sad|", (new QrCode())->buildIpsPayload($transaction)
+        );
+    }
+
+    public function testARecipientWithNoSchoolGetsNoCityLine(): void
+    {
+        // Skipped rather than defaulted — a wrong city on a payment slip is worse than none.
+        self::assertStringContainsString(
+            '|N:Petar Petrović|', (new QrCode())->buildIpsPayload($this->makeTransaction())
+        );
+    }
+
+    public function testTheCityIsBudgetedOutOfTheSeventyCharacterRecipientField(): void
+    {
+        $transaction = $this->makeTransaction();
+        $transaction->beneficiary->name = str_repeat('a', 90);
+        $transaction->beneficiary->school = $this->school('Kragujevac');
+
+        preg_match('/\|N:([^|]*)\|/', (new QrCode())->buildIpsPayload($transaction), $m);
+
+        self::assertSame(70, mb_strlen($m[1]));
+        self::assertStringEndsWith("\nKragujevac", $m[1]);
     }
 
     public function testWhitespaceInRecipientIsCollapsed(): void

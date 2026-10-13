@@ -152,6 +152,12 @@ class Transaction
         return self::getHrStatuses()[$status];
     }
 
+    /** Whether the donor is still expected to transfer money for this instruction. */
+    public function isPayable(): bool
+    {
+        return in_array($this->status, [self::STATUS_NEW, self::STATUS_WAITING_CONFIRMATION], true);
+    }
+
     public static function getHrStatuses(): array
     {
         return array(

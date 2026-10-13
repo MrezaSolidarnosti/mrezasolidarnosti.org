@@ -285,7 +285,9 @@ class Donor extends TableView
                 ],
                 'projectId' => $transaction->project->id,
                 'paymentType' => $transaction->paymentType,
-                'accountNumber' => $transaction->accountNumber,
+                // Withheld once the instruction can no longer be paid; the reference code
+                // stays so the donor can still match it against their bank statement.
+                'accountNumber' => $transaction->isPayable() ? $transaction->accountNumber : null,
                 'qrCode' => $qr
             ];
         }

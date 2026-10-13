@@ -37,7 +37,7 @@ class Beneficiary
 
     #[ORM\ManyToOne(targetEntity: School::class, inversedBy: 'beneficiaries')]
     #[ORM\JoinColumn(name: 'school_id', referencedColumnName: 'id', unique: false, nullable: true)]
-    public ?School $school;
+    public ?School $school = null;
 
     #[ORM\ManyToOne(inversedBy: 'beneficiaries')]
     #[ORM\JoinColumn(onDelete: 'SET NULL')]

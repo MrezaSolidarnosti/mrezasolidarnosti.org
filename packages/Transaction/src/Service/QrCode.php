@@ -21,7 +21,8 @@ use Solidarity\Transaction\Entity\Transaction;
  *
  * Field mapping / assumptions — adjust here if the business rules differ:
  *  - R  (account)   ← transaction->accountNumber (digits only)
- *  - N  (recipient) ← beneficiary->name (throws if the transaction has none)
+ *  - N  (recipient) ← beneficiary->name, plus the school's city on a second line when set
+ *                     (throws if the transaction has no beneficiary at all)
  *  - I  (amount)    ← transaction->amount, which is ALWAYS stored in RSD
  *                     (amountEur holds the EUR figure); IPS is domestic RSD only
  *  - SF (pay code)  ← DEFAULT_PAYMENT_CODE (289 = citizen transfer/donation)
@@ -32,6 +33,9 @@ class QrCode
 {
     /** Šifra plaćanja — 289 = other transfer, the usual code for a citizen donation. */
     private const DEFAULT_PAYMENT_CODE = '289';
+
+    /** IPS limit for the N (recipient) field, shared by the name and the city line. */
+    private const IPS_NAME_MAX = 70;
 
     /**
      * Full pipeline: transaction → IPS payload → QR → data URI.
@@ -49,8 +53,9 @@ class QrCode
      */
     public function canBuildFor(Transaction $transaction): bool
     {
-        return $transaction->beneficiary !== null && $transaction->paymentType === PaymentMethod::TYPE_BANK_TRANSFER
-            && in_array($transaction->status, [Transaction::STATUS_NEW, Transaction::STATUS_WAITING_CONFIRMATION]);
+        return $transaction->beneficiary !== null
+            && $transaction->paymentType === PaymentMethod::TYPE_BANK_TRANSFER
+            && $transaction->isPayable();
     }
 
     /**
@@ -73,7 +78,7 @@ class QrCode
             'V'  => '01',
             'C'  => '1',
             'R'  => $account,
-            'N'  => $this->clip($transaction->beneficiary->name, 70),
+            'N'  => $this->recipientBlock($transaction),
             'I'  => 'RSD' . number_format($transaction->amount, 2, ',', ''),
             'SF' => self::DEFAULT_PAYMENT_CODE,
             'S'  => $this->clip('Donacija ' . $transaction->getReferenceCode(), 35),
@@ -104,6 +109,30 @@ class QrCode
         ]);
 
         return (new QrCodeRenderer($options))->render($payload);
+    }
+
+    /**
+     * Recipient name, and the beneficiary's city on a second line when there is one.
+     *
+     * IPS allows the N field to carry name/address/city as LF-separated lines within the same
+     * 70 characters, so the city is budgeted out of the name rather than added to it.
+     */
+    private function recipientBlock(Transaction $transaction): string
+    {
+        $name = $transaction->beneficiary->name;
+        $city = (string) ($transaction->beneficiary->school?->city?->name ?? '');
+
+        if ($city === '') {
+            return $this->clip($name, self::IPS_NAME_MAX);
+        }
+
+        $city = $this->clip($city, self::IPS_NAME_MAX);
+        $nameBudget = self::IPS_NAME_MAX - mb_strlen($city) - 1;
+
+        // A city long enough to crowd out the name is not worth printing.
+        return $nameBudget < 1
+            ? $this->clip($name, self::IPS_NAME_MAX)
+            : $this->clip($name, $nameBudget) . "\n" . $city;
     }
 
     /** Collapse whitespace and hard-limit to the IPS field length. */
