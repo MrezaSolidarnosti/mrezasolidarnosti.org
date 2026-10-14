@@ -40,6 +40,7 @@ final class GetInstructionsTest extends IntegrationTestCase
 {
     private const BANK = 1;
     private const WIRE = 2;
+    private const ACCOUNT = '000000000000000098';
 
     public function testRejectsAnUnknownDonor(): void
     {
@@ -94,6 +95,24 @@ final class GetInstructionsTest extends IntegrationTestCase
 
         self::assertNotNull($this->fetch($open->getId())['items'][0]['expiresAt']);
         self::assertNull($this->fetch($done->getId())['items'][0]['expiresAt']);
+    }
+
+    public function testANonPayableInstructionWithholdsTheAccountNumberButKeepsTheReference(): void
+    {
+        // Withholding the account number is what stops a stale instruction being paid; the
+        // reference code is harmless and still matches a bank statement.
+        [$openDonor, $open] = $this->instruction();
+        [$expiredDonor, $expired] = $this->instruction(status: Transaction::STATUS_EXPIRED);
+        $open->accountNumber = self::ACCOUNT;
+        $expired->accountNumber = self::ACCOUNT;
+        $this->em()->flush();
+
+        $live = $this->fetch($openDonor->getId())['items'][0];
+        $dead = $this->fetch($expiredDonor->getId())['items'][0];
+
+        self::assertSame(self::ACCOUNT, $live['accountNumber']);
+        self::assertNull($dead['accountNumber']);
+        self::assertNotEmpty($dead['referenceCode']);
     }
 
     public function testABankTransferGetsAQrCodeAndAWireTransferDoesNot(): void

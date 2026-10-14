@@ -143,7 +143,7 @@ class DonorRepository extends TableViewRepository implements LoginRepositoryInte
 
     public function getSearchableColumns(): array
     {
-        return ['a.email', 'a.status'];
+        return ['a.email', 'a.status', 'a.fullName'];
     }
 
     public function getDonorCount(int $status, ?bool $isActive = true): int

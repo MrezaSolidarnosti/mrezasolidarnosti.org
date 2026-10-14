@@ -142,7 +142,9 @@ export default class InstructionsTable {
             document.body.appendChild(iframe);
 
 
-            const printAccountNum = this.activeInstruction.paymentType === 1 || this.activeInstruction.paymentType === 2;
+            // The server withholds accountNumber once an instruction is no longer payable.
+            const printAccountNum = (this.activeInstruction.paymentType === 1 || this.activeInstruction.paymentType === 2)
+                && !!this.activeInstruction.accountNumber;
             const printQR = this.activeInstruction.paymentType === 1;
             const printRefCode = this.activeInstruction.paymentType === 1;
             const doc = iframe.contentWindow.document;
@@ -413,6 +415,13 @@ export default class InstructionsTable {
                     qrCodeImage.parentElement.parentElement.classList.add('hidden');
                     break;
             }
+            // Overrides the paymentType cases above: a non-payable instruction has no
+            // account number to show, whatever its type.
+            if (!instruction.accountNumber) {
+                accNumInput.value = '';
+                accNumInput.parentElement.parentElement.classList.add('hidden');
+            }
+
             nameInput.value = instruction.beneficiaryName;
             if (cityInput) {
                 cityInput.value = instruction.city ?? 'Beograd';
