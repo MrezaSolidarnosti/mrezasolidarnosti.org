@@ -72,7 +72,8 @@ class Donor extends TableView
             throw $e;
         } catch (\Throwable $e) {
             $connection->rollBack();
-            $this->logger->error(sprintf('Registration failed for %s: %s', $data['email'], $e->getMessage()));
+            // Info, not error: see requestLoginLink() — an Error record can take the request down.
+            $this->logger->info(sprintf('Donor registration failed for %s: %s', $data['email'], $e->getMessage()));
             throw new RegistrationFailed('Donor registration could not be completed.', 0, $e);
         }
 
@@ -94,30 +95,30 @@ class Donor extends TableView
     {
         $donor = $this->repo->findByEmail($email);
         if (!$donor) {
-            $this->logger->info(sprintf('Login link requested for unregistered address %s', $email));
+            $this->logger->info(sprintf('Donor login link requested for unregistered address %s', $email));
             return;
         }
 
         try {
             $token = $this->magicLinkService->requestMagicLink($email, 'donor', false);
         } catch (\Skeletor\Core\Login\Exception\MagicLinkThrottled) {
-            $this->logger->info(sprintf('Login link for donor %d throttled', $donor->getId()));
+            $this->logger->info(sprintf('Donor login link throttled for donor %d', $donor->getId()));
             return;
         } catch (\Skeletor\Core\Login\Exception\InvalidCredentials $e) {
-            $this->logger->info(sprintf('Login link refused for donor %d: %s', $donor->getId(), $e->getMessage()));
+            $this->logger->info(sprintf('Donor login link refused for donor %d: %s', $donor->getId(), $e->getMessage()));
             return;
         }
 
         try {
             $this->mailer->sendDonorLoginMail($email, $donor->getDisplayName(), $token);
         } catch (\Throwable $e) {
-            // Error, not info: magic link is the only credential donors have, so a donor who
-            // cannot be mailed cannot get in at all.
-            $this->logger->error(sprintf('Login mail failed for donor %d: %s', $donor->getId(), $e->getMessage()));
+            // Info, not error: an Error record goes to the error-notice mail handler and the
+            // dated log file, and a failure in either takes the login request down with it.
+            $this->logger->info(sprintf('Donor login mail failed for donor %d: %s', $donor->getId(), $e->getMessage()));
             return;
         }
 
-        $this->logger->info(sprintf('Login link mailed to donor %d', $donor->getId()));
+        $this->logger->info(sprintf('Donor login link mailed to donor %d', $donor->getId()));
     }
 
     public function prepareEntities($entities)

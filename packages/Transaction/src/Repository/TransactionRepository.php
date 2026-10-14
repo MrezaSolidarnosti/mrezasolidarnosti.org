@@ -296,7 +296,9 @@ class TransactionRepository extends TableViewRepository
 
     public function getSearchableColumns(): array
     {
-        return ['d.email', 'a.id', 'd.firstName', 'd.lastName', 'a.accountNumber', 'a.instructions', 'b.name', 'a.accountNumber'];
+        // firstName/lastName stay alongside fullName: they still match a single name under
+        // the "starts with" search mode, which an anchored fullName would miss.
+        return ['d.email', 'a.id', 'd.firstName', 'd.lastName', 'd.fullName', 'a.accountNumber', 'a.instructions', 'b.name'];
     }
 
     public function getColumnsToCount(): array

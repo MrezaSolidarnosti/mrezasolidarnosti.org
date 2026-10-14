@@ -89,6 +89,11 @@ class Donor implements AuthenticatableInterface
     #[ORM\ManyToMany(targetEntity: Project::class, inversedBy: 'donors')]
     #[ORM\JoinTable(name: 'donor_project')]
     public Collection $projects;
+    #[ORM\Column(
+        type: Types::STRING, length: 257, insertable: false, updatable: false,
+        columnDefinition: "VARCHAR(257) AS (CONCAT(firstName, ' ', lastName)) VIRTUAL", generated: 'ALWAYS'
+    )]
+    public string $fullName;
 
     public function __construct()
     {
